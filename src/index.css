@@ -1,0 +1,43 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-body: "DM Sans", sans-serif;
+  
+  --color-momentum-navy: #071E41;
+  --color-momentum-navy-dark: #041228;
+  --color-momentum-navy-light: #0D2C5B;
+  --color-momentum-gold: #C99A31;
+  --color-momentum-gold-hover: #B58825;
+  --color-momentum-gold-light: #E8BE65;
+  --color-momentum-charcoal: #1F2937;
+  --color-momentum-gray: #F5F7FA;
+  --color-momentum-gray-border: #E5E7EB;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: #F5F7FA;
+  color: #1F2937;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+/* Custom Scrollbar for professional data tables and dashboards */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
