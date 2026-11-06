@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: github-pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -30,6 +30,45 @@ jobs:
         run: npm run build
         env:
           GITHUB_PAGES: 'true'
+      - name: Audit and optimize Pages artifact
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          root = Path('dist')
+          files = [p for p in root.rglob('*') if p.is_file()]
+          before = sum(p.stat().st_size for p in files)
+          # Only remove exact duplicate, unreferenced copies in the AI Studio
+          # staging folder. Never remove canonical documents, branding or images.
+          references = b'\n'.join(
+              p.read_bytes() for p in files
+              if p.suffix.lower() in {'.html', '.js', '.css', '.json', '.svg'}
+              and p.stat().st_size < 12_000_000
+          )
+          by_hash = {}
+          for p in files:
+              if p.stat().st_size >= 100_000:
+                  digest = hashlib.sha256(p.read_bytes()).hexdigest()
+                  by_hash.setdefault(digest, []).append(p)
+          removed = []
+          for group in by_hash.values():
+              if len(group) < 2:
+                  continue
+              for p in group:
+                  rel = p.relative_to(root).as_posix()
+                  if not rel.startswith('assets/aistudio/'):
+                      continue
+                  # A basename match is intentionally conservative.
+                  if p.name.encode() in references or rel.encode() in references:
+                      continue
+                  p.unlink()
+                  removed.append((rel, p.stat().st_size if p.exists() else 0))
+          after = sum(p.stat().st_size for p in root.rglob('*') if p.is_file())
+          print(f'Pages files: {len(files)}; before: {before/1048576:.1f} MiB; after: {after/1048576:.1f} MiB')
+          print('Removed unreferenced AI Studio duplicate paths:', [x[0] for x in removed])
+          assert (root/'index.html').is_file(), 'Missing site entry point'
+          PY
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload site
