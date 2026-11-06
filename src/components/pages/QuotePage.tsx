@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { PageView } from '../common/Header';
 import { COMPANY } from '../../config/company';
-import { ASSETS, ASSET_METADATA } from '../../config/assets';
+import { Logo } from '../common/Logo';
+import { ASSETS, ASSET_METADATA, LOGOS } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 import {
   Send,
@@ -147,15 +148,25 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
       <div className="bg-[#F5F7FA] min-h-screen py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-8">
           <div className="bg-white rounded-xl border border-slate-200 shadow-xl overflow-hidden p-8 sm:p-10 space-y-6">
+            {/* Official Corporate Logo on Confirmation Document */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+              <Logo variant="horizontal-light" size="lg" />
+              <div className="text-right text-xs text-slate-500">
+                <span className="font-bold text-[#071E41] block">Momentum Transportation &amp; Hauling LLC</span>
+                <span>2 Penhurst Ct., Columbia, SC 29229</span>
+                <span className="block">Dispatch: 803-718-5509</span>
+              </div>
+            </div>
+
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                <CheckCircle2 className="w-7 h-7" />
+              <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-6 h-6" />
               </div>
               <div>
                 <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
                   Quotation Request Recorded
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#071E41] font-display">
+                <h2 className="text-2xl font-extrabold text-[#071E41] font-display">
                   Thank You, {submittedQuote.customerName}
                 </h2>
               </div>

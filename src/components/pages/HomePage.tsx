@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PageView } from '../common/Header';
 import { COMPANY } from '../../config/company';
-import { ASSETS, ASSET_METADATA } from '../../config/assets';
+import { ASSETS, ASSET_METADATA, LOGOS } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 import {
   ArrowRight,
@@ -80,7 +80,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F7FA]">
-      {/* 1. CINEMATIC HERO SECTION */}
+      {/* 1. CINEMATIC HERO SECTION MATCHING OFFICIAL BRAND MOCKUP */}
       <section className="relative bg-[#071E41] text-white overflow-hidden">
         {/* Visual Hero Image Carrier */}
         <div className="absolute inset-0 z-0">
@@ -91,29 +91,83 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
             containerClassName="w-full h-full"
           />
           {/* Measured Dark Scrim for WCAG AAA text contrast */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#071E41]/95 via-[#071E41]/80 to-transparent lg:w-3/4" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#071E41] via-transparent to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#071E41] via-[#071E41]/90 to-transparent lg:w-4/5" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#071E41] via-transparent to-black/40" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 py-20 lg:py-32 flex flex-col justify-center min-h-[580px]">
+        {/* Dynamic Aerodynamic Gold & Navy Ribbon Swooshes (Signature Brand Element from Attachment 1) */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none overflow-hidden h-16 sm:h-24">
+          <svg
+            viewBox="0 0 1440 96"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-full h-full preserve-3d"
+            preserveAspectRatio="none"
+          >
+            {/* Navy Base Curve */}
+            <path
+              d="M0 96L1440 96L1440 45C1080 85 720 15 0 70L0 96Z"
+              fill="#071E41"
+              opacity="0.95"
+            />
+            {/* Metallic Gold Primary Highway Ribbon */}
+            <path
+              d="M0 72C360 40 840 88 1440 28L1440 44C840 104 360 56 0 88L0 72Z"
+              fill="url(#heroGoldGrad)"
+            />
+            {/* Metallic Gold Accent Swoosh */}
+            <path
+              d="M200 86C600 62 1050 94 1440 46L1440 52C1050 100 600 68 200 92L200 86Z"
+              fill="#E8BE65"
+              opacity="0.8"
+            />
+            <defs>
+              <linearGradient id="heroGoldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#C99A31" />
+                <stop offset="50%" stopColor="#E8BE65" />
+                <stop offset="100%" stopColor="#C99A31" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+
+        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-8 py-20 lg:py-28 flex flex-col justify-center min-h-[620px]">
           <div className="max-w-2xl space-y-6">
-            <div className="inline-flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-[#C99A31] font-display">
-              <span className="w-2.5 h-0.5 bg-[#C99A31]" />
-              <span>Columbia, South Carolina · Regional Logistics</span>
+            {/* Official Brand Lockup: Exact Emblem + Typography */}
+            <div className="flex items-center gap-4">
+              <img
+                src={LOGOS.header}
+                alt="Momentum Transportation & Hauling LLC Official Emblem"
+                className="w-20 h-20 sm:w-24 sm:h-24 object-contain shrink-0 filter drop-shadow-md"
+              />
+              <div className="flex flex-col text-left">
+                <span className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight font-display text-white leading-none">
+                  MOMENTUM
+                </span>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <span className="w-4 h-[2px] bg-[#C99A31] shrink-0" />
+                  <span className="text-xs sm:text-sm font-bold tracking-wider uppercase text-slate-200 font-display leading-none">
+                    TRANSPORTATION &amp; HAULING LLC
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight font-display text-white leading-tight text-balance">
-              MOVING BUSINESS FORWARD.
-            </h1>
+            {/* Proposed Tagline & Headline */}
+            <div className="space-y-2">
+              <div className="text-2xl sm:text-3xl font-bold italic font-display text-[#C99A31] tracking-tight">
+                Moving Business Forward.
+              </div>
+              <p className="text-base sm:text-lg text-slate-200 font-normal leading-relaxed">
+                {COMPANY.subheading}
+              </p>
+            </div>
 
-            <p className="text-lg sm:text-xl text-slate-200 font-normal leading-relaxed">
-              {COMPANY.subheading}
-            </p>
-
-            <div className="pt-2 flex flex-wrap items-center gap-4">
+            {/* Prominent CTAs per Directive Section 5 */}
+            <div className="pt-2 flex flex-wrap items-center gap-3.5">
               <button
                 onClick={() => onNavigate('quote')}
-                className="px-8 py-4 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md transition-all font-display shadow-lg hover:shadow-xl inline-flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0"
+                className="px-7 py-3.5 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md transition-all font-display shadow-lg hover:shadow-xl inline-flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0"
               >
                 <span>REQUEST A QUOTE</span>
                 <ArrowRight className="w-4 h-4" />
@@ -121,20 +175,29 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
 
               <button
                 onClick={() => onNavigate('services')}
-                className="px-7 py-4 text-xs font-bold tracking-wider uppercase text-white bg-white/10 hover:bg-white/20 border border-white/30 rounded-md transition-all font-display backdrop-blur-sm cursor-pointer whitespace-nowrap shrink-0"
+                className="px-6 py-3.5 text-xs font-bold tracking-wider uppercase text-white bg-white/10 hover:bg-white/20 border border-white/30 rounded-md transition-all font-display backdrop-blur-sm cursor-pointer whitespace-nowrap shrink-0"
               >
-                EXPLORE OUR SERVICES
+                EXPLORE SERVICES
+              </button>
+
+              <button
+                onClick={() => onNavigate('contact')}
+                className="px-6 py-3.5 text-xs font-bold tracking-wider uppercase text-slate-200 hover:text-white bg-transparent hover:bg-slate-800/40 border border-slate-500/50 rounded-md transition-all font-display cursor-pointer whitespace-nowrap shrink-0 inline-flex items-center gap-2"
+              >
+                <Phone className="w-3.5 h-3.5 text-[#C99A31]" />
+                <span>CONTACT US</span>
               </button>
             </div>
 
-            <div className="pt-4 flex items-center gap-6 text-xs text-slate-300">
+            {/* Trust Markers */}
+            <div className="pt-3 flex flex-wrap items-center gap-6 text-xs text-slate-300">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-[#C99A31]" />
-                <span>Verified SC Commercial Carrier</span>
+                <span>Columbia, SC Regional Market Base</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[#C99A31]" />
-                <span>Direct Dispatch &amp; Milestone Tracking</span>
+                <span>Direct Dispatch: (803) 718-5509</span>
               </div>
             </div>
           </div>
@@ -631,7 +694,101 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
         </div>
       </section>
 
-      {/* 8. CTA & DIRECT DISPATCH STRIP */}
+      {/* 8. APPROVED CORPORATE BRAND IDENTITY & FLEET LIVERY SYSTEM */}
+      <section className="py-20 bg-[#F5F7FA] border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 space-y-12">
+          <div className="max-w-3xl">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display block mb-1">
+              06. CORPORATE BRAND IDENTITY &amp; LIVERY SYSTEM
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#071E41] tracking-tight font-display">
+              Approved Corporate Visual Identity
+            </h2>
+            <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+              Momentum Transportation &amp; Hauling LLC operates under a strict, standardized corporate design system across all commercial tractors, trailers, operator uniforms, and customer communications.
+            </p>
+          </div>
+
+          {/* Brand Board Mockup Showcase Carrier */}
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xl">
+            <div className="relative">
+              <img
+                src={ASSETS.brandMockup}
+                alt="Momentum Transportation Brand Identity Mockup - Fleet Livery, Apparel, Stationery and Palette"
+                className="w-full h-auto object-cover"
+                loading="lazy"
+              />
+              <div className="absolute top-4 left-4 bg-[#071E41]/90 backdrop-blur-md text-white px-3 py-1.5 rounded text-xs font-bold font-display flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#C99A31]" />
+                <span>Approved Corporate Identity System</span>
+              </div>
+            </div>
+
+            {/* Explanatory Grid: Palette, Emblem, Typography */}
+            <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-3 gap-6 border-t border-slate-200 text-xs">
+              {/* Col 1: Palette */}
+              <div className="space-y-3">
+                <h4 className="font-bold text-[#071E41] uppercase tracking-wider font-display">
+                  Official Corporate Color Palette
+                </h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-2.5 rounded bg-[#071E41] text-white space-y-0.5">
+                    <span className="text-[10px] font-bold uppercase block text-slate-300">Deep Royal Navy</span>
+                    <span className="font-mono text-[11px] font-bold text-[#C99A31]">#071E41</span>
+                  </div>
+                  <div className="p-2.5 rounded bg-[#C99A31] text-[#071E41] space-y-0.5">
+                    <span className="text-[10px] font-bold uppercase block text-[#071E41]">Metallic Gold</span>
+                    <span className="font-mono text-[11px] font-bold text-white">#C99A31</span>
+                  </div>
+                  <div className="p-2.5 rounded bg-white text-slate-900 border border-slate-200 space-y-0.5">
+                    <span className="text-[10px] font-bold uppercase block text-slate-500">Pure White</span>
+                    <span className="font-mono text-[11px] font-bold text-slate-700">#FFFFFF</span>
+                  </div>
+                  <div className="p-2.5 rounded bg-[#F5F7FA] text-slate-800 border border-slate-200 space-y-0.5">
+                    <span className="text-[10px] font-bold uppercase block text-slate-500">Light Gray</span>
+                    <span className="font-mono text-[11px] font-bold text-slate-700">#F5F7FA</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Col 2: Official Emblem */}
+              <div className="space-y-2.5">
+                <h4 className="font-bold text-[#071E41] uppercase tracking-wider font-display flex items-center gap-1.5">
+                  <img src={LOGOS.favicon} alt="Emblem icon" className="w-4 h-4 object-contain" />
+                  <span>The Official Emblem</span>
+                </h4>
+                <p className="text-slate-600 leading-relaxed text-[11px]">
+                  The circular insignia features a deep royal navy and metallic gold double ring, crisp white interior, stylized navy letter &apos;M&apos;, gold forward-motion swooshes, curved highway ribbon, and modern commercial truck illustration.
+                </p>
+                <div className="flex items-center gap-2 pt-1 text-[11px] text-[#071E41] font-semibold">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" />
+                  <span>Approved for Fleet, Signage &amp; Documents</span>
+                </div>
+              </div>
+
+              {/* Col 3: Typography & Tagline */}
+              <div className="space-y-2.5">
+                <h4 className="font-bold text-[#071E41] uppercase tracking-wider font-display">
+                  Corporate Typography &amp; Tagline
+                </h4>
+                <div className="p-3 rounded bg-slate-50 border border-slate-200 space-y-1">
+                  <div className="text-sm font-bold text-[#071E41] font-display">
+                    Inter (Bold &amp; Extra Bold)
+                  </div>
+                  <div className="text-xs text-slate-600 font-normal">
+                    Inter (Regular) for body prose &amp; tabular metrics
+                  </div>
+                  <div className="text-xs italic font-bold text-[#C99A31] pt-1 border-t border-slate-200">
+                    &ldquo;Moving Business Forward.&rdquo;
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 9. CTA & DIRECT DISPATCH STRIP */}
       <section className="bg-gradient-to-r from-[#071E41] via-[#0D2C5B] to-[#071E41] text-white py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 text-center space-y-6">
           <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">

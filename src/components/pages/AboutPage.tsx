@@ -1,7 +1,8 @@
 import React from 'react';
 import { PageView } from '../common/Header';
 import { COMPANY } from '../../config/company';
-import { ASSETS, ASSET_METADATA } from '../../config/assets';
+import { Logo } from '../common/Logo';
+import { ASSETS, ASSET_METADATA, LOGOS } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 import { Shield, Target, Compass, Award, Phone, Mail, MapPin, ArrowRight } from 'lucide-react';
 
@@ -22,10 +23,22 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
           />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8">
-          <div className="max-w-2xl space-y-4">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
-              About Momentum Transportation &amp; Hauling LLC
-            </span>
+          <div className="max-w-3xl space-y-4">
+            <div className="flex items-center gap-4">
+              <img
+                src={LOGOS.header}
+                alt="Momentum Transportation Official Emblem"
+                className="w-16 h-16 sm:w-20 sm:h-20 object-contain shrink-0 filter drop-shadow-md"
+              />
+              <div>
+                <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display block">
+                  About Momentum Transportation &amp; Hauling LLC
+                </span>
+                <span className="text-sm font-bold tracking-wider text-slate-200 uppercase font-display">
+                  Moving Business Forward.
+                </span>
+              </div>
+            </div>
             <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight font-display text-white">
               Disciplined Freight &amp; Commercial Hauling
             </h1>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PageView } from '../common/Header';
 import { COMPANY } from '../../config/company';
-import { ASSETS, ASSET_METADATA } from '../../config/assets';
+import { ASSETS, ASSET_METADATA, LOGOS } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 import {
   ShieldCheck,
@@ -253,9 +253,11 @@ export const OperationsCommandCenter: React.FC<OperationsCommandCenterProps> = (
       <div className="bg-[#071E41] border-b border-[#0D2C5B] px-4 sm:px-8 py-3">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded bg-[#C99A31] text-[#071E41] flex items-center justify-center font-bold text-xs">
-              MTH
-            </div>
+            <img
+              src={LOGOS.header}
+              alt="Momentum Transportation Official Emblem"
+              className="w-9 h-9 object-contain shrink-0 filter drop-shadow-sm"
+            />
             <div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#C99A31] font-display block">
                 Momentum Operations Command Center

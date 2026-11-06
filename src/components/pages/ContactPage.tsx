@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { PageView } from '../common/Header';
 import { COMPANY } from '../../config/company';
-import { ASSETS, ASSET_METADATA } from '../../config/assets';
+import { Logo } from '../common/Logo';
+import { ASSETS, ASSET_METADATA, LOGOS } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 import {
   Phone,
@@ -91,13 +92,8 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
           {/* Left Column: Official Contact Card & Image */}
           <div className="lg:col-span-5 space-y-6">
             <div className="bg-white rounded-xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display">
-                  Official Entity
-                </span>
-                <h3 className="text-xl font-bold text-[#071E41] font-display mt-0.5">
-                  {COMPANY.legalName}
-                </h3>
+              <div className="border-b border-slate-100 pb-4">
+                <Logo variant="horizontal-light" size="md" />
               </div>
 
               <div className="space-y-4 text-xs text-slate-700">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PageView } from '../common/Header';
 import { COMPANY } from '../../config/company';
-import { ASSETS, ASSET_METADATA } from '../../config/assets';
+import { ASSETS, ASSET_METADATA, LOGOS } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 import {
   Search,
@@ -133,9 +133,11 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onNavigate }) =>
       <div className="bg-[#071E41] text-white border-b border-[#0D2C5B] py-4 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#C99A31]/20 border border-[#C99A31] flex items-center justify-center text-[#C99A31]">
-              <Truck className="w-5 h-5" />
-            </div>
+            <img
+              src={LOGOS.header}
+              alt="Momentum Transportation Official Emblem"
+              className="w-10 h-10 object-contain shrink-0 filter drop-shadow-sm"
+            />
             <div>
               <div className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
                 Customer Freight Portal

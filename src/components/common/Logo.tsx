@@ -1,103 +1,75 @@
 import React from 'react';
+import { LOGOS } from '../../config/assets';
 
 interface LogoProps {
   variant?: 'full' | 'mark' | 'horizontal-light' | 'horizontal-dark';
   className?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  showTagline?: boolean;
 }
 
 export const Logo: React.FC<LogoProps> = ({
   variant = 'horizontal-light',
   className = '',
   size = 'md',
+  showTagline = false,
 }) => {
   const sizeMap = {
-    sm: { mark: 32, text: 'text-sm', sub: 'text-[9px]' },
-    md: { mark: 42, text: 'text-base', sub: 'text-[10px]' },
-    lg: { mark: 56, text: 'text-xl', sub: 'text-xs' },
-    xl: { mark: 72, text: 'text-2xl', sub: 'text-sm' },
+    sm: { img: 'w-9 h-9', text: 'text-sm', sub: 'text-[9px]', gap: 'gap-2.5' },
+    md: { img: 'w-11 h-11', text: 'text-base sm:text-lg', sub: 'text-[10px] sm:text-[11px]', gap: 'gap-3' },
+    lg: { img: 'w-14 h-14', text: 'text-xl sm:text-2xl', sub: 'text-xs', gap: 'gap-3.5' },
+    xl: { img: 'w-20 h-20 sm:w-24 sm:h-24', text: 'text-2xl sm:text-3xl', sub: 'text-xs sm:text-sm', gap: 'gap-4' },
   };
 
-  const dim = sizeMap[size].mark;
+  const currentSize = sizeMap[size];
+  const isDarkBg = variant === 'horizontal-dark';
+  const logoSrc = size === 'sm' || size === 'md' ? LOGOS.header : LOGOS.transparent;
 
-  // The circular Momentum mark
-  const MarkSVG = (
-    <svg
-      width={dim}
-      height={dim}
-      viewBox="0 0 100 100"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="shrink-0 transition-transform duration-300 group-hover:scale-105"
-      aria-label="Momentum Transportation & Hauling Emblem"
-    >
-      <defs>
-        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#E5B94E" />
-          <stop offset="50%" stopColor="#C99A31" />
-          <stop offset="100%" stopColor="#9C731A" />
-        </linearGradient>
-        <linearGradient id="navyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#0B2B5C" />
-          <stop offset="100%" stopColor="#071E41" />
-        </linearGradient>
-      </defs>
-
-      {/* Outer circular crest */}
-      <circle cx="50" cy="50" r="47" fill="url(#navyGrad)" stroke="url(#goldGrad)" strokeWidth="3.5" />
-      <circle cx="50" cy="50" r="41" fill="none" stroke="#C99A31" strokeWidth="0.75" strokeDasharray="3 2" opacity="0.6" />
-
-      {/* Dynamic Forward Momentum Wing / Chevron */}
-      <path
-        d="M26 68L26 34L50 56L74 34L74 68"
-        stroke="#FFFFFF"
-        strokeWidth="6.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      
-      {/* Interior Gold Ascending Chevron */}
-      <path
-        d="M34 68L50 49L66 68"
-        stroke="url(#goldGrad)"
-        strokeWidth="5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-
-      {/* Center Forward Arrow Apex */}
-      <circle cx="50" cy="27" r="3.5" fill="url(#goldGrad)" />
-    </svg>
+  // Exact circular emblem image element
+  const EmblemImg = (
+    <img
+      src={logoSrc}
+      alt="Momentum Transportation & Hauling LLC Official Emblem"
+      className={`${currentSize.img} object-contain shrink-0 transition-transform duration-300 group-hover:scale-105`}
+      loading="eager"
+      decoding="async"
+    />
   );
 
   if (variant === 'mark') {
     return (
-      <div className={`inline-flex items-center justify-center ${className}`}>
-        {MarkSVG}
+      <div className={`inline-flex items-center justify-center shrink-0 ${className}`}>
+        {EmblemImg}
       </div>
     );
   }
 
-  const isDarkBg = variant === 'horizontal-dark';
-
   return (
-    <div className={`inline-flex items-center gap-3.5 group select-none ${className}`}>
-      {MarkSVG}
-      <div className="flex flex-col text-left">
+    <div className={`inline-flex items-center ${currentSize.gap} group select-none ${className}`}>
+      {EmblemImg}
+      <div className="flex flex-col text-left justify-center">
         <span
-          className={`font-extrabold tracking-tight font-display leading-none ${sizeMap[size].text} ${
+          className={`font-extrabold tracking-tight font-display leading-none ${currentSize.text} ${
             isDarkBg ? 'text-white' : 'text-[#071E41]'
           }`}
         >
           MOMENTUM
         </span>
-        <span
-          className={`font-semibold tracking-wider uppercase font-display mt-0.5 leading-none ${sizeMap[size].sub} ${
-            isDarkBg ? 'text-[#C99A31]' : 'text-[#C99A31]'
-          }`}
-        >
-          TRANSPORTATION &amp; HAULING LLC
-        </span>
+        <div className="flex items-center gap-1.5 mt-1">
+          <span className="w-2.5 h-[1.5px] bg-[#C99A31] shrink-0" />
+          <span
+            className={`font-bold tracking-wider uppercase font-display leading-none ${currentSize.sub} ${
+              isDarkBg ? 'text-slate-200' : 'text-[#071E41]'
+            }`}
+          >
+            TRANSPORTATION &amp; HAULING LLC
+          </span>
+        </div>
+        {showTagline && (
+          <span className="text-[11px] italic font-medium text-[#C99A31] mt-1 tracking-normal font-display">
+            Moving Business Forward.
+          </span>
+        )}
       </div>
     </div>
   );
