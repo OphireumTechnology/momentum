@@ -557,7 +557,7 @@ export const OperationsCommandCenter: React.FC<OperationsCommandCenterProps> = (
                           <div className="text-slate-400">➔ {q.deliveryLocation}</div>
                         </td>
                         <td className="py-3.5 px-4 text-[11px]">
-                          <span className="capitalize">{q.serviceCategory.replace('_', ' ')}</span>
+                          <span className="capitalize">{q.serviceCategory.replace(/_/g, ' ')}</span>
                           <span className="block text-slate-400 tabular-nums">{q.estimatedWeightLbs.toLocaleString()} lbs</span>
                         </td>
                         <td className="py-3.5 px-4 font-bold text-white tabular-nums">

@@ -383,11 +383,16 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
                     onChange={handleChange}
                     className="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:border-[#071E41] focus:outline-none"
                   >
-                    <option value="dry_van">53ft Air-Ride Dry Van</option>
-                    <option value="flatbed">48ft / 53ft Flatbed Cargo</option>
-                    <option value="heavy_haul">Heavy Hauling &amp; Machinery (Lowboy)</option>
-                    <option value="dedicated">Dedicated Corridor Shuttle</option>
-                    <option value="regional_logistics">Regional Port / Intermodal Transfer</option>
+                    <option value="dry_van">Commercial Freight Transportation (53ft Air-Ride Dry Van)</option>
+                    <option value="heavy_haul">Commercial Hauling &amp; Machinery (Heavy Equipment Lowboy)</option>
+                    <option value="regional_logistics">Regional Corridors &amp; Port Access (I-77, I-26, I-20)</option>
+                    <option value="cargo_van">Cargo Van Transportation &amp; Delivery (Warehouse-to-Jobsite)</option>
+                    <option value="preconstruction_hauling">Pre-Construction Transportation (Dump Truck Aggregate &amp; Site Prep)</option>
+                    <option value="ongoing_construction">Ongoing Construction Hauling (Jobsite Staging)</option>
+                    <option value="flatbed_materials">Construction Material Delivery (Flatbed Structural Steel &amp; Lumber)</option>
+                    <option value="equipment_mobilization">Equipment Mobilization (Excavators &amp; Heavy Machinery)</option>
+                    <option value="project_logistics">Dedicated Construction Project Logistics (Multi-Vehicle Coordination)</option>
+                    <option value="dedicated">Dedicated Transportation Arrangements (Scheduled Contract Lanes)</option>
                   </select>
                 </div>
                 <div>

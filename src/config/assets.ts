@@ -1,23 +1,31 @@
 /**
  * Centralized Image and Logo Assets for Momentum Transportation & Hauling LLC.
  * All image assets are imported directly via Vite so that URLs are correctly resolved
- * across both local development and GitHub Pages under the '/momentum/' base path.
+ * across both local development and production environments.
+ *
+ * All vehicle images feature exclusive Momentum corporate branding (Navy #071E41, Gold #C99A31, White #FFFFFF)
+ * with the official circular emblem and strictly zero third-party commercial fleet branding.
  */
 
-import homeHero from '../assets/images/momentum_home_hero_1793927090285.jpg';
+// Brand-Approved Exclusive Vehicle & Staging Assets (Directive Images 01 - 08)
+import commercialFreight from '../assets/images/commercial_freight_1793930931652.jpg';
+import commercialHauling from '../assets/images/commercial_hauling_1793930933033.jpg';
+import regionalCorridors from '../assets/images/regional_corridors_1793930933975.jpg';
+import cargoVanDelivery from '../assets/images/cargo_van_delivery_1793930934063.jpg';
+import preconstructionHauling from '../assets/images/preconstruction_hauling_1793930935160.jpg';
+import constructionMaterials from '../assets/images/construction_materials_1793930935770.jpg';
+import equipmentMobilization from '../assets/images/equipment_mobilization_1793930936065.jpg';
+import constructionLogistics from '../assets/images/construction_logistics_1793930937192.jpg';
+
+// Supporting Operational & Facilities Assets
 import aboutOperations from '../assets/images/momentum_about_operations_1793927090246.jpg';
-import transportationHero from '../assets/images/momentum_transportation_hero_1793927091045.jpg';
-import haulingHero from '../assets/images/momentum_hauling_hero_1793927090275.jpg';
-import fleetHero from '../assets/images/momentum_fleet_hero_1793927091643.jpg';
-import serviceAreas from '../assets/images/momentum_service_areas_1793927092785.jpg';
-import quoteHero from '../assets/images/momentum_quote_hero_1793927092924.jpg';
 import contactHero from '../assets/images/momentum_contact_hero_1793927092952.jpg';
 import portalHero from '../assets/images/momentum_portal_hero_1793927094534.jpg';
 import careersHero from '../assets/images/momentum_careers_hero_1793927094602.jpg';
 import safetyHero from '../assets/images/momentum_safety_hero_1793927094788.jpg';
 import commandCenter from '../assets/images/momentum_command_center_1793927094510.jpg';
 
-// Official Circular Emblem & Logo Derivatives
+// Official Circular Emblem & Logo Derivatives (LOCKED)
 import logoOriginal from '../assets/logo/momentum-logo-original.png';
 import logoTransparent from '../assets/logo/momentum-logo-transparent.png';
 import logoHeader from '../assets/logo/momentum-logo-header.png';
@@ -35,18 +43,33 @@ export const LOGOS = {
 } as const;
 
 export const ASSETS = {
-  homeHero,
+  // Primary Five Services & Core Operations (All Exclusive Momentum Branding)
+  commercialFreight,
+  commercialHauling,
+  regionalCorridors,
+  cargoVanDelivery,
+  preconstructionHauling,
+  constructionMaterials,
+  equipmentMobilization,
+  constructionLogistics,
+
+  // Aliases for backwards compatibility with existing page components
+  homeHero: commercialFreight,
+  transportationHero: commercialFreight,
+  haulingHero: commercialHauling,
+  fleetHero: equipmentMobilization,
+  serviceAreas: regionalCorridors,
+  quoteHero: commercialFreight,
+
+  // Operational Context Images
   aboutOperations,
-  transportationHero,
-  haulingHero,
-  fleetHero,
-  serviceAreas,
-  quoteHero,
   contactHero,
   portalHero,
   careersHero,
   safetyHero,
   commandCenter,
+
+  // Branding
   logoHeader,
   logoFooter,
   logoOriginal,
@@ -55,39 +78,81 @@ export const ASSETS = {
 } as const;
 
 export const ASSET_METADATA = {
+  commercialFreight: {
+    src: ASSETS.commercialFreight,
+    alt: 'Momentum Transportation & Hauling commercial Class 8 semi-truck with 53ft dry van trailer on South Carolina highway',
+    caption: 'Interstate commercial freight transport with exclusive Momentum branding and 53ft dry van trailer.',
+  },
+  commercialHauling: {
+    src: ASSETS.commercialHauling,
+    alt: 'Momentum heavy-duty commercial truck transporting construction machinery on lowboy equipment trailer',
+    caption: 'Specialized commercial machinery and equipment hauling with certified heavy rigging.',
+  },
+  regionalCorridors: {
+    src: ASSETS.regionalCorridors,
+    alt: 'Momentum freight tractor navigating regional corridor and port logistics terminal',
+    caption: 'Dedicated corridor transit and container port terminal access across South Carolina.',
+  },
+  cargoVanDelivery: {
+    src: ASSETS.cargoVanDelivery,
+    alt: 'High-roof commercial cargo van with Momentum branding at warehouse loading dock',
+    caption: 'Warehouse-to-jobsite deliveries, contractor supplies, and scheduled courier transportation.',
+  },
+  preconstructionHauling: {
+    src: ASSETS.preconstructionHauling,
+    alt: 'Momentum commercial tandem dump truck delivering crushed stone and aggregate on pre-construction site',
+    caption: 'Site preparation, earthwork aggregate supply, and heavy excavation hauling.',
+  },
+  constructionMaterials: {
+    src: ASSETS.constructionMaterials,
+    alt: 'Momentum flatbed commercial truck delivering structural steel and building materials to active construction site',
+    caption: 'Ongoing construction material logistics, structural framing, and job-site staging.',
+  },
+  equipmentMobilization: {
+    src: ASSETS.equipmentMobilization,
+    alt: 'Momentum heavy-duty lowboy trailer carrying large hydraulic excavator with oversized load escort signage',
+    caption: 'Safe equipment mobilization, machinery relocation, and infrastructure jobsite delivery.',
+  },
+  constructionLogistics: {
+    src: ASSETS.constructionLogistics,
+    alt: 'Coordinated Momentum commercial fleet at commercial construction site including cargo van, freight tractor, and dump truck',
+    caption: 'Dedicated construction project logistics and multi-vehicle jobsite supply coordination.',
+  },
+
+  // Backwards compatibility aliases
   homeHero: {
-    src: ASSETS.homeHero,
-    alt: 'Modern American heavy-duty semi-truck traveling on an interstate highway during morning sunlight in South Carolina',
-    caption: 'Interstate commercial freight transport operating across regional hubs.',
+    src: ASSETS.commercialFreight,
+    alt: 'Momentum Transportation & Hauling commercial Class 8 semi-truck on interstate corridor in South Carolina',
+    caption: 'Commercial freight transportation and heavy hauling headquartered in Columbia, SC.',
   },
   aboutOperations: {
     src: ASSETS.aboutOperations,
     alt: 'Commercial transportation operations yard with freight vehicles and logistics dispatch facilities',
-    caption: 'Operational coordination and terminal activity.',
+    caption: 'Operational coordination and terminal activity in Columbia, SC.',
   },
   transportationHero: {
-    src: ASSETS.transportationHero,
-    alt: 'Commercial semi-truck transporting freight safely on a South Carolina highway corridor',
+    src: ASSETS.commercialFreight,
+    alt: 'Momentum commercial semi-truck transporting freight safely on South Carolina highway corridor',
     caption: 'Scheduled freight transport and regional dedicated hauling.',
   },
   haulingHero: {
-    src: ASSETS.haulingHero,
-    alt: 'Heavy-duty commercial hauling vehicle at an industrial staging and transport site',
-    caption: 'Specialized hauling and heavy cargo transport (illustrative concept).',
+    src: ASSETS.commercialHauling,
+    alt: 'Momentum heavy-duty commercial hauling vehicle with lowboy trailer transporting machinery',
+    caption: 'Heavy equipment hauling with exclusive Momentum corporate livery.',
   },
   fleetHero: {
-    src: ASSETS.fleetHero,
-    alt: 'Commercial transportation fleet in alignment at a clean industrial terminal',
-    caption: 'Commercial vehicle equipment and configuration concepts.',
+    src: ASSETS.equipmentMobilization,
+    alt: 'Momentum commercial transportation tractor and lowboy equipment mobilization setup',
+    caption: 'Commercial vehicle equipment and specialized trailer configurations.',
   },
   serviceAreas: {
-    src: ASSETS.serviceAreas,
-    alt: 'Commercial freight transport traveling through southeastern interstate transit corridors',
-    caption: 'Columbia, SC regional market and interstate connections.',
+    src: ASSETS.regionalCorridors,
+    alt: 'Momentum freight transport traveling through southeastern interstate transit corridors and port connections',
+    caption: 'Columbia, SC regional market, Port of Charleston, and interstate highway connections.',
   },
   quoteHero: {
-    src: ASSETS.quoteHero,
-    alt: 'Commercial freight truck staged at distribution loading terminal dock ready for dispatch',
+    src: ASSETS.commercialFreight,
+    alt: 'Momentum commercial freight truck staged for dispatch',
     caption: 'Rapid rate quotation and freight dispatch planning.',
   },
   contactHero: {

@@ -369,8 +369,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               <div>
                 <div className="h-48 overflow-hidden">
                   <ImageWithFallback
-                    src={ASSETS.transportationHero}
-                    alt={ASSET_METADATA.transportationHero.alt}
+                    src={ASSETS.commercialFreight}
+                    alt={ASSET_METADATA.commercialFreight.alt}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                     fallbackTitle="Freight Transport"
                   />
@@ -404,7 +404,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               <div className="px-6 pb-6 pt-2">
                 <button
                   onClick={() => onNavigate('quote')}
-                  className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded transition-colors text-center font-display"
+                  className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded transition-colors text-center font-display cursor-pointer"
                 >
                   Quote Freight
                 </button>
@@ -416,8 +416,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               <div>
                 <div className="h-48 overflow-hidden">
                   <ImageWithFallback
-                    src={ASSETS.haulingHero}
-                    alt={ASSET_METADATA.haulingHero.alt}
+                    src={ASSETS.commercialHauling}
+                    alt={ASSET_METADATA.commercialHauling.alt}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                     fallbackTitle="Heavy Hauling"
                   />
@@ -451,7 +451,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               <div className="px-6 pb-6 pt-2">
                 <button
                   onClick={() => onNavigate('quote')}
-                  className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded transition-colors text-center font-display"
+                  className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded transition-colors text-center font-display cursor-pointer"
                 >
                   Quote Hauling
                 </button>
@@ -463,8 +463,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               <div>
                 <div className="h-48 overflow-hidden">
                   <ImageWithFallback
-                    src={ASSETS.serviceAreas}
-                    alt={ASSET_METADATA.serviceAreas.alt}
+                    src={ASSETS.regionalCorridors}
+                    alt={ASSET_METADATA.regionalCorridors.alt}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                     fallbackTitle="Regional Corridors"
                   />
@@ -498,9 +498,106 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               <div className="px-6 pb-6 pt-2">
                 <button
                   onClick={() => onNavigate('service-areas')}
-                  className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded transition-colors text-center font-display"
+                  className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded transition-colors text-center font-display cursor-pointer"
                 >
                   Explore Corridors
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 2: Two Balanced Cards on Desktop (Services 4 & 5) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 max-w-5xl lg:max-w-none lg:grid-cols-2 lg:w-4/5 lg:mx-auto">
+            {/* Service 4: Cargo Van Transportation & Delivery */}
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+              <div>
+                <div className="h-48 overflow-hidden">
+                  <ImageWithFallback
+                    src={ASSETS.cargoVanDelivery}
+                    alt={ASSET_METADATA.cargoVanDelivery.alt}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    fallbackTitle="Cargo Van Delivery"
+                  />
+                </div>
+                <div className="p-6">
+                  <div className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display mb-1">
+                    Expedited &amp; Jobsite Delivery
+                  </div>
+                  <h3 className="text-xl font-bold text-[#071E41] font-display mb-2">
+                    Cargo Van Transportation &amp; Delivery
+                  </h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Modern high-roof commercial cargo van service for rapid warehouse-to-jobsite deliveries, contractor supplies, small commercial freight, and scheduled business routes across the Midlands.
+                  </p>
+                  <ul className="mt-4 space-y-1.5 text-xs text-slate-700">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" />
+                      <span>Local &amp; Regional Scheduled Business Deliveries</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" />
+                      <span>Contractor Supplies &amp; Warehouse-to-Jobsite Staging</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" />
+                      <span>Time-Critical Small Commercial Freight Shuttles</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div className="px-6 pb-6 pt-2">
+                <button
+                  onClick={() => onNavigate('quote')}
+                  className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded transition-colors text-center font-display cursor-pointer"
+                >
+                  Quote Cargo Van
+                </button>
+              </div>
+            </div>
+
+            {/* Service 5: Construction Transportation & Hauling Solutions */}
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+              <div>
+                <div className="h-48 overflow-hidden">
+                  <ImageWithFallback
+                    src={ASSETS.preconstructionHauling}
+                    alt={ASSET_METADATA.preconstructionHauling.alt}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    fallbackTitle="Construction Logistics"
+                  />
+                </div>
+                <div className="p-6">
+                  <div className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display mb-1">
+                    Earthwork &amp; Project Logistics
+                  </div>
+                  <h3 className="text-xl font-bold text-[#071E41] font-display mb-2">
+                    Construction Transportation &amp; Hauling Solutions
+                  </h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Comprehensive site preparation and construction logistics: dump truck aggregate delivery (gravel, stone, sand), flatbed building material transport, and heavy machinery equipment mobilization.
+                  </p>
+                  <ul className="mt-4 space-y-1.5 text-xs text-slate-700">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" />
+                      <span>Dump Truck Aggregate &amp; Site Prep Hauling</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" />
+                      <span>Flatbed Structural Steel &amp; Building Material Delivery</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" />
+                      <span>Heavy Equipment Mobilization &amp; Lowboy Transport</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div className="px-6 pb-6 pt-2">
+                <button
+                  onClick={() => onNavigate('quote')}
+                  className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded transition-colors text-center font-display cursor-pointer"
+                >
+                  Quote Construction Hauling
                 </button>
               </div>
             </div>

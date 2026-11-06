@@ -33,7 +33,7 @@ export interface QuoteRecord {
   companyName?: string;
   email: string;
   phone: string;
-  serviceCategory: 'dry_van' | 'flatbed' | 'heavy_haul' | 'dedicated' | 'regional_logistics';
+  serviceCategory: 'dry_van' | 'flatbed' | 'heavy_haul' | 'dedicated' | 'regional_logistics' | 'cargo_van' | 'preconstruction_hauling' | 'ongoing_construction' | 'flatbed_materials' | 'equipment_mobilization' | 'project_logistics' | string;
   pickupLocation: string;
   deliveryLocation: string;
   pickupDate: string;
