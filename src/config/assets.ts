@@ -4,18 +4,18 @@
  */
 
 export const ASSETS = {
-  homeHero: '/src/assets/images/momentum_home_hero_1793927090285.jpg',
-  aboutOperations: '/src/assets/images/momentum_about_operations_1793927090246.jpg',
-  transportationHero: '/src/assets/images/momentum_transportation_hero_1793927091045.jpg',
-  haulingHero: '/src/assets/images/momentum_hauling_hero_1793927090275.jpg',
-  fleetHero: '/src/assets/images/momentum_fleet_hero_1793927091643.jpg',
-  serviceAreas: '/src/assets/images/momentum_service_areas_1793927092785.jpg',
-  quoteHero: '/src/assets/images/momentum_quote_hero_1793927092924.jpg',
-  contactHero: '/src/assets/images/momentum_contact_hero_1793927092952.jpg',
-  portalHero: '/src/assets/images/momentum_portal_hero_1793927094534.jpg',
-  careersHero: '/src/assets/images/momentum_careers_hero_1793927094602.jpg',
-  safetyHero: '/src/assets/images/momentum_safety_hero_1793927094788.jpg',
-  commandCenter: '/src/assets/images/momentum_command_center_1793927094510.jpg',
+  homeHero: new URL('../assets/images/momentum_home_hero_1793927090285.jpg', import.meta.url).href,
+  aboutOperations: new URL('../assets/images/momentum_about_operations_1793927090246.jpg', import.meta.url).href,
+  transportationHero: new URL('../assets/images/momentum_transportation_hero_1793927091045.jpg', import.meta.url).href,
+  haulingHero: new URL('../assets/images/momentum_hauling_hero_1793927090275.jpg', import.meta.url).href,
+  fleetHero: new URL('../assets/images/momentum_fleet_hero_1793927091643.jpg', import.meta.url).href,
+  serviceAreas: new URL('../assets/images/momentum_service_areas_1793927092785.jpg', import.meta.url).href,
+  quoteHero: new URL('../assets/images/momentum_quote_hero_1793927092924.jpg', import.meta.url).href,
+  contactHero: new URL('../assets/images/momentum_contact_hero_1793927092952.jpg', import.meta.url).href,
+  portalHero: new URL('../assets/images/momentum_portal_hero_1793927094534.jpg', import.meta.url).href,
+  careersHero: new URL('../assets/images/momentum_careers_hero_1793927094602.jpg', import.meta.url).href,
+  safetyHero: new URL('../assets/images/momentum_safety_hero_1793927094788.jpg', import.meta.url).href,
+  commandCenter: new URL('../assets/images/momentum_command_center_1793927094510.jpg', import.meta.url).href,
 } as const;
 
 export const ASSET_METADATA = {
