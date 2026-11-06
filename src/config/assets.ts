@@ -32,10 +32,12 @@ import heroTechTruck from '../assets/images/hero_tech_truck_1793953504134.jpg';
 import cargoVanLogistics from '../assets/images/cargo_van_logistics_1793953506308.jpg';
 import constructionTransportTech from '../assets/images/construction_transport_tech_1793953505865.jpg';
 
-// Official Corporate Company Profile Document & First-Page High-Res Thumbnail
+// Official Corporate Company Profile Document (8-Page Official Publication)
 import companyProfileThumbnail from '../assets/images/momentum-company-profile-p1.png';
+import companyProfileCollaterals from '../assets/images/momentum-company-profile-p8.png';
 
-export const COMPANY_PROFILE_PDF_URL = `${import.meta.env.BASE_URL}documents/momentum-company-profile.pdf`;
+export const COMPANY_PROFILE_PDF_URL = `${import.meta.env.BASE_URL}documents/Momentum-Transportation-Company-Profile.pdf`;
+export const COMPANY_PROFILE_PDF_ALT_URL = `${import.meta.env.BASE_URL}documents/momentum-company-profile.pdf`;
 
 // Official Circular Emblem & Logo Derivatives (LOCKED)
 import logoOriginal from '../assets/logo/momentum-logo-original.png';
@@ -91,6 +93,7 @@ export const ASSETS = {
 
   // Branding & Documents
   companyProfileThumbnail,
+  companyProfileCollaterals,
   logoHeader,
   logoFooter,
   logoOriginal,

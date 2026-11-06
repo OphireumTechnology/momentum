@@ -153,15 +153,22 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 </button>
               </li>
               <li className="pt-1.5 border-t border-slate-700/60">
-                <a
-                  href={COMPANY_PROFILE_PDF_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-[#C99A31] transition-colors text-left inline-flex items-center gap-1.5 font-medium text-slate-300 group"
+                <button
+                  onClick={() => handleNav('company-profile')}
+                  className="hover:text-[#C99A31] transition-colors text-left inline-flex items-center gap-1.5 font-medium text-slate-300 cursor-pointer"
                 >
                   <FileText className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
-                  <span>Company Profile (PDF)</span>
-                  <ArrowUpRight className="w-3 h-3 opacity-70 group-hover:opacity-100" />
+                  <span>Company Profile (8-Page)</span>
+                </button>
+              </li>
+              <li>
+                <a
+                  href={COMPANY_PROFILE_PDF_URL}
+                  download="Momentum-Transportation-Company-Profile.pdf"
+                  className="hover:text-white transition-colors text-left inline-flex items-center gap-1.5 text-[11px] text-slate-400 group ml-5"
+                >
+                  <span>Download Profile PDF</span>
+                  <ArrowUpRight className="w-3 h-3 opacity-70 group-hover:opacity-100 text-[#C99A31]" />
                 </a>
               </li>
             </ul>

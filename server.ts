@@ -1275,6 +1275,10 @@ Answer cleanly in 2-3 helpful sentences:`;
 
 // Setup Vite middleware in dev or static files in production
 async function startServer() {
+  // Always serve static assets from public (e.g. documents, PDFs, brand assets)
+  app.use(express.static(path.resolve(__dirname, 'public')));
+  app.use('/momentum', express.static(path.resolve(__dirname, 'public')));
+
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.resolve(__dirname, 'dist')));
     app.use('/momentum', express.static(path.resolve(__dirname, 'dist')));

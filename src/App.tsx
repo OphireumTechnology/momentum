@@ -12,6 +12,7 @@ import { CareersPage } from './components/pages/CareersPage';
 import { SafetyPage } from './components/pages/SafetyPage';
 import { CustomerPortal } from './components/portal/CustomerPortal';
 import { OperationsCommandCenter } from './components/operations/OperationsCommandCenter';
+import { CompanyProfilePage } from './components/pages/CompanyProfilePage';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<PageView>('home');
@@ -53,6 +54,7 @@ export default function App() {
         {currentPage === 'contact' && <ContactPage onNavigate={handleNavigate} />}
         {currentPage === 'careers' && <CareersPage onNavigate={handleNavigate} />}
         {currentPage === 'safety' && <SafetyPage onNavigate={handleNavigate} />}
+        {currentPage === 'company-profile' && <CompanyProfilePage onNavigate={handleNavigate} />}
       </main>
 
       <Footer onNavigate={handleNavigate} />

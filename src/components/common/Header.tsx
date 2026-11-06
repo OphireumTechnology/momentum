@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Logo } from './Logo';
 import { COMPANY } from '../../config/company';
-import { Phone, Menu, X, ArrowRight, ShieldCheck, UserCheck } from 'lucide-react';
+import { Phone, Menu, X, ArrowRight, ShieldCheck, UserCheck, FileText } from 'lucide-react';
 
 export type PageView =
   | 'home'
@@ -14,7 +14,8 @@ export type PageView =
   | 'careers'
   | 'safety'
   | 'portal'
-  | 'operations';
+  | 'operations'
+  | 'company-profile';
 
 interface HeaderProps {
   currentPage: PageView;
@@ -59,15 +60,24 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
             </a>
             <span className="text-slate-500">|</span>
             <button
+              onClick={() => onNavigate('company-profile')}
+              className={`hover:text-white transition-colors text-xs font-medium cursor-pointer ${
+                currentPage === 'company-profile' ? 'text-[#C99A31] font-bold' : 'text-slate-300'
+              }`}
+            >
+              Company Profile
+            </button>
+            <span className="text-slate-500">|</span>
+            <button
               onClick={() => onNavigate('portal')}
-              className="text-slate-300 hover:text-white transition-colors text-xs font-medium"
+              className="text-slate-300 hover:text-white transition-colors text-xs font-medium cursor-pointer"
             >
               Customer Portal
             </button>
             <span className="text-slate-500">|</span>
             <button
               onClick={() => onNavigate('operations')}
-              className="text-[#C99A31] hover:text-[#E8BE65] transition-colors text-xs font-semibold inline-flex items-center gap-1"
+              className="text-[#C99A31] hover:text-[#E8BE65] transition-colors text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
             >
               <ShieldCheck className="w-3 h-3" />
               <span>Operations</span>
@@ -162,6 +172,13 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
                 className="text-left py-2 text-sm text-slate-600 font-medium"
               >
                 Safety &amp; Compliance
+              </button>
+              <button
+                onClick={() => handleLinkClick('company-profile')}
+                className="text-left py-2 text-sm text-[#071E41] font-semibold flex items-center justify-between"
+              >
+                <span>Company Profile (8-Page PDF)</span>
+                <FileText className="w-4 h-4 text-[#C99A31]" />
               </button>
               <button
                 onClick={() => handleLinkClick('portal')}

@@ -1352,7 +1352,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
             <div className="lg:col-span-7 min-w-0 space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded border border-slate-200 text-[#071E41] text-xs font-bold uppercase tracking-wider font-display shadow-xs">
                 <FileText className="w-3.5 h-3.5 text-[#C99A31]" />
-                <span>Official Corporate Publication</span>
+                <span>Authoritative 8-Page Corporate Publication</span>
               </div>
 
               <div className="space-y-3">
@@ -1360,23 +1360,23 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                   Discover Momentum Transportation &amp; Hauling LLC
                 </h2>
                 <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl">
-                  Explore our corporate background, transportation and hauling services, regional logistics coverage, operational philosophy and contact information.
+                  Explore our corporate background, transportation and hauling capabilities, regional logistics corridors, operational philosophy, 9 commercial sectors served, corporate contact directory, and official brand collaterals.
                 </p>
               </div>
 
-              {/* 7-Page Outline Checklist */}
+              {/* 8-Page Outline Checklist */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-xs">
                 <div className="flex items-center gap-2 bg-white p-3 rounded-lg border border-slate-200 text-slate-700 shadow-xs">
                   <span className="w-5 h-5 rounded-full bg-[#071E41] text-[#C99A31] font-bold flex items-center justify-center text-[10px] shrink-0">1</span>
-                  <span className="font-medium">Corporate Company Profile Cover</span>
+                  <span className="font-medium">Company Profile Cover &amp; Executive Summary</span>
                 </div>
                 <div className="flex items-center gap-2 bg-white p-3 rounded-lg border border-slate-200 text-slate-700 shadow-xs">
                   <span className="w-5 h-5 rounded-full bg-[#071E41] text-[#C99A31] font-bold flex items-center justify-center text-[10px] shrink-0">2</span>
-                  <span className="font-medium">Corporate Overview &amp; Corridor Map</span>
+                  <span className="font-medium">Corporate Overview &amp; Regional Corridors (I-20, I-26, I-77)</span>
                 </div>
                 <div className="flex items-center gap-2 bg-white p-3 rounded-lg border border-slate-200 text-slate-700 shadow-xs">
                   <span className="w-5 h-5 rounded-full bg-[#071E41] text-[#C99A31] font-bold flex items-center justify-center text-[10px] shrink-0">3</span>
-                  <span className="font-medium">Mission, Vision &amp; Guiding Principles</span>
+                  <span className="font-medium">Mission &amp; Vision (Pending Management Approval)</span>
                 </div>
                 <div className="flex items-center gap-2 bg-white p-3 rounded-lg border border-slate-200 text-slate-700 shadow-xs">
                   <span className="w-5 h-5 rounded-full bg-[#071E41] text-[#C99A31] font-bold flex items-center justify-center text-[10px] shrink-0">4</span>
@@ -1384,37 +1384,49 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                 </div>
                 <div className="flex items-center gap-2 bg-white p-3 rounded-lg border border-slate-200 text-slate-700 shadow-xs">
                   <span className="w-5 h-5 rounded-full bg-[#071E41] text-[#C99A31] font-bold flex items-center justify-center text-[10px] shrink-0">5</span>
-                  <span className="font-medium">Industries &amp; Customers Served</span>
+                  <span className="font-medium">Industries &amp; Customers Served (9 Sectors)</span>
                 </div>
                 <div className="flex items-center gap-2 bg-white p-3 rounded-lg border border-slate-200 text-slate-700 shadow-xs">
                   <span className="w-5 h-5 rounded-full bg-[#071E41] text-[#C99A31] font-bold flex items-center justify-center text-[10px] shrink-0">6</span>
-                  <span className="font-medium">Operational Philosophy &amp; Dispatch</span>
+                  <span className="font-medium">Operational Philosophy &amp; Direct Dispatch Model</span>
                 </div>
-                <div className="flex items-center gap-2 bg-white p-3 rounded-lg border border-slate-200 text-slate-700 shadow-xs sm:col-span-2">
+                <div className="flex items-center gap-2 bg-white p-3 rounded-lg border border-slate-200 text-slate-700 shadow-xs">
                   <span className="w-5 h-5 rounded-full bg-[#071E41] text-[#C99A31] font-bold flex items-center justify-center text-[10px] shrink-0">7</span>
-                  <span className="font-medium">Corporate Contact Directory, Location &amp; Quotation Inquiries</span>
+                  <span className="font-medium">Corporate Contact Directory &amp; Office Hours</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white p-3 rounded-lg border border-slate-200 text-slate-700 shadow-xs">
+                  <span className="w-5 h-5 rounded-full bg-[#071E41] text-[#C99A31] font-bold flex items-center justify-center text-[10px] shrink-0">8</span>
+                  <span className="font-medium">Corporate Branding &amp; Collaterals (Apparel &amp; Fleet)</span>
                 </div>
               </div>
 
               {/* Standardized View & Download Controls */}
               <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <a
-                  href={COMPANY_PROFILE_PDF_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-6 py-3.5 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md transition-all font-display shadow-md hover:shadow-lg inline-flex items-center justify-center gap-2 text-center"
+                <button
+                  onClick={() => onNavigate('company-profile')}
+                  className="w-full sm:w-auto px-6 py-3.5 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md transition-all font-display shadow-md hover:shadow-lg inline-flex items-center justify-center gap-2 text-center cursor-pointer"
                 >
-                  <ExternalLink className="w-4 h-4 text-[#071E41]" />
+                  <FileText className="w-4 h-4 text-[#071E41]" />
                   <span>VIEW COMPANY PROFILE</span>
-                </a>
+                </button>
 
                 <a
                   href={COMPANY_PROFILE_PDF_URL}
-                  download="Momentum_Transportation_and_Hauling_Services.pdf"
+                  download="Momentum-Transportation-Company-Profile.pdf"
                   className="w-full sm:w-auto px-6 py-3.5 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-white hover:bg-slate-100 border border-slate-300 rounded-md transition-all font-display inline-flex items-center justify-center gap-2 text-center shadow-xs"
                 >
                   <Download className="w-4 h-4 text-[#C99A31]" />
                   <span>DOWNLOAD COMPANY PROFILE</span>
+                </a>
+
+                <a
+                  href={COMPANY_PROFILE_PDF_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto px-4 py-3.5 text-xs font-semibold text-slate-600 hover:text-[#071E41] inline-flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>View PDF in Browser</span>
                 </a>
               </div>
             </div>
@@ -1424,12 +1436,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               <div className="relative group max-w-sm w-full">
                 <div className="absolute -inset-1 bg-gradient-to-r from-[#C99A31] to-[#071E41] rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-500" />
                 <div className="relative rounded-xl overflow-hidden border border-slate-200 shadow-2xl bg-white">
-                  <a
-                    href={COMPANY_PROFILE_PDF_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block relative overflow-hidden group cursor-pointer"
-                    title="Click to view full 7-page company profile PDF"
+                  <button
+                    onClick={() => onNavigate('company-profile')}
+                    className="block relative overflow-hidden group cursor-pointer w-full text-left"
+                    title="Click to view full 8-page company profile interactive edition"
                   >
                     <img
                       src={ASSETS.companyProfileThumbnail}
@@ -1439,13 +1449,23 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                     <div className="absolute inset-0 bg-[#071E41]/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <span className="px-4 py-2 bg-[#071E41] text-white text-xs font-bold rounded shadow-lg flex items-center gap-2 border border-[#C99A31]">
                         <ExternalLink className="w-3.5 h-3.5 text-[#C99A31]" />
-                        <span>Open 7-Page PDF</span>
+                        <span>Open 8-Page Profile</span>
                       </span>
                     </div>
-                  </a>
-                  <div className="p-3.5 bg-[#071E41] text-center border-t border-slate-800 text-white">
-                    <span className="text-xs font-bold block">Official 7-Page Corporate Profile</span>
-                    <span className="text-[11px] text-slate-300 block mt-0.5">Columbia, South Carolina · United States of America</span>
+                  </button>
+                  <div className="p-3.5 bg-[#071E41] text-center border-t border-slate-800 text-white flex items-center justify-between px-4">
+                    <div className="text-left">
+                      <span className="text-xs font-bold block text-white">Official 8-Page Profile</span>
+                      <span className="text-[11px] text-slate-300 block">Columbia, South Carolina</span>
+                    </div>
+                    <a
+                      href={COMPANY_PROFILE_PDF_URL}
+                      download="Momentum-Transportation-Company-Profile.pdf"
+                      className="p-1.5 bg-[#C99A31] text-[#071E41] rounded hover:bg-[#E8BE65] transition-colors"
+                      title="Direct PDF Download"
+                    >
+                      <Download className="w-4 h-4" />
+                    </a>
                   </div>
                 </div>
               </div>
