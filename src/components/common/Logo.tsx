@@ -4,7 +4,7 @@ import { LOGOS } from '../../config/assets';
 interface LogoProps {
   variant?: 'full' | 'mark' | 'horizontal-light' | 'horizontal-dark';
   className?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'hero';
   showTagline?: boolean;
 }
 
@@ -14,23 +14,30 @@ export const Logo: React.FC<LogoProps> = ({
   size = 'md',
   showTagline = false,
 }) => {
+  // Sizing matrix strictly aligned with Directive:
+  // Desktop Header: ~48-60px diameter (w-12 h-12 to w-14 h-14)
+  // Hero: ~64-80px diameter (w-16 h-16 to w-20 h-20)
   const sizeMap = {
-    sm: { img: 'w-9 h-9', text: 'text-sm', sub: 'text-[9px]', gap: 'gap-2.5' },
-    md: { img: 'w-11 h-11', text: 'text-base sm:text-lg', sub: 'text-[10px] sm:text-[11px]', gap: 'gap-3' },
-    lg: { img: 'w-14 h-14', text: 'text-xl sm:text-2xl', sub: 'text-xs', gap: 'gap-3.5' },
-    xl: { img: 'w-20 h-20 sm:w-24 sm:h-24', text: 'text-2xl sm:text-3xl', sub: 'text-xs sm:text-sm', gap: 'gap-4' },
+    sm: { img: 'w-10 h-10', text: 'text-sm font-extrabold', sub: 'text-[9px] font-bold', gap: 'gap-2.5' },
+    md: { img: 'w-12 h-12 md:w-14 md:h-14', text: 'text-base sm:text-lg md:text-xl font-extrabold', sub: 'text-[10px] sm:text-[11px] md:text-xs font-bold', gap: 'gap-3 sm:gap-3.5' },
+    lg: { img: 'w-14 h-14 md:w-16 md:h-16', text: 'text-xl sm:text-2xl font-extrabold', sub: 'text-xs font-bold', gap: 'gap-3.5' },
+    xl: { img: 'w-16 h-16 sm:w-20 sm:h-20', text: 'text-2xl sm:text-3xl font-extrabold', sub: 'text-xs sm:text-sm font-bold', gap: 'gap-4' },
+    hero: { img: 'w-16 h-16 sm:w-20 sm:h-20', text: 'text-xl sm:text-2xl md:text-3xl font-extrabold', sub: 'text-[11px] sm:text-xs md:text-sm font-bold', gap: 'gap-4' },
   };
 
   const currentSize = sizeMap[size];
   const isDarkBg = variant === 'horizontal-dark';
-  const logoSrc = size === 'sm' || size === 'md' ? LOGOS.header : LOGOS.transparent;
+  // Use authoritative 1254x1254 high-res original emblem for razor-sharp rendering on all screens
+  const logoSrc = LOGOS.original;
 
-  // Exact circular emblem image element
+  // Exact circular emblem image element with zero distortion
   const EmblemImg = (
     <img
       src={logoSrc}
       alt="Momentum Transportation & Hauling LLC Official Emblem"
-      className={`${currentSize.img} object-contain shrink-0 transition-transform duration-300 group-hover:scale-105`}
+      width={size === 'hero' ? 80 : size === 'md' ? 56 : 48}
+      height={size === 'hero' ? 80 : size === 'md' ? 56 : 48}
+      className={`${currentSize.img} object-contain shrink-0 aspect-square select-none`}
       loading="eager"
       decoding="async"
     />
@@ -49,16 +56,16 @@ export const Logo: React.FC<LogoProps> = ({
       {EmblemImg}
       <div className="flex flex-col text-left justify-center">
         <span
-          className={`font-extrabold tracking-tight font-display leading-none ${currentSize.text} ${
+          className={`tracking-tight font-display leading-none ${currentSize.text} ${
             isDarkBg ? 'text-white' : 'text-[#071E41]'
           }`}
         >
           MOMENTUM
         </span>
-        <div className="flex items-center gap-1.5 mt-1">
-          <span className="w-2.5 h-[1.5px] bg-[#C99A31] shrink-0" />
+        <div className="flex items-center gap-1.5 mt-1 sm:mt-1.5">
+          <span className="w-3 h-[2px] bg-[#C99A31] shrink-0" />
           <span
-            className={`font-bold tracking-wider uppercase font-display leading-none ${currentSize.sub} ${
+            className={`tracking-wider uppercase font-display leading-none ${currentSize.sub} ${
               isDarkBg ? 'text-slate-200' : 'text-[#071E41]'
             }`}
           >
@@ -66,7 +73,7 @@ export const Logo: React.FC<LogoProps> = ({
           </span>
         </div>
         {showTagline && (
-          <span className="text-[11px] italic font-medium text-[#C99A31] mt-1 tracking-normal font-display">
+          <span className="text-[11px] sm:text-xs italic font-medium text-[#C99A31] mt-1 tracking-normal font-display">
             Moving Business Forward.
           </span>
         )}
@@ -74,3 +81,4 @@ export const Logo: React.FC<LogoProps> = ({
     </div>
   );
 };
+

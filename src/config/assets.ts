@@ -25,6 +25,18 @@ import careersHero from '../assets/images/momentum_careers_hero_1793927094602.jp
 import safetyHero from '../assets/images/momentum_safety_hero_1793927094788.jpg';
 import commandCenter from '../assets/images/momentum_command_center_1793927094510.jpg';
 
+// Newly Generated Technology & Logistics Assets
+import connectedLogisticsNetwork from '../assets/images/connected_logistics_network_1793953504093.jpg';
+import digitalDispatchWorkspace from '../assets/images/digital_dispatch_workspace_1793953504229.jpg';
+import heroTechTruck from '../assets/images/hero_tech_truck_1793953504134.jpg';
+import cargoVanLogistics from '../assets/images/cargo_van_logistics_1793953506308.jpg';
+import constructionTransportTech from '../assets/images/construction_transport_tech_1793953505865.jpg';
+
+// Official Corporate Company Profile Document & First-Page High-Res Thumbnail
+import companyProfileThumbnail from '../assets/images/momentum-company-profile-p1.png';
+
+export const COMPANY_PROFILE_PDF_URL = `${import.meta.env.BASE_URL}documents/momentum-company-profile.pdf`;
+
 // Official Circular Emblem & Logo Derivatives (LOCKED)
 import logoOriginal from '../assets/logo/momentum-logo-original.png';
 import logoTransparent from '../assets/logo/momentum-logo-transparent.png';
@@ -38,6 +50,7 @@ export const LOGOS = {
   transparent: logoTransparent,
   header: logoHeader,
   footer: logoFooter,
+  hero: logoOriginal,
   favicon: favicon,
   brandMockup: brandMockup,
 } as const;
@@ -69,7 +82,15 @@ export const ASSETS = {
   safetyHero,
   commandCenter,
 
-  // Branding
+  // Technology & Network Visuals
+  connectedLogisticsNetwork,
+  digitalDispatchWorkspace,
+  heroTechTruck,
+  cargoVanLogistics,
+  constructionTransportTech,
+
+  // Branding & Documents
+  companyProfileThumbnail,
   logoHeader,
   logoFooter,
   logoOriginal,
@@ -78,6 +99,21 @@ export const ASSETS = {
 } as const;
 
 export const ASSET_METADATA = {
+  connectedLogisticsNetwork: {
+    src: ASSETS.connectedLogisticsNetwork,
+    alt: 'Southeast Regional Freight Logistics Network connectivity map across South Carolina and North Carolina corridors',
+    caption: 'Inter-hub regional connectivity and freight route network across the Carolinas.',
+  },
+  digitalDispatchWorkspace: {
+    src: ASSETS.digitalDispatchWorkspace,
+    alt: 'Modern logistics dispatch operations workspace with fleet routing and coordination displays',
+    caption: 'Centralized operations desk coordinating freight movement and delivery milestones.',
+  },
+  heroTechTruck: {
+    src: ASSETS.heroTechTruck,
+    alt: 'Momentum commercial semi-truck on South Carolina highway with integrated digital logistics route data',
+    caption: 'Connected transportation and hauling supported by responsive operations technology.',
+  },
   commercialFreight: {
     src: ASSETS.commercialFreight,
     alt: 'Momentum Transportation & Hauling commercial Class 8 semi-truck with 53ft dry van trailer on South Carolina highway',

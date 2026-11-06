@@ -77,7 +77,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
       </div>
 
       {/* Main Navigation Bar — Strict 3-Zone Contract */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 h-18 flex items-center justify-between gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 h-20 sm:h-22 flex items-center justify-between gap-6 lg:gap-8">
         {/* Zone 1: Brand Wordmark */}
         <button
           onClick={() => handleLinkClick('home')}

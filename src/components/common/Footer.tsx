@@ -1,8 +1,9 @@
 import React from 'react';
 import { Logo } from './Logo';
 import { COMPANY } from '../../config/company';
+import { COMPANY_PROFILE_PDF_URL } from '../../config/assets';
 import { PageView } from './Header';
-import { Phone, Mail, MapPin, Shield, ArrowUpRight } from 'lucide-react';
+import { Phone, Mail, MapPin, Shield, ArrowUpRight, FileText } from 'lucide-react';
 
 interface FooterProps {
   onNavigate: (page: PageView) => void;
@@ -150,6 +151,18 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <button onClick={() => handleNav('contact')} className="hover:text-white transition-colors text-left cursor-pointer">
                   Contact Dispatch
                 </button>
+              </li>
+              <li className="pt-1.5 border-t border-slate-700/60">
+                <a
+                  href={COMPANY_PROFILE_PDF_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-[#C99A31] transition-colors text-left inline-flex items-center gap-1.5 font-medium text-slate-300 group"
+                >
+                  <FileText className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
+                  <span>Company Profile (PDF)</span>
+                  <ArrowUpRight className="w-3 h-3 opacity-70 group-hover:opacity-100" />
+                </a>
               </li>
             </ul>
           </div>

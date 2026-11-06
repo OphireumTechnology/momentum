@@ -2,9 +2,9 @@ import React from 'react';
 import { PageView } from '../common/Header';
 import { COMPANY } from '../../config/company';
 import { Logo } from '../common/Logo';
-import { ASSETS, ASSET_METADATA, LOGOS } from '../../config/assets';
+import { ASSETS, ASSET_METADATA, LOGOS, COMPANY_PROFILE_PDF_URL } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
-import { Shield, Target, Compass, Award, Phone, Mail, MapPin, ArrowRight } from 'lucide-react';
+import { Shield, Target, Compass, Award, Phone, Mail, MapPin, ArrowRight, FileText, Download, ExternalLink } from 'lucide-react';
 
 interface AboutPageProps {
   onNavigate: (page: PageView) => void;
@@ -26,9 +26,11 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
           <div className="max-w-3xl space-y-4">
             <div className="flex items-center gap-4">
               <img
-                src={LOGOS.header}
+                src={LOGOS.original}
                 alt="Momentum Transportation Official Emblem"
-                className="w-16 h-16 sm:w-20 sm:h-20 object-contain shrink-0 filter drop-shadow-md"
+                width={80}
+                height={80}
+                className="w-16 h-16 sm:w-20 sm:h-20 object-contain shrink-0 filter drop-shadow-md select-none"
               />
               <div>
                 <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display block">
@@ -53,7 +55,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            <div className="lg:col-span-7 space-y-6">
+            <div className="lg:col-span-7 min-w-0 space-y-6">
               <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display">
                 Company Overview
               </span>
@@ -91,7 +93,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
               </div>
             </div>
 
-            <div className="lg:col-span-5">
+            <div className="lg:col-span-5 min-w-0">
               <div className="rounded-xl overflow-hidden shadow-lg border border-slate-200">
                 <ImageWithFallback
                   src={ASSETS.aboutOperations}
@@ -103,6 +105,115 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
                   <div className="font-semibold text-white">Operations Coordination Environment</div>
                   <div className="text-slate-400 text-[11px] mt-0.5">
                     Terminal yard staging and dispatch oversight for southeastern regional runs.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Corporate Company Profile Section per Directive Section 12 */}
+      <section className="py-16 bg-[#071E41] text-white border-y border-[#0D2C5B]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            {/* Left: Document Info and Highlights */}
+            <div className="lg:col-span-7 min-w-0 space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded border border-white/20 text-[#C99A31] text-xs font-bold uppercase tracking-wider font-display">
+                <FileText className="w-3.5 h-3.5" />
+                <span>Authoritative Corporate Document</span>
+              </div>
+
+              <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight font-display text-white">
+                Momentum Corporate Company Profile
+              </h2>
+
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-2xl">
+                Explore our corporate background, transportation and hauling capabilities, regional logistics coverage, operational philosophy, and contact directory in our complete seven-page publication.
+              </p>
+
+              {/* 7-Page Profile Table of Contents */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 text-xs">
+                <div className="flex items-center gap-2 text-slate-200 bg-white/5 p-2.5 rounded border border-white/10">
+                  <span className="w-5 h-5 rounded-full bg-[#C99A31] text-[#071E41] font-bold flex items-center justify-center text-[10px] shrink-0">1</span>
+                  <span>Corporate Company Profile Cover</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-200 bg-white/5 p-2.5 rounded border border-white/10">
+                  <span className="w-5 h-5 rounded-full bg-[#C99A31] text-[#071E41] font-bold flex items-center justify-center text-[10px] shrink-0">2</span>
+                  <span>Corporate Overview &amp; Corridor Map</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-200 bg-white/5 p-2.5 rounded border border-white/10">
+                  <span className="w-5 h-5 rounded-full bg-[#C99A31] text-[#071E41] font-bold flex items-center justify-center text-[10px] shrink-0">3</span>
+                  <span>Mission, Vision &amp; Guiding Standards</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-200 bg-white/5 p-2.5 rounded border border-white/10">
+                  <span className="w-5 h-5 rounded-full bg-[#C99A31] text-[#071E41] font-bold flex items-center justify-center text-[10px] shrink-0">4</span>
+                  <span>Core Transportation &amp; Hauling Services</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-200 bg-white/5 p-2.5 rounded border border-white/10">
+                  <span className="w-5 h-5 rounded-full bg-[#C99A31] text-[#071E41] font-bold flex items-center justify-center text-[10px] shrink-0">5</span>
+                  <span>Industries &amp; Customers Served</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-200 bg-white/5 p-2.5 rounded border border-white/10">
+                  <span className="w-5 h-5 rounded-full bg-[#C99A31] text-[#071E41] font-bold flex items-center justify-center text-[10px] shrink-0">6</span>
+                  <span>Operational Philosophy &amp; Dispatch</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-200 bg-white/5 p-2.5 rounded border border-white/10 sm:col-span-2">
+                  <span className="w-5 h-5 rounded-full bg-[#C99A31] text-[#071E41] font-bold flex items-center justify-center text-[10px] shrink-0">7</span>
+                  <span>Corporate Contact Directory, Location &amp; Quotation Inquiries</span>
+                </div>
+              </div>
+
+              {/* Standardized View & Download Controls */}
+              <div className="pt-3 flex flex-wrap items-center gap-3">
+                <a
+                  href={COMPANY_PROFILE_PDF_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-3.5 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md transition-all font-display shadow-md inline-flex items-center gap-2"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  <span>VIEW COMPANY PROFILE</span>
+                </a>
+
+                <a
+                  href={COMPANY_PROFILE_PDF_URL}
+                  download="Momentum_Transportation_and_Hauling_Services.pdf"
+                  className="px-6 py-3.5 text-xs font-bold tracking-wider uppercase text-white bg-white/10 hover:bg-white/20 border border-white/25 rounded-md transition-all font-display inline-flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4 text-[#C99A31]" />
+                  <span>DOWNLOAD COMPANY PROFILE</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Right: High-Res First Page Preview Thumbnail */}
+            <div className="lg:col-span-5 min-w-0 flex justify-center">
+              <div className="relative group max-w-sm w-full">
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#C99A31] to-[#071E41] rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500" />
+                <div className="relative rounded-xl overflow-hidden border-2 border-white/20 shadow-2xl bg-white">
+                  <a
+                    href={COMPANY_PROFILE_PDF_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block relative overflow-hidden group cursor-pointer"
+                    title="Click to view full 7-page company profile PDF"
+                  >
+                    <img
+                      src={ASSETS.companyProfileThumbnail}
+                      alt="Momentum Transportation & Hauling LLC Corporate Profile Document Preview"
+                      className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                    />
+                    <div className="absolute inset-0 bg-[#071E41]/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span className="px-4 py-2 bg-[#071E41] text-white text-xs font-bold rounded shadow-lg flex items-center gap-2 border border-[#C99A31]">
+                        <ExternalLink className="w-3.5 h-3.5 text-[#C99A31]" />
+                        <span>Open 7-Page PDF</span>
+                      </span>
+                    </div>
+                  </a>
+                  <div className="p-3.5 bg-slate-900 text-center border-t border-slate-800">
+                    <span className="text-xs font-bold text-slate-200">7-Page Official Corporate Profile</span>
+                    <span className="block text-[11px] text-slate-400 mt-0.5">PDF Document · Public Access</span>
                   </div>
                 </div>
               </div>

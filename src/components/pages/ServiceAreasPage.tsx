@@ -98,7 +98,7 @@ export const ServiceAreasPage: React.FC<ServiceAreasPageProps> = ({ onNavigate }
       <section className="py-16 max-w-7xl mx-auto px-4 sm:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* Corridor Selection List */}
-          <div className="lg:col-span-5 space-y-4">
+          <div className="lg:col-span-5 min-w-0 space-y-4">
             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
               <h3 className="text-sm font-bold uppercase tracking-wider text-[#071E41] font-display mb-3 flex items-center gap-2">
                 <Navigation className="w-4 h-4 text-[#C99A31]" />
@@ -158,7 +158,7 @@ export const ServiceAreasPage: React.FC<ServiceAreasPageProps> = ({ onNavigate }
           </div>
 
           {/* Detailed Corridor Card + Visual Route Map Representation */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="lg:col-span-7 min-w-0 space-y-6">
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
               <div className="h-64 sm:h-72 overflow-hidden relative">
                 <ImageWithFallback

@@ -91,7 +91,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
       <section className="py-14 max-w-7xl mx-auto px-4 sm:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* Left Column: Official Contact Card & Image */}
-          <div className="lg:col-span-5 space-y-6">
+          <div className="lg:col-span-5 min-w-0 space-y-6">
             <div className="bg-white rounded-xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
               <div className="border-b border-slate-100 pb-4">
                 <Logo variant="horizontal-light" size="md" />
@@ -167,7 +167,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
           </div>
 
           {/* Right Column: Secure Inquiries Form */}
-          <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+          <div className="lg:col-span-7 min-w-0 bg-white rounded-xl border border-slate-200 p-6 sm:p-8 shadow-sm">
             <h2 className="text-xl font-bold text-[#071E41] font-display mb-1">
               Send an Operational Message
             </h2>

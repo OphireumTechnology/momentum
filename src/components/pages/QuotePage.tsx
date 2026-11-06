@@ -294,7 +294,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
       <section className="py-12 max-w-7xl mx-auto px-4 sm:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           {/* Left Column: Quotation Form */}
-          <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+          <div className="lg:col-span-7 min-w-0 bg-white rounded-xl border border-slate-200 p-6 sm:p-8 shadow-sm">
             <h2 className="text-xl font-bold text-[#071E41] font-display mb-1">
               Freight &amp; Route Information
             </h2>
@@ -581,7 +581,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
           </div>
 
           {/* Right Column: Visual Hero & Direct Support */}
-          <div className="lg:col-span-5 space-y-6">
+          <div className="lg:col-span-5 min-w-0 space-y-6">
             <div className="rounded-xl overflow-hidden shadow-lg border border-slate-200">
               <ImageWithFallback
                 src={ASSETS.quoteHero}
