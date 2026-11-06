@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { PageView } from '../common/Header';
 import { COMPANY } from '../../config/company';
-import { ASSETS, ASSET_METADATA, LOGOS } from '../../config/assets';
-import { ImageWithFallback } from '../common/ImageWithFallback';
+import { LOGOS } from '../../config/assets';
+import { getApiUrl } from '../../config/api';
 import {
   Search,
   Truck,
@@ -18,6 +18,7 @@ import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
+  LifeBuoy,
 } from 'lucide-react';
 
 interface CustomerPortalProps {
@@ -38,6 +39,21 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onNavigate }) =>
   const [selectedShipment, setSelectedShipment] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Customer Concern / Support Modal state
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [supportSubmitting, setSupportSubmitting] = useState(false);
+  const [supportTicket, setSupportTicket] = useState<string | null>(null);
+  const [supportError, setSupportError] = useState('');
+  const [supportForm, setSupportForm] = useState({
+    name: 'Carolina Industrial Supplies',
+    email: 'logistics@carolinaindustrial.com',
+    phone: '(803) 555-0199',
+    accountNumber: 'MTH-ACC-8812',
+    shipmentRef: '',
+    category: 'Delivery Status & ETA',
+    message: '',
+  });
+
   // AI Support Chatbot state inside portal
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Array<{ sender: 'user' | 'assistant'; text: string }>>([
@@ -54,8 +70,8 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onNavigate }) =>
     setIsLoading(true);
     try {
       const [shipRes, quoteRes] = await Promise.all([
-        fetch('/api/shipments'),
-        fetch('/api/quotes'),
+        fetch(getApiUrl('/api/shipments')),
+        fetch(getApiUrl('/api/quotes')),
       ]);
       const shipData = await shipRes.json();
       const quoteData = await quoteRes.json();
@@ -85,7 +101,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onNavigate }) =>
     if (!trackingQuery.trim()) return;
 
     try {
-      const res = await fetch(`/api/shipments/${encodeURIComponent(trackingQuery.trim())}`);
+      const res = await fetch(getApiUrl(`/api/shipments/${encodeURIComponent(trackingQuery.trim())}`));
       const data = await res.json();
       if (data.success && data.shipment) {
         setSelectedShipment(data.shipment);
@@ -107,7 +123,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onNavigate }) =>
     setIsAiReplying(true);
 
     try {
-      const res = await fetch('/api/ai/support', {
+      const res = await fetch(getApiUrl('/api/ai/support'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: userText }),
@@ -124,6 +140,36 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onNavigate }) =>
       ]);
     } finally {
       setIsAiReplying(false);
+    }
+  };
+
+  const handleSubmitSupport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSupportError('');
+
+    if (!supportForm.name.trim() || !supportForm.email.trim() || !supportForm.message.trim()) {
+      setSupportError('Please fill out name, email, and message details.');
+      return;
+    }
+
+    setSupportSubmitting(true);
+    try {
+      const res = await fetch(getApiUrl('/api/support'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(supportForm),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSupportTicket(data.ticketId);
+      } else {
+        setSupportError(data.error || 'Failed to submit support request.');
+      }
+    } catch (err) {
+      setSupportError('Network connection error. Please call our Columbia dispatch office directly at 803-718-5509.');
+    } finally {
+      setSupportSubmitting(false);
     }
   };
 
@@ -156,11 +202,18 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onNavigate }) =>
               + New Quote Request
             </button>
             <button
+              onClick={() => setSupportOpen(true)}
+              className="px-3.5 py-1.5 text-xs font-bold uppercase text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded font-display inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <LifeBuoy className="w-3.5 h-3.5 text-[#C99A31]" />
+              <span>Submit Concern / Ticket</span>
+            </button>
+            <button
               onClick={() => setChatOpen(!chatOpen)}
-              className="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 inline-flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 inline-flex items-center gap-1.5 cursor-pointer"
             >
               <MessageSquare className="w-3.5 h-3.5 text-[#C99A31]" />
-              <span>Logistics Support</span>
+              <span>AI Logistics Help</span>
             </button>
           </div>
         </div>
@@ -429,6 +482,160 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onNavigate }) =>
               <Send className="w-3.5 h-3.5" />
             </button>
           </form>
+        </div>
+      )}
+
+      {/* Customer Support Concern & Dispatch Inquiry Modal */}
+      {supportOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-xl border border-slate-200 p-6 sm:p-8 max-w-lg w-full space-y-4 text-xs text-slate-800 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <div className="flex items-center gap-2">
+                <LifeBuoy className="w-5 h-5 text-[#C99A31]" />
+                <h3 className="text-base font-bold text-[#071E41] font-display">
+                  Submit Operational Concern or Request
+                </h3>
+              </div>
+              <button
+                onClick={() => {
+                  setSupportOpen(false);
+                  setSupportTicket(null);
+                }}
+                className="text-slate-400 hover:text-slate-700 text-sm font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {supportTicket ? (
+              <div className="p-5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-3">
+                <div className="flex items-center gap-2 text-emerald-800 font-bold text-sm">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                  <span>Support Ticket Transmitted</span>
+                </div>
+                <p>
+                  Your concern has been assigned ticket <strong className="font-mono text-emerald-950">{supportTicket}</strong> and delivered to operations at <strong className="font-mono">{COMPANY.contact.email}</strong>.
+                </p>
+                <p className="text-[11px] text-emerald-700">
+                  A representative will review the details and reach out directly at {supportForm.phone} or {supportForm.email}.
+                </p>
+                <button
+                  onClick={() => {
+                    setSupportOpen(false);
+                    setSupportTicket(null);
+                    setSupportForm((prev) => ({ ...prev, message: '', shipmentRef: '' }));
+                  }}
+                  className="w-full py-2.5 text-xs font-bold uppercase text-emerald-900 bg-white border border-emerald-300 rounded hover:bg-emerald-100 cursor-pointer"
+                >
+                  Close Window
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmitSupport} className="space-y-3">
+                {supportError && (
+                  <div className="p-3 rounded bg-red-50 text-red-700 text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{supportError}</span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-700 font-bold uppercase text-[10px] mb-1">Contact Name *</label>
+                    <input
+                      type="text"
+                      value={supportForm.name}
+                      onChange={(e) => setSupportForm((prev) => ({ ...prev, name: e.target.value }))}
+                      required
+                      className="w-full px-3 py-2 border border-slate-300 rounded focus:border-[#071E41] focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-bold uppercase text-[10px] mb-1">Email Address *</label>
+                    <input
+                      type="email"
+                      value={supportForm.email}
+                      onChange={(e) => setSupportForm((prev) => ({ ...prev, email: e.target.value }))}
+                      required
+                      className="w-full px-3 py-2 border border-slate-300 rounded focus:border-[#071E41] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-700 font-bold uppercase text-[10px] mb-1">Phone Number</label>
+                    <input
+                      type="tel"
+                      value={supportForm.phone}
+                      onChange={(e) => setSupportForm((prev) => ({ ...prev, phone: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-300 rounded focus:border-[#071E41] focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-bold uppercase text-[10px] mb-1">Shipment # / Tracking (Optional)</label>
+                    <input
+                      type="text"
+                      value={supportForm.shipmentRef}
+                      onChange={(e) => setSupportForm((prev) => ({ ...prev, shipmentRef: e.target.value }))}
+                      placeholder="e.g. MTH-TRK-7701"
+                      className="w-full px-3 py-2 border border-slate-300 rounded focus:border-[#071E41] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold uppercase text-[10px] mb-1">Inquiry / Concern Category</label>
+                  <select
+                    value={supportForm.category}
+                    onChange={(e) => setSupportForm((prev) => ({ ...prev, category: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded focus:border-[#071E41] focus:outline-none"
+                  >
+                    <option value="Delivery Status & ETA">Delivery Status &amp; Real-Time ETA</option>
+                    <option value="Pickup Scheduling / Reschedule">Pickup Scheduling or Reschedule Request</option>
+                    <option value="Proof of Delivery Request">Proof of Delivery (POD) Documentation Request</option>
+                    <option value="Billing / Invoice Concern">Billing, Invoice, or Rate Reconciliation</option>
+                    <option value="Damaged Cargo or Exception">Damaged Cargo or Delivery Exception</option>
+                    <option value="Special Handling / Accessorial">Accessorial Equipment or Dock Requirement</option>
+                    <option value="General Customer Concern">General Customer Concern</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold uppercase text-[10px] mb-1">Message / Details *</label>
+                  <textarea
+                    value={supportForm.message}
+                    onChange={(e) => setSupportForm((prev) => ({ ...prev, message: e.target.value }))}
+                    rows={3}
+                    required
+                    placeholder="Describe your inquiry, dock specifications, or operational issue..."
+                    className="w-full px-3 py-2 border border-slate-300 rounded focus:border-[#071E41] focus:outline-none"
+                  />
+                </div>
+
+                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded text-[11px] text-slate-500">
+                  All support inquiries are dispatched to official operations at <strong>{COMPANY.contact.email}</strong> and tracked in the central command register.
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setSupportOpen(false)}
+                    className="px-4 py-2 text-slate-600 hover:text-slate-800 font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={supportSubmitting}
+                    className="px-5 py-2.5 text-xs font-bold uppercase text-white bg-[#071E41] hover:bg-[#041228] rounded font-display transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {supportSubmitting ? 'Transmitting...' : 'Submit Support Ticket'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
       )}
     </div>

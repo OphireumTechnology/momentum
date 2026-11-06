@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { PageView } from '../common/Header';
 import { COMPANY } from '../../config/company';
 import { Logo } from '../common/Logo';
-import { ASSETS, ASSET_METADATA, LOGOS } from '../../config/assets';
+import { ASSETS, ASSET_METADATA } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
+import { getApiUrl } from '../../config/api';
 import {
   Send,
   CheckCircle2,
@@ -65,7 +66,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
     setIsAiLoading(true);
 
     try {
-      const res = await fetch('/api/ai/quote-assist', {
+      const res = await fetch(getApiUrl('/api/ai/quote-assist'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -122,7 +123,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/quotes', {
+      const response = await fetch(getApiUrl('/api/quotes'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -195,7 +196,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
               </div>
               <div>
                 <span className="font-bold text-[#071E41] block">Service Type:</span>
-                <span className="capitalize">{submittedQuote.serviceCategory.replace('_', ' ')}</span>
+                <span className="capitalize">{submittedQuote.serviceCategory.replace(/_/g, ' ')}</span>
               </div>
               <div>
                 <span className="font-bold text-[#071E41] block">Estimated Weight:</span>
@@ -216,7 +217,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
             <div className="space-y-2 text-xs text-slate-600">
               <h4 className="font-bold text-[#071E41]">Next Operational Steps:</h4>
               <ul className="list-disc pl-5 space-y-1">
-                <li>Our Columbia operations dispatch team has received your load specifications.</li>
+                <li>Your request specifications have been automatically routed to operations at <strong>{COMPANY.contact.email}</strong>.</li>
                 <li>An official rate confirmation sheet will be finalized and sent to <strong>{submittedQuote.email}</strong>.</li>
                 <li>For urgent or same-day freight needs, contact dispatch directly at <strong>803-718-5509</strong>.</li>
               </ul>

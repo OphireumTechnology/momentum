@@ -3,6 +3,7 @@ import { PageView } from '../common/Header';
 import { COMPANY } from '../../config/company';
 import { ASSETS, ASSET_METADATA } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
+import { getApiUrl } from '../../config/api';
 import {
   CheckCircle2,
   Send,
@@ -22,14 +23,52 @@ export const CareersPage: React.FC<CareersPageProps> = ({ onNavigate }) => {
   const [applicantName, setApplicantName] = useState('');
   const [applicantPhone, setApplicantPhone] = useState('');
   const [applicantEmail, setApplicantEmail] = useState('');
+  const [cdlClass, setCdlClass] = useState('A');
   const [yearsExperience, setYearsExperience] = useState('3+');
   const [endorsements, setEndorsements] = useState('Standard Class A');
-  const [submitted, setSubmitted] = useState(false);
+  const [preferredLanes, setPreferredLanes] = useState('Regional Southeastern Corridors (I-77 / I-26 / I-20)');
+  const [notes, setNotes] = useState('');
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittedRef, setSubmittedRef] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (applicantName && applicantPhone) {
-      setSubmitted(true);
+    setErrorMessage('');
+
+    if (!applicantName.trim() || !applicantPhone.trim()) {
+      setErrorMessage('Please provide your full legal name and phone number.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(getApiUrl('/api/careers'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicantName,
+          applicantPhone,
+          applicantEmail,
+          cdlClass,
+          yearsExperience,
+          endorsements,
+          preferredLanes,
+          notes,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSubmittedRef(data.applicationId);
+      } else {
+        setErrorMessage(data.error || 'Failed to submit driver application.');
+      }
+    } catch (err) {
+      setErrorMessage('Network connection error. Please call our Columbia dispatch office directly at 803-718-5509.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -106,24 +145,45 @@ export const CareersPage: React.FC<CareersPageProps> = ({ onNavigate }) => {
               Complete the preliminary interest form. All applications undergo verification of valid CDL-A credentials and driving records.
             </p>
 
-            {submitted ? (
+            {submittedRef ? (
               <div className="p-6 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-3">
                 <div className="flex items-center gap-2 text-emerald-800 font-bold text-sm">
                   <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                  <span>Application Interest Received</span>
+                  <span>Commercial Driver Application Submitted</span>
                 </div>
                 <p>
-                  Thank you, <strong>{applicantName}</strong>. A recruitment coordinator from our Columbia operations office will reach out to discuss current lane openings.
+                  Thank you, <strong>{applicantName}</strong>. Your driver application has been assigned reference <strong className="font-mono text-emerald-900">{submittedRef}</strong> and immediately routed to our recruitment inbox at <strong className="font-mono">{COMPANY.contact.email}</strong>.
+                </p>
+                <div className="p-3 bg-white/70 border border-emerald-200 rounded text-[11px] text-emerald-800 space-y-1">
+                  <div><strong>Applicant:</strong> {applicantName} ({applicantPhone})</div>
+                  <div><strong>CDL Class:</strong> Class {cdlClass} ({endorsements})</div>
+                  <div><strong>Experience:</strong> {yearsExperience} years</div>
+                </div>
+                <p className="text-[11px] text-emerald-700">
+                  A recruitment and safety coordinator from our Columbia operations headquarters will review your qualification profile and reach out regarding regional lane availability.
                 </p>
                 <button
-                  onClick={() => setSubmitted(false)}
-                  className="px-4 py-2 text-xs font-bold uppercase text-emerald-800 bg-white border border-emerald-300 rounded hover:bg-emerald-100"
+                  onClick={() => {
+                    setSubmittedRef(null);
+                    setApplicantName('');
+                    setApplicantPhone('');
+                    setApplicantEmail('');
+                    setNotes('');
+                  }}
+                  className="px-4 py-2 text-xs font-bold uppercase text-emerald-800 bg-white border border-emerald-300 rounded hover:bg-emerald-100 cursor-pointer"
                 >
-                  Submit Additional Information
+                  Submit Another Application
                 </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+                {errorMessage && (
+                  <div className="p-3 rounded bg-red-50 text-red-700 text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
                 <div>
                   <label className="block font-bold text-slate-700 uppercase mb-1">
                     Full Name *
@@ -166,25 +226,39 @@ export const CareersPage: React.FC<CareersPageProps> = ({ onNavigate }) => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block font-bold text-slate-700 uppercase mb-1">
-                      Commercial Driving Experience
+                      CDL Class
+                    </label>
+                    <select
+                      value={cdlClass}
+                      onChange={(e) => setCdlClass(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded focus:border-[#071E41] focus:outline-none"
+                    >
+                      <option value="A">Class A CDL</option>
+                      <option value="B">Class B CDL</option>
+                      <option value="Commercial Non-CDL">Commercial Hotshot / Non-CDL</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 uppercase mb-1">
+                      Driving Experience
                     </label>
                     <select
                       value={yearsExperience}
                       onChange={(e) => setYearsExperience(e.target.value)}
                       className="w-full px-3 py-2 border border-slate-300 rounded focus:border-[#071E41] focus:outline-none"
                     >
-                      <option value="1-2">1 - 2 Years CDL-A</option>
-                      <option value="3+">3 - 5 Years CDL-A</option>
+                      <option value="1-2">1 - 2 Years</option>
+                      <option value="3+">3 - 5 Years</option>
                       <option value="5+">5+ Years Professional</option>
-                      <option value="10+">10+ Years Senior Driver</option>
+                      <option value="10+">10+ Years Senior</option>
                     </select>
                   </div>
                   <div>
                     <label className="block font-bold text-slate-700 uppercase mb-1">
-                      Endorsements &amp; Certifications
+                      Endorsements
                     </label>
                     <select
                       value={endorsements}
@@ -200,16 +274,46 @@ export const CareersPage: React.FC<CareersPageProps> = ({ onNavigate }) => {
                   </div>
                 </div>
 
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase mb-1">
+                    Preferred Regional Corridors
+                  </label>
+                  <select
+                    value={preferredLanes}
+                    onChange={(e) => setPreferredLanes(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded focus:border-[#071E41] focus:outline-none"
+                  >
+                    <option value="Regional Southeastern Corridors (I-77 / I-26 / I-20)">Regional Southeastern Corridors (I-77 / I-26 / I-20)</option>
+                    <option value="Columbia Local Midlands Hauling & Construction">Columbia Local Midlands Hauling &amp; Construction</option>
+                    <option value="Port of Charleston Dedicated Drayage">Port of Charleston Dedicated Drayage</option>
+                    <option value="Interstate Dedicated Contract Lanes">Interstate Dedicated Contract Lanes</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase mb-1">
+                    Additional Background or Qualifications (Optional)
+                  </label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={2}
+                    placeholder="Mention previous carrier experience, clean MVR record, or preferred start date..."
+                    className="w-full px-3 py-2 border border-slate-300 rounded focus:border-[#071E41] focus:outline-none"
+                  />
+                </div>
+
                 <div className="p-3 bg-slate-50 rounded border border-slate-200 text-slate-600 text-[11px] leading-relaxed">
                   <strong>Driver Minimum Requirements:</strong> Valid Class A CDL, current DOT Medical Examiner&apos;s Certificate, clean Motor Vehicle Record (MVR), and minimum 21 years of age.
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded font-display transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  disabled={isSubmitting}
+                  className="w-full py-3 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded font-display transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <Send className="w-3.5 h-3.5 text-[#C99A31]" />
-                  <span>Submit Driver Inquiry</span>
+                  <span>{isSubmitting ? 'Transmitting Application...' : 'Submit Driver Application'}</span>
                 </button>
               </form>
             )}

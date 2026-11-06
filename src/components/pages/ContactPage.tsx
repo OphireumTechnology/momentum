@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { PageView } from '../common/Header';
 import { COMPANY } from '../../config/company';
 import { Logo } from '../common/Logo';
-import { ASSETS, ASSET_METADATA, LOGOS } from '../../config/assets';
+import { ASSETS, ASSET_METADATA } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
+import { getApiUrl } from '../../config/api';
 import {
   Phone,
   Mail,
@@ -24,7 +25,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
     name: '',
     email: '',
     phone: '',
-    inquiryType: 'Freight Booking & Capacity',
+    inquiryType: 'General Inquiries',
     message: '',
   });
 
@@ -48,7 +49,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch('/api/contact', {
+      const res = await fetch(getApiUrl('/api/contact'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -181,7 +182,10 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                   <span>Inquiry Dispatched Successfully</span>
                 </div>
                 <p>
-                  Your message has been assigned reference ticket <strong className="font-mono">{submittedTicket}</strong>. An authorized Momentum representative will follow up via email or phone.
+                  Your message has been assigned reference ticket <strong className="font-mono">{submittedTicket}</strong> and delivered to operations at <strong className="font-mono text-emerald-900">{COMPANY.contact.email}</strong>.
+                </p>
+                <p className="text-[11px] text-emerald-700">
+                  An authorized Momentum logistics representative will review your request and follow up promptly via email or direct phone.
                 </p>
                 <button
                   onClick={() => {
@@ -190,11 +194,11 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                       name: '',
                       email: '',
                       phone: '',
-                      inquiryType: 'Freight Booking & Capacity',
+                      inquiryType: 'General Inquiries',
                       message: '',
                     });
                   }}
-                  className="px-4 py-2 text-xs font-bold uppercase text-emerald-800 bg-white border border-emerald-300 rounded hover:bg-emerald-100"
+                  className="px-4 py-2 text-xs font-bold uppercase text-emerald-800 bg-white border border-emerald-300 rounded hover:bg-emerald-100 cursor-pointer"
                 >
                   Submit Another Inquiry
                 </button>
@@ -263,11 +267,14 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                       onChange={handleChange}
                       className="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:border-[#071E41] focus:outline-none"
                     >
-                      <option value="Freight Booking & Capacity">Freight Booking &amp; Capacity</option>
-                      <option value="Heavy Haul Inquiry">Heavy Haul &amp; Machinery Inquiry</option>
-                      <option value="Billing & Invoicing">Billing &amp; Invoicing</option>
-                      <option value="Driver Recruitment">Driver Recruitment</option>
-                      <option value="General Management">General Inquiries</option>
+                      <option value="General Inquiries">General Inquiries &amp; Customer Support</option>
+                      <option value="Freight Booking & Capacity">Commercial Freight Transportation (53ft Dry Van)</option>
+                      <option value="Cargo Van Service Request">Cargo Van Transportation &amp; Delivery</option>
+                      <option value="Heavy Haul Inquiry">Heavy Machinery &amp; Equipment Hauling</option>
+                      <option value="Construction Hauling">Construction Material &amp; Aggregate Hauling</option>
+                      <option value="Customer Concern">Customer Concern &amp; Service Issue</option>
+                      <option value="Dispatch & Coordination">Dispatch &amp; Route Coordination</option>
+                      <option value="Billing & Invoicing">Billing &amp; Invoicing Inquiries</option>
                     </select>
                   </div>
                 </div>
