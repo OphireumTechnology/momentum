@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { PageView } from '../common/Header';
 import { COMPANY } from '../../config/company';
 import { Logo } from '../common/Logo';
@@ -40,6 +40,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
     consent: false,
   });
 
+  const submissionKey = useRef<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -48,6 +49,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
+    submissionKey.current = null;
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData((prev) => ({ ...prev, [name]: checked }));
@@ -121,11 +123,12 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
     }
 
     setIsSubmitting(true);
+    if (!submissionKey.current) submissionKey.current = crypto.randomUUID();
 
     try {
       const response = await fetch(getApiUrl('/api/quotes'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': submissionKey.current },
         body: JSON.stringify(formData),
       });
 
