@@ -26,7 +26,7 @@ export async function dispatchSupabaseOutboxOnce(): Promise<void> {
       !process.env.SUPABASE_URL || !key()) return;
   running = true;
   try {
-    const due = new URL(url());
+    // Reclaim a crashed worker's stale lease after ten minutes. Reuse the same\n    // Resend idempotency key to reduce duplicate sends on retry.\n    const stale = new Date(Date.now() - 10 * 60_000).toISOString();\n    await patch('status=eq.sending&updated_at=lt.' + encodeURIComponent(stale), { status: 'pending' });\n    const due = new URL(url());
     due.searchParams.set('select', 'id,recipient_email,subject,payload,attempt_count,max_attempts');
     due.searchParams.set('status', 'eq.pending');
     due.searchParams.set('next_attempt_at', 'lte.' + new Date().toISOString());
