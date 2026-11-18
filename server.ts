@@ -272,6 +272,8 @@ function summarizeEmailDelivery(
     status = 'pending_provider_config';
   } else if (recipients.length > 0 && recipients.every((r) => r.status === 'failed')) {
     status = 'failed';
+  } else if (recipients.some((r) => r.status === 'not_queued')) {
+    status = 'not_queued';
   } else if (recipients.some((r) => r.status === 'retrying')) {
     status = 'retrying';
   } else if (recipients.length > 0) {
@@ -404,14 +406,8 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
         }
       }
 
-      if (outboxRows.length === 0) {
-        outboxRows = authorizedRecipients.map((recipient) => ({
-          recipient_email: recipient,
-          status: isEmailProviderConfigured() ? 'pending' : 'pending_provider_config',
-          provider: null,
-          provider_message_id: null,
-        }));
-      }
+      // Do not fabricate pending notifications when the database returned no rows.
+      // summarizeEmailDelivery explicitly reports the missing rows as not_queued.
 
       return res.status(stored.created ? 201 : 200).json({
         success: true,
