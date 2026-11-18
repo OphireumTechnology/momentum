@@ -88,6 +88,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                   <span>{COMPANY.contact.email}</span>
                 </a>
               </div>
+              <div>
+                <a href={COMPANY.contact.secondaryEmailMailto} className="min-h-[44px] inline-flex items-center gap-2.5 text-slate-200 hover:text-white transition-colors break-all">
+                  <Mail className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
+                  <span>{COMPANY.contact.secondaryEmail}</span>
+                </a>
+              </div>
             </div>
           </div>
 
