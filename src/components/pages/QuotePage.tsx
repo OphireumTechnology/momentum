@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { PageView } from '../common/Header';
-import { COMPANY, COMPANY_PHONE } from '../../config/company';
+import { COMPANY, COMPANY_EMAILS, COMPANY_PHONE } from '../../config/company';
 import { Logo } from '../common/Logo';
 import { ASSETS, ASSET_METADATA } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
@@ -29,6 +29,7 @@ import {
   Copy,
   Check,
   Loader2,
+  Mail,
 } from 'lucide-react';
 
 interface QuotePageProps {
@@ -62,6 +63,14 @@ interface FormState {
   companyWebsite: string; // Honeypot field
 }
 
+interface RecipientDeliveryInfo {
+  recipientEmail: string;
+  status: string;
+  delivered: boolean;
+  provider?: string | null;
+  messageId?: string | null;
+}
+
 interface SubmittedQuoteSummary {
   referenceNumber: string;
   createdAt: string;
@@ -69,7 +78,9 @@ interface SubmittedQuoteSummary {
   emailDelivery: {
     status: string;
     delivered: boolean;
+    allDelivered?: boolean;
     messageId?: string | null;
+    recipients?: RecipientDeliveryInfo[];
   };
   submittedData: NormalizedQuoteSubmission;
 }
@@ -336,7 +347,26 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
   // Accessible Confirmation Screen
   if (submittedSummary) {
     const { referenceNumber, submittedData, emailDelivery } = submittedSummary;
-    const isDelivered = emailDelivery.status === 'sent' || emailDelivery.delivered;
+    const recipientStatuses: RecipientDeliveryInfo[] =
+      emailDelivery.recipients && emailDelivery.recipients.length > 0
+        ? emailDelivery.recipients
+        : COMPANY_EMAILS.quoteRecipients.map((recipientEmail) => ({
+            recipientEmail,
+            status: emailDelivery.status,
+            delivered: Boolean(emailDelivery.delivered),
+          }));
+    const allDelivered =
+      emailDelivery.allDelivered ??
+      (recipientStatuses.length > 0 && recipientStatuses.every((r) => r.delivered || r.status === 'sent'));
+    const someDelivered = recipientStatuses.some((r) => r.delivered || r.status === 'sent');
+
+    const formatRecipientStatusLabel = (status: string, delivered: boolean) => {
+      if (delivered || status === 'sent') return 'Notification Sent';
+      if (status === 'retrying') return 'Retrying';
+      if (status === 'failed') return 'Delivery Failed';
+      if (status === 'pending_provider_config' || status === 'pending') return 'Notification Pending';
+      return 'Queued';
+    };
 
     return (
       <div className="bg-[#F5F7FA] min-h-screen py-8 sm:py-12">
@@ -366,7 +396,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
               </div>
               <div className="min-w-0">
                 <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display block">
-                  Quote Request Saved
+                  Submission Successful · Customer Quote Safely Recorded
                 </span>
                 <h1
                   id="quote-confirmation-heading"
@@ -416,43 +446,84 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
               </p>
             </div>
 
-            {/* Honest email dispatch status */}
+            {/* Honest per-recipient email dispatch status */}
             <div
-              className={`p-4 rounded-lg border text-sm flex items-start gap-3 leading-relaxed ${
-                isDelivered
+              className={`p-4 rounded-lg border text-sm space-y-3 leading-relaxed ${
+                allDelivered
                   ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
                   : 'bg-amber-50 border-amber-200 text-amber-900'
               }`}
             >
-              {isDelivered ? (
-                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" aria-hidden="true" />
-              ) : (
-                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" aria-hidden="true" />
-              )}
-              <div>
-                {isDelivered ? (
-                  <>
-                    <strong className="block mb-0.5">Dispatch Notification Sent</strong>
-                    <span>
-                      Your quote details have been delivered to our operations team ({COMPANY.contact.email}). A coordinator will reply to <strong>{submittedData.email}</strong> or call <strong>{submittedData.phone}</strong>.
-                    </span>
-                  </>
+              <div className="flex items-start gap-3">
+                {allDelivered ? (
+                  <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" aria-hidden="true" />
                 ) : (
-                  <>
-                    <strong className="block mb-0.5">Saved — Dispatch Notification Queued</strong>
-                    <span>
-                      Your quote request has been saved successfully. Your dispatch notification is queued for delivery. For immediate same-day dispatch, call{' '}
-                      <a
-                        href={COMPANY_PHONE.href}
-                        aria-label={COMPANY_PHONE.ariaLabel}
-                        className="font-bold underline"
-                      >
-                        {COMPANY_PHONE.display}
-                      </a>
-                      .
-                    </span>
-                  </>
+                  <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" aria-hidden="true" />
                 )}
+                <div>
+                  {allDelivered ? (
+                    <>
+                      <strong className="block mb-0.5">Notification Sent</strong>
+                      <span>
+                        Email provider accepted the notification for both official Momentum recipients. A coordinator will reply to <strong>{submittedData.email}</strong> or call <strong>{submittedData.phone}</strong>.
+                      </span>
+                    </>
+                  ) : someDelivered ? (
+                    <>
+                      <strong className="block mb-0.5">Notification Pending (Partial Delivery Queued)</strong>
+                      <span>
+                        Your quote is safely recorded. One official recipient has been accepted by the email provider and the remaining recipient notification is queued for automatic retry. For immediate dispatch, call{' '}
+                        <a
+                          href={COMPANY_PHONE.href}
+                          aria-label={COMPANY_PHONE.ariaLabel}
+                          className="font-bold underline"
+                        >
+                          {COMPANY_PHONE.display}
+                        </a>
+                        .
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <strong className="block mb-0.5">Notification Pending</strong>
+                      <span>
+                        Customer quote safely recorded. Email notifications are queued for dispatch to our operations and general inquiry inboxes. For immediate same-day dispatch, call{' '}
+                        <a
+                          href={COMPANY_PHONE.href}
+                          aria-label={COMPANY_PHONE.ariaLabel}
+                          className="font-bold underline"
+                        >
+                          {COMPANY_PHONE.display}
+                        </a>
+                        .
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-black/10 text-xs">
+                {recipientStatuses.map((rec) => (
+                  <div
+                    key={rec.recipientEmail}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 bg-white/80 rounded px-3 py-2 border border-black/5 min-w-0"
+                  >
+                    <span className="font-mono font-semibold text-[#071E41] break-all">
+                      {rec.recipientEmail}
+                    </span>
+                    <span
+                      className={`font-bold uppercase tracking-wider text-[10px] shrink-0 ${
+                        rec.delivered || rec.status === 'sent'
+                          ? 'text-emerald-700'
+                          : rec.status === 'failed'
+                          ? 'text-red-700'
+                          : 'text-amber-800'
+                      }`}
+                    >
+                      {formatRecipientStatusLabel(rec.status, rec.delivered)}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -1491,6 +1562,28 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
               </a>
               <div className="text-xs text-slate-500 pt-1">
                 {COMPANY.hours.dispatch}
+              </div>
+              <div className="pt-4 border-t border-slate-200 space-y-2.5">
+                <div className="flex items-center gap-2 text-[#071E41]">
+                  <Mail className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
+                  <span className="text-xs font-extrabold uppercase tracking-wider font-display">
+                    Official Company Emails
+                  </span>
+                </div>
+                {COMPANY_EMAILS.entries.map((entry) => (
+                  <div key={entry.key} className="min-w-0">
+                    <span className="block text-[11px] font-bold text-slate-500">
+                      {entry.label}
+                    </span>
+                    <a
+                      href={entry.href}
+                      aria-label={entry.ariaLabel}
+                      className="min-h-[44px] inline-flex items-center text-sm font-semibold text-[#071E41] hover:underline break-all"
+                    >
+                      {entry.address}
+                    </a>
+                  </div>
+                ))}
               </div>
             </div>
 

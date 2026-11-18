@@ -188,7 +188,11 @@ export function generateQuoteReference(): string {
 
 export async function findQuoteByIdempotencyKey(
   idempotencyKey: string
-): Promise<{ quote: StoredQuoteRequest; outbox: StoredEmailOutbox | null } | null> {
+): Promise<{
+  quote: StoredQuoteRequest;
+  outbox: StoredEmailOutbox | null;
+  outboxes: StoredEmailOutbox[];
+} | null> {
   if (!idempotencyKey) return null;
 
   if (isSupabaseConfigured()) {
@@ -198,17 +202,17 @@ export async function findQuoteByIdempotencyKey(
     const quote = rows[0];
     if (!quote) return null;
     const outboxRows = await supabaseFetch<StoredEmailOutbox[]>(
-      `email_outbox?quote_request_id=eq.${encodeURIComponent(quote.id)}&limit=1`
+      `email_outbox?quote_request_id=eq.${encodeURIComponent(quote.id)}&order=created_at.asc`
     );
-    return { quote, outbox: outboxRows[0] || null };
+    return { quote, outbox: outboxRows[0] || null, outboxes: outboxRows };
   }
 
   assertDurableProductionStorage();
   const state = ensureLocalStore();
   const quote = state.quote_requests.find((q) => q.idempotency_key === idempotencyKey);
   if (!quote) return null;
-  const outbox = state.email_outbox.find((o) => o.quote_request_id === quote.id) || null;
-  return { quote, outbox };
+  const outboxes = state.email_outbox.filter((o) => o.quote_request_id === quote.id);
+  return { quote, outbox: outboxes[0] || null, outboxes };
 }
 
 export async function createQuoteAndOutbox(params: {
@@ -217,14 +221,30 @@ export async function createQuoteAndOutbox(params: {
   idempotencyKey: string;
   ipHash: string | null;
   emailPayload: {
-    recipientEmail: string;
+    recipientEmail?: string;
+    recipientEmails?: string[];
     replyToEmail: string;
     senderEmail: string;
     subject: string;
     htmlBody: string;
     textBody: string;
   };
-}): Promise<{ quote: StoredQuoteRequest; outbox: StoredEmailOutbox }> {
+}): Promise<{ quote: StoredQuoteRequest; outbox: StoredEmailOutbox; outboxes: StoredEmailOutbox[] }> {
+  const recipients = Array.from(
+    new Set(
+      (
+        params.emailPayload.recipientEmails && params.emailPayload.recipientEmails.length > 0
+          ? params.emailPayload.recipientEmails
+          : params.emailPayload.recipientEmail
+          ? [params.emailPayload.recipientEmail]
+          : []
+      ).map((r) => r.trim().toLowerCase())
+    )
+  ).filter(Boolean);
+
+  if (recipients.length === 0) {
+    throw new Error('At least one recipient email is required to queue quote notifications.');
+  }
   const now = new Date();
   const nowIso = now.toISOString();
   const retentionIso = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString();
@@ -274,11 +294,11 @@ export async function createQuoteAndOutbox(params: {
       throw new Error('Failed to persist quote request to Supabase.');
     }
 
-    const outboxInsert = {
+    const outboxInserts = recipients.map((recipientEmail) => ({
       quote_request_id: quote.id,
       reference_number: quote.reference_number,
       notification_type: 'quote_notification',
-      recipient_email: params.emailPayload.recipientEmail,
+      recipient_email: recipientEmail,
       reply_to_email: params.emailPayload.replyToEmail,
       sender_email: params.emailPayload.senderEmail,
       subject: params.emailPayload.subject,
@@ -288,79 +308,95 @@ export async function createQuoteAndOutbox(params: {
       attempt_count: 0,
       max_attempts: 5,
       next_retry_at: nowIso,
-    };
+    }));
 
-    const insertedOutbox = await supabaseFetch<StoredEmailOutbox[]>('email_outbox', {
+    const insertedOutboxes = await supabaseFetch<StoredEmailOutbox[]>('email_outbox', {
       method: 'POST',
       headers: { Prefer: 'return=representation' },
-      body: JSON.stringify(outboxInsert),
+      body: JSON.stringify(outboxInserts),
     });
-    const outbox = insertedOutbox[0];
-    if (!outbox) {
-      throw new Error('Failed to persist email outbox record to Supabase.');
+    if (!insertedOutboxes || insertedOutboxes.length === 0) {
+      throw new Error('Failed to persist email outbox records to Supabase.');
     }
 
-    await recordDeliveryEvent({
-      outboxId: outbox.id,
-      quoteRequestId: quote.id,
-      attemptNumber: 0,
-      eventType: 'queued',
-      metadata: { referenceNumber: quote.reference_number },
-    });
+    for (const outbox of insertedOutboxes) {
+      await recordDeliveryEvent({
+        outboxId: outbox.id,
+        quoteRequestId: quote.id,
+        attemptNumber: 0,
+        eventType: 'queued',
+        metadata: {
+          referenceNumber: quote.reference_number,
+          recipientEmail: outbox.recipient_email,
+        },
+      });
+    }
 
-    return { quote, outbox };
+    return { quote, outbox: insertedOutboxes[0], outboxes: insertedOutboxes };
   }
 
-  // Local durable JSON store fallback (development only)
+  // Local durable JSON store fallback (development / container preview)
   assertDurableProductionStorage();
   const state = ensureLocalStore();
   const quote: StoredQuoteRequest = {
     id: crypto.randomUUID(),
     ...quoteRecord,
   };
-  const outbox: StoredEmailOutbox = {
-    id: crypto.randomUUID(),
-    quote_request_id: quote.id,
-    reference_number: quote.reference_number,
-    notification_type: 'quote_notification',
-    recipient_email: params.emailPayload.recipientEmail,
-    reply_to_email: params.emailPayload.replyToEmail,
-    sender_email: params.emailPayload.senderEmail,
-    subject: params.emailPayload.subject,
-    html_body: params.emailPayload.htmlBody,
-    text_body: params.emailPayload.textBody,
-    status: 'pending',
-    attempt_count: 0,
-    max_attempts: 5,
-    next_retry_at: nowIso,
-    locked_at: null,
-    provider: null,
-    provider_message_id: null,
-    last_error: null,
-    sent_at: null,
-    created_at: nowIso,
-    updated_at: nowIso,
-  };
 
-  const event: StoredDeliveryEvent = {
-    id: crypto.randomUUID(),
-    outbox_id: outbox.id,
-    quote_request_id: quote.id,
-    attempt_number: 0,
-    event_type: 'queued',
-    provider: null,
-    provider_message_id: null,
-    error_message: null,
-    metadata: { referenceNumber: quote.reference_number },
-    created_at: nowIso,
-  };
+  const outboxes: StoredEmailOutbox[] = [];
+  const events: StoredDeliveryEvent[] = [];
+
+  for (const recipientEmail of recipients) {
+    const outbox: StoredEmailOutbox = {
+      id: crypto.randomUUID(),
+      quote_request_id: quote.id,
+      reference_number: quote.reference_number,
+      notification_type: 'quote_notification',
+      recipient_email: recipientEmail,
+      reply_to_email: params.emailPayload.replyToEmail,
+      sender_email: params.emailPayload.senderEmail,
+      subject: params.emailPayload.subject,
+      html_body: params.emailPayload.htmlBody,
+      text_body: params.emailPayload.textBody,
+      status: 'pending',
+      attempt_count: 0,
+      max_attempts: 5,
+      next_retry_at: nowIso,
+      locked_at: null,
+      provider: null,
+      provider_message_id: null,
+      last_error: null,
+      sent_at: null,
+      created_at: nowIso,
+      updated_at: nowIso,
+    };
+
+    const event: StoredDeliveryEvent = {
+      id: crypto.randomUUID(),
+      outbox_id: outbox.id,
+      quote_request_id: quote.id,
+      attempt_number: 0,
+      event_type: 'queued',
+      provider: null,
+      provider_message_id: null,
+      error_message: null,
+      metadata: {
+        referenceNumber: quote.reference_number,
+        recipientEmail,
+      },
+      created_at: nowIso,
+    };
+
+    outboxes.push(outbox);
+    events.push(event);
+  }
 
   state.quote_requests.unshift(quote);
-  state.email_outbox.unshift(outbox);
-  state.email_delivery_events.unshift(event);
+  state.email_outbox.unshift(...outboxes);
+  state.email_delivery_events.unshift(...events);
   writeLocalStore(state);
 
-  return { quote, outbox };
+  return { quote, outbox: outboxes[0], outboxes };
 }
 
 export async function recordDeliveryEvent(params: {

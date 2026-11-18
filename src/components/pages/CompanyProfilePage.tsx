@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PageView } from '../common/Header';
-import { COMPANY_PHONE } from '../../config/company';
+import { COMPANY_EMAILS, COMPANY_PHONE } from '../../config/company';
 import { LOGOS, ASSETS, COMPANY_PROFILE_PDF_URL } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 import { ResponsiveTabs, ResponsiveTabItem, getPanelId, getTabId } from '../common/ResponsiveTabs';
@@ -276,7 +276,20 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
                     >
                       {COMPANY_PHONE.display}
                     </a>
-                    <span className="block text-slate-600">wright.wendell@icloud.com</span>
+                    <a
+                      href={`mailto:${COMPANY_EMAILS.dispatch}`}
+                      aria-label="Email Dispatch and Operations at wright.wendell@icloud.com"
+                      className="block text-slate-700 hover:text-[#071E41] font-semibold break-all py-1"
+                    >
+                      {COMPANY_EMAILS.dispatch}
+                    </a>
+                    <a
+                      href={`mailto:${COMPANY_EMAILS.general}`}
+                      aria-label="Email General Inquiries at info@momentumtransporthauling.com"
+                      className="block text-slate-700 hover:text-[#071E41] font-semibold break-all py-1"
+                    >
+                      {COMPANY_EMAILS.general}
+                    </a>
                   </div>
                 </div>
 
@@ -945,17 +958,27 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
                 </div>
               </div>
 
-              {/* Card 3: Email */}
-              <div className="p-6 rounded-xl bg-[#F5F7FA] border border-slate-200 space-y-2">
+              {/* Card 3: Official Company Emails */}
+              <div className="p-6 rounded-xl bg-[#F5F7FA] border border-slate-200 space-y-2.5">
                 <div className="flex items-center gap-2 text-[#071E41]">
-                  <Mail className="w-4 h-4 text-[#C99A31]" />
-                  <span className="font-bold uppercase tracking-wider text-xs font-display">Corporate Email</span>
+                  <Mail className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
+                  <span className="font-bold uppercase tracking-wider text-xs font-display">Official Company Emails</span>
                 </div>
-                <a href="mailto:wright.wendell@icloud.com" className="text-sm font-bold text-[#071E41] hover:text-[#C99A31] block break-all">
-                  wright.wendell@icloud.com
-                </a>
-                <div className="text-xs text-slate-600">
-                  Central inquiries &amp; rate quotation inbox
+                <div className="space-y-2">
+                  {COMPANY_EMAILS.entries.map((entry) => (
+                    <div key={entry.key} className="min-w-0">
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        {entry.label}
+                      </span>
+                      <a
+                        href={entry.href}
+                        aria-label={entry.ariaLabel}
+                        className="min-h-[44px] inline-flex items-center text-sm font-bold text-[#071E41] hover:text-[#C99A31] break-all"
+                      >
+                        {entry.address}
+                      </a>
+                    </div>
+                  ))}
                 </div>
               </div>
 

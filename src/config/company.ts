@@ -12,6 +12,31 @@ export const COMPANY_PHONE = {
   ariaLabel: 'Call Momentum Transportation and Hauling at +1 803 718 5509',
 } as const;
 
+export const COMPANY_EMAILS = {
+  dispatch: 'wright.wendell@icloud.com',
+  general: 'info@momentumtransporthauling.com',
+  quoteRecipients: [
+    'wright.wendell@icloud.com',
+    'info@momentumtransporthauling.com',
+  ],
+  entries: [
+    {
+      key: 'dispatch',
+      label: 'Dispatch & Operations',
+      address: 'wright.wendell@icloud.com',
+      href: 'mailto:wright.wendell@icloud.com',
+      ariaLabel: 'Email Dispatch and Operations at wright.wendell@icloud.com',
+    },
+    {
+      key: 'general',
+      label: 'General Inquiries',
+      address: 'info@momentumtransporthauling.com',
+      href: 'mailto:info@momentumtransporthauling.com',
+      ariaLabel: 'Email General Inquiries at info@momentumtransporthauling.com',
+    },
+  ],
+} as const;
+
 export const COMPANY = {
   legalName: 'Momentum Transportation & Hauling LLC',
   displayName: 'Momentum Transportation & Hauling',
@@ -29,8 +54,10 @@ export const COMPANY = {
     phone: COMPANY_PHONE.display,
     formattedPhone: COMPANY_PHONE.display,
     phoneTel: COMPANY_PHONE.href,
-    email: 'wright.wendell@icloud.com',
-    emailMailto: 'mailto:wright.wendell@icloud.com',
+    email: COMPANY_EMAILS.dispatch,
+    emailMailto: `mailto:${COMPANY_EMAILS.dispatch}`,
+    generalEmail: COMPANY_EMAILS.general,
+    generalEmailMailto: `mailto:${COMPANY_EMAILS.general}`,
   },
 
   primaryMarket: 'Columbia, South Carolina',
