@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { PageView } from '../common/Header';
 import { COMPANY } from '../../config/company';
 import { Logo } from '../common/Logo';
@@ -40,6 +40,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
     consent: false,
   });
 
+  const submissionKey = useRef<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -48,6 +49,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
+    submissionKey.current = null;
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData((prev) => ({ ...prev, [name]: checked }));
@@ -121,11 +123,12 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
     }
 
     setIsSubmitting(true);
+    if (!submissionKey.current) submissionKey.current = crypto.randomUUID();
 
     try {
       const response = await fetch(getApiUrl('/api/quotes'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': submissionKey.current },
         body: JSON.stringify(formData),
       });
 
@@ -181,7 +184,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
                 {submittedQuote.referenceNumber}
               </div>
               <p className="text-xs text-slate-300 pt-1">
-                Save this number to track your shipment in the Customer Portal or reference during telephone dispatch inquiries.
+                Save this number for reference when contacting our dispatch team about your quote request.
               </p>
             </div>
 
@@ -233,12 +236,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
               </button>
 
               <div className="flex items-center gap-3">
-                <button
-                  onClick={() => onNavigate('portal')}
-                  className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded font-display cursor-pointer"
-                >
-                  View in Customer Portal
-                </button>
+
                 <button
                   onClick={() => {
                     setSubmittedQuote(null);

@@ -174,22 +174,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             </ul>
           </div>
 
-          {/* Col 5: Portals & Security */}
+          {/* Col 5: Quote & Support */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-white font-display mb-4">
-              Operations &amp; Portals
+              Request a Quote &amp; Support
             </h4>
             <ul className="space-y-2.5 text-xs text-slate-400">
-              <li>
-                <button onClick={() => handleNav('portal')} className="hover:text-[#C99A31] transition-colors text-left cursor-pointer font-medium flex items-center gap-1.5">
-                  <span>Customer Shipment Portal</span>
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('operations')} className="hover:text-[#C99A31] transition-colors text-left cursor-pointer font-medium flex items-center gap-1.5">
-                  <span>Operations Command Suite</span>
-                </button>
-              </li>
               <li>
                 <button onClick={() => handleNav('quote')} className="hover:text-white transition-colors text-left cursor-pointer">
                   Instant Freight Quote
