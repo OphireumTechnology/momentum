@@ -685,7 +685,9 @@ app.post('/api/quotes', async (req, res) => {
     }
 
     const refNum = `MTH-Q-${new Date().getUTCFullYear()}-${crypto.randomUUID().slice(0, 12).toUpperCase()}`;
-    const weight = Number(estimatedWeightLbs) || 10000;
+    const weight = estimatedWeightLbs === undefined || estimatedWeightLbs === null || estimatedWeightLbs === ''
+      ? 10000
+      : Number(estimatedWeightLbs);
     if (!Number.isFinite(weight) || weight <= 0 || weight > 200_000) {
       return res.status(400).json({ success: false, error: 'Invalid estimated freight weight.' });
     }
