@@ -144,16 +144,24 @@ export async function sendNotificationEmail(params: {
     .map(([k, v]) => `${k.replace(/([A-Z])/g, ' $1').toUpperCase()}: ${v}`)
     .join('\n');
 
+  const escapeHtml = (value: unknown): string => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[ch] || ch));
+
   const fieldListHtml = Object.entries(params.fields)
     .filter(([_, v]) => v !== undefined && v !== null && v !== '')
     .map(
       ([k, v]) => `
       <tr>
         <td style="padding: 10px 14px; font-weight: bold; color: #071E41; border-bottom: 1px solid #E5E7EB; width: 35%; text-transform: capitalize; background-color: #F8FAFC;">
-          ${k.replace(/([A-Z])/g, ' $1')}
+          ${escapeHtml(k.replace(/([A-Z])/g, ' $1'))}
         </td>
         <td style="padding: 10px 14px; color: #1F2937; border-bottom: 1px solid #E5E7EB;">
-          ${String(v).replace(/\n/g, '<br/>')}
+          ${escapeHtml(v).replace(/\n/g, '<br/>')}
         </td>
       </tr>`
     )
@@ -164,7 +172,7 @@ export async function sendNotificationEmail(params: {
     <html>
       <head>
         <meta charset="utf-8">
-        <title>${params.subject}</title>
+        <title>${escapeHtml(params.subject)}</title>
       </head>
       <body style="margin: 0; padding: 24px; background-color: #F5F7FA; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
         <div style="max-width: 640px; margin: 0 auto; background-color: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
@@ -185,20 +193,20 @@ export async function sendNotificationEmail(params: {
           <div style="padding: 24px;">
             <div style="background-color: #F8FAFC; border-left: 4px solid #071E41; padding: 12px 16px; margin-bottom: 20px;">
               <span style="font-size: 11px; font-weight: bold; color: #64748B; text-transform: uppercase; display: block;">Reference Number</span>
-              <span style="font-size: 18px; font-weight: 800; color: #071E41; font-family: monospace;">${params.referenceNumber}</span>
+              <span style="font-size: 18px; font-weight: 800; color: #071E41; font-family: monospace;">${escapeHtml(params.referenceNumber)}</span>
               <span style="font-size: 11px; color: #64748B; display: block; margin-top: 4px;">Submitted: ${new Date(timestamp).toLocaleString('en-US', { timeZone: 'America/New_York' })} EST</span>
             </div>
 
             <h2 style="font-size: 16px; color: #071E41; margin: 0 0 12px 0; border-bottom: 2px solid #F1F5F9; padding-bottom: 6px;">
-              ${params.summary}
+              ${escapeHtml(params.summary)}
             </h2>
 
             <!-- Customer Overview -->
             <div style="margin-bottom: 20px; font-size: 13px; line-height: 1.6;">
-              <div><strong>Customer / Sender:</strong> ${params.customer.name}</div>
-              ${params.customer.company ? `<div><strong>Company:</strong> ${params.customer.company}</div>` : ''}
-              <div><strong>Email:</strong> <a href="mailto:${params.customer.email}" style="color: #071E41; font-weight: bold;">${params.customer.email}</a></div>
-              ${params.customer.phone ? `<div><strong>Phone:</strong> <a href="tel:${params.customer.phone.replace(/[^0-9]/g, '')}" style="color: #071E41; font-weight: bold;">${params.customer.phone}</a></div>` : ''}
+              <div><strong>Customer / Sender:</strong> ${escapeHtml(params.customer.name)}</div>
+              ${params.customer.company ? `<div><strong>Company:</strong> ${escapeHtml(params.customer.company)}</div>` : ''}
+              <div><strong>Email:</strong> <a href="mailto:${escapeHtml(params.customer.email)}" style="color: #071E41; font-weight: bold;">${escapeHtml(params.customer.email)}</a></div>
+              ${params.customer.phone ? `<div><strong>Phone:</strong> <a href="tel:${params.customer.phone.replace(/[^0-9]/g, '')}" style="color: #071E41; font-weight: bold;">${escapeHtml(params.customer.phone)}</a></div>` : ''}
             </div>
 
             <!-- Parameters Table -->
@@ -210,14 +218,14 @@ export async function sendNotificationEmail(params: {
 
             <!-- Reply Prompt -->
             <div style="background-color: #FFFBEB; border: 1px solid #FDE68A; padding: 12px 16px; border-radius: 6px; font-size: 12px; color: #92400E;">
-              <strong>Direct Reply Available:</strong> Simply click &quot;Reply&quot; in your email client to send a direct response to ${params.customer.name} (${params.customer.email}).
+              <strong>Direct Reply Available:</strong> Simply click &quot;Reply&quot; in your email client to send a direct response to ${escapeHtml(params.customer.name)} (${escapeHtml(params.customer.email)}).
             </div>
           </div>
 
           <!-- Footer -->
           <div style="background-color: #F8FAFC; padding: 16px 24px; border-top: 1px solid #E5E7EB; font-size: 11px; color: #64748B; text-align: center;">
             Momentum Transportation &amp; Hauling LLC · 2 Penhurst Ct., Columbia, SC 29229 · (803) 718-5509<br>
-            Delivered directly to: <strong>${toAddress}</strong>
+            Delivered directly to: <strong>${escapeHtml(toAddress)}</strong>
           </div>
         </div>
       </body>
