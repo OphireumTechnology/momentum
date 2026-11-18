@@ -657,151 +657,82 @@ let drivers: DriverRecord[] = [
 // --- REST API ENDPOINTS ---
 
 // 1. Submit Quote Request (With Automatic Email Notification to wright.wendell@icloud.com)
+// Public quote intake: persist to Supabase; no email transport or domain required.
+// Never acknowledge a quote as stored unless the database confirms persistence.
 app.post('/api/quotes', async (req, res) => {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SECRET_KEY;
+  if (!url || !key || !/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(url)) {
+    return res.status(503).json({ success: false, code: 'QUOTE_STORAGE_UNCONFIGURED' });
+  }
+  const body = req.body || {};
+  const fields = ['customerName','email','phone','pickupLocation','deliveryLocation','loadDescription'];
+  if (!fields.every(k => typeof body[k] === 'string' && body[k].trim().length > 0 && body[k].length <= 2000)
+    || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)
+    || (body.estimatedWeightLbs != null && body.estimatedWeightLbs !== '' && (!Number.isFinite(Number(body.estimatedWeightLbs)) || Number(body.estimatedWeightLbs) <= 0))) {
+    return res.status(400).json({ success: false, code: 'INVALID_QUOTE_REQUEST' });
+  }
+  const optional = ['companyName','serviceCategory','pickupDate','deliveryDate','dimensions','specialHandling'];
+  if (optional.some(k => body[k] != null && (typeof body[k] !== 'string' || body[k].length > 2000))) {
+    return res.status(400).json({ success: false, code: 'INVALID_QUOTE_REQUEST' });
+  }
+  const reference = 'MTH-Q-' + crypto.randomUUID().replace(/-/g,'').slice(0,12).toUpperCase();
+  const base = url.replace(/\/$/,'') + '/rest/v1/';
+  const headers = { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json', Prefer: 'return=representation' };
+  const request = {
+    reference_number: reference,
+    customer_name: body.customerName.trim(),
+    company_name: body.companyName || null,
+    email: body.email.trim(),
+    phone: body.phone.trim(),
+    service_type: body.serviceCategory || 'dry_van',
+    pickup_location: body.pickupLocation.trim(),
+    delivery_location: body.deliveryLocation.trim(),
+    pickup_date: body.pickupDate || null,
+    delivery_date: body.deliveryDate || null,
+    freight_description: body.loadDescription.trim(),
+    freight_weight_lbs: body.estimatedWeightLbs ? Number(body.estimatedWeightLbs) : null,
+    dimensions: body.dimensions || null,
+    special_requirements: body.specialHandling || null,
+    source: 'website'
+  };
   try {
-    const {
-      customerName,
-      companyName,
-      email,
-      phone,
-      serviceCategory,
-      pickupLocation,
-      deliveryLocation,
-      pickupDate,
-      deliveryDate,
-      estimatedWeightLbs,
-      dimensions,
-      loadDescription,
-      specialHandling,
-    } = req.body;
-
-    if (![customerName, email, phone, pickupLocation, deliveryLocation, loadDescription].every(
-      (value) => typeof value === 'string' && value.trim().length > 0 && value.length <= 2000
-    ) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Please fill in all required fields (Name, Email, Phone, Origin, Destination, Load Description).',
-      });
+    const saved = await fetch(base + 'quote_requests', { method: 'POST', headers, body: JSON.stringify(request), signal: AbortSignal.timeout(10000) });
+    if (!saved.ok) {
+      console.error('Quote database insert failed', saved.status);
+      return res.status(503).json({ success: false, code: 'QUOTE_STORAGE_UNAVAILABLE' });
     }
-
-    const refNum = `MTH-Q-${new Date().getUTCFullYear()}-${crypto.randomUUID().slice(0, 12).toUpperCase()}`;
-    const weight = estimatedWeightLbs === undefined || estimatedWeightLbs === null || estimatedWeightLbs === ''
-      ? 10000
-      : Number(estimatedWeightLbs);
-    if (!Number.isFinite(weight) || weight <= 0 || weight > 200_000) {
-      return res.status(400).json({ success: false, error: 'Invalid estimated freight weight.' });
-    }
-
-    const baseFee = 350;
-    const estDistance = 120;
-    const estimatedRate = Math.round(baseFee + estDistance * 3.4 + (weight > 30000 ? 200 : 0));
-
-    const newQuote: QuoteRecord = {
-      id: `q-${Date.now()}`,
-      referenceNumber: refNum,
-      customerName,
-      companyName: companyName || '',
-      email,
-      phone,
-      serviceCategory: serviceCategory || 'dry_van',
-      pickupLocation,
-      deliveryLocation,
-      pickupDate: pickupDate || new Date().toISOString().split('T')[0],
-      deliveryDate: deliveryDate || '',
-      estimatedWeightLbs: weight,
-      dimensions: dimensions || 'Standard Freight',
-      loadDescription,
-      specialHandling: specialHandling || '',
-      status: 'pending',
-      estimatedRate,
-      notes: 'Customer submitted via online portal. Pending operations review.',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    quotes.unshift(newQuote);
-
-    // Standardized subject lines per Directive §4
-    let emailSubject = `[MOMENTUM] New Freight Quotation Request — ${refNum}`;
-    let categoryKey = 'freight_quote';
-    if (serviceCategory === 'cargo_van') {
-      emailSubject = `[MOMENTUM] Cargo Van Service Request — ${refNum}`;
-      categoryKey = 'cargo_van';
-    } else if (
-      serviceCategory === 'preconstruction_hauling' ||
-      serviceCategory === 'ongoing_construction' ||
-      serviceCategory === 'construction_hauling' ||
-      serviceCategory === 'flatbed_materials' ||
-      serviceCategory === 'project_logistics'
-    ) {
-      emailSubject = `[MOMENTUM] Construction Hauling Inquiry — ${refNum}`;
-      categoryKey = 'construction_hauling';
-    } else if (serviceCategory === 'heavy_haul' || serviceCategory === 'equipment_mobilization') {
-      emailSubject = `[MOMENTUM] Equipment Mobilization & Machinery Haul — ${refNum}`;
-      categoryKey = 'equipment_mobilization';
-    }
-
-    // Trigger email notification to official recipient
-    const emailResult = await sendNotificationEmail({
-      referenceNumber: refNum,
-      category: categoryKey,
-      subject: emailSubject,
-      customer: {
-        name: customerName,
-        email,
-        phone,
-        company: companyName,
-      },
-      summary: `New Rate Proposal & Quotation Submission: ${refNum}`,
-      fields: {
-        serviceCategory: (serviceCategory || 'dry_van').replace(/_/g, ' '),
-        origin: pickupLocation,
-        destination: deliveryLocation,
-        targetPickupDate: pickupDate || 'Immediate / Coordinated',
-        estimatedWeight: `${weight.toLocaleString()} lbs`,
-        dimensions: dimensions || 'Standard Freight',
-        loadDescription,
-        specialHandling: specialHandling || 'None noted',
-        systemEstimatedBaseline: `$${estimatedRate.toLocaleString()}`,
-        destinationInbox: OFFICIAL_RECIPIENT_EMAIL,
-      },
+    const rows = await saved.json();
+    const id = rows?.[0]?.id;
+    if (!id) return res.status(503).json({ success: false, code: 'QUOTE_STORAGE_UNAVAILABLE' });
+    const outbox = await fetch(base + 'email_outbox', {
+      method: 'POST', headers,
+      body: JSON.stringify({
+        quote_request_id: id,
+        recipient_email: 'wright.wendell@icloud.com',
+        subject: '[MOMENTUM] New Freight Quotation Request — ' + reference,
+        payload: { reference_number: reference, ...request },
+        status: 'pending'
+      }),
+      signal: AbortSignal.timeout(10000)
     });
-
+    if (!outbox.ok) {
+      console.error('Quote notification queue insert failed', outbox.status, reference);
+      return res.status(503).json({ success: false, code: 'QUOTE_NOTIFICATION_QUEUE_UNAVAILABLE', referenceNumber: reference });
+    }
     return res.status(201).json({
-      success: true,
-      message: emailResult.delivered ? 'Quote request delivered to operations.' : 'Quote received by this server; email delivery is unconfirmed.',
-      quote: newQuote,
-      emailNotification: emailResult,
+      success: true, referenceNumber: reference, status: 'received',
+      emailStatus: 'pending_domain_verification',
+      message: 'Your quote request has been saved. Our team will review it.'
     });
-  } catch (err: any) {
-    console.error('Error creating quote:', err);
-    return res.status(500).json({ success: false, error: 'Internal server error processing quote.' });
+  } catch (error) {
+    console.error('Quote persistence unavailable', error instanceof Error ? error.name : 'unknown');
+    return res.status(503).json({ success: false, code: 'QUOTE_STORAGE_UNAVAILABLE' });
   }
 });
 
-// 2. Get Quotes
-app.get('/api/quotes', (req, res) => {
-  const { status, search } = req.query;
-  let filtered = [...quotes];
-
-  if (status && status !== 'all') {
-    filtered = filtered.filter((q) => q.status === status);
-  }
-
-  if (search && typeof search === 'string') {
-    const s = search.toLowerCase();
-    filtered = filtered.filter(
-      (q) =>
-        q.referenceNumber.toLowerCase().includes(s) ||
-        q.customerName.toLowerCase().includes(s) ||
-        (q.companyName && q.companyName.toLowerCase().includes(s)) ||
-        q.pickupLocation.toLowerCase().includes(s) ||
-        q.deliveryLocation.toLowerCase().includes(s)
-    );
-  }
-
-  return res.json({ success: true, quotes: filtered });
-});
+// Quote listing and management are intentionally unavailable without admin authentication.
+app.get('/api/quotes', (_req, res) => res.status(403).json({ success: false, code: 'ADMIN_AUTH_REQUIRED' }));
 
 // 3. Update Quote Status / Rate
 app.patch('/api/quotes/:id', (req, res) => {
