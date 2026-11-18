@@ -874,7 +874,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                   Shipment Visibility
                 </h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Verified milestone reporting and signed Proof of Delivery (POD) documentation accessible through the online Customer Portal or via direct email.
+                  Verified milestone reporting and signed Proof of Delivery (POD) documentation provided directly via dispatch coordination and email.
                 </p>
                 <div className="text-[11px] text-[#C99A31] font-semibold flex items-center gap-1.5 pt-1">
                   <CheckCircle2 className="w-3.5 h-3.5" />
@@ -917,10 +917,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => onNavigate('portal')}
-                      className="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700"
+                      onClick={() => onNavigate('quote')}
+                      className="px-3 py-1.5 rounded bg-[#C99A31] hover:bg-[#E8BE65] text-[#071E41] text-xs font-bold cursor-pointer"
                     >
-                      Customer Portal
+                      Request a Quote
                     </button>
                   </div>
                 </div>

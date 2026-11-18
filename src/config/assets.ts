@@ -20,10 +20,8 @@ import constructionLogistics from '../assets/images/construction_logistics_17939
 // Supporting Operational & Facilities Assets
 import aboutOperations from '../assets/images/momentum_about_operations_1793927090246.jpg';
 import contactHero from '../assets/images/momentum_contact_hero_1793927092952.jpg';
-import portalHero from '../assets/images/momentum_portal_hero_1793927094534.jpg';
 import careersHero from '../assets/images/momentum_careers_hero_1793927094602.jpg';
 import safetyHero from '../assets/images/momentum_safety_hero_1793927094788.jpg';
-import commandCenter from '../assets/images/momentum_command_center_1793927094510.jpg';
 
 // Newly Generated Technology & Logistics Assets
 import connectedLogisticsNetwork from '../assets/images/connected_logistics_network_1793953504093.jpg';
@@ -79,10 +77,8 @@ export const ASSETS = {
   // Operational Context Images
   aboutOperations,
   contactHero,
-  portalHero,
   careersHero,
   safetyHero,
-  commandCenter,
 
   // Technology & Network Visuals
   connectedLogisticsNetwork,
@@ -199,11 +195,6 @@ export const ASSET_METADATA = {
     alt: 'Modern logistics dispatch operations office with fleet monitoring workstations',
     caption: 'Direct coordination with dispatch and customer support personnel.',
   },
-  portalHero: {
-    src: ASSETS.portalHero,
-    alt: 'Transportation management desktop interface showing shipment milestones and logistics metrics',
-    caption: 'Client access to verified milestones and documentation.',
-  },
   careersHero: {
     src: ASSETS.careersHero,
     alt: 'Professional commercial driver conducting pre-trip inspection beside a commercial truck',
@@ -213,11 +204,6 @@ export const ASSET_METADATA = {
     src: ASSETS.safetyHero,
     alt: 'Safety technician conducting comprehensive pre-trip wheel and mechanical inspection',
     caption: 'Commitment to road safety, regular maintenance, and compliance standards.',
-  },
-  commandCenter: {
-    src: ASSETS.commandCenter,
-    alt: 'Enterprise logistics operations command center with active route monitoring',
-    caption: 'Centralized dispatch, load coordination, and route oversight.',
   },
   officialEmblem: {
     src: LOGOS.transparent,

@@ -1,20 +1,198 @@
-import express from 'express';
-import { createServer as createViteServer } from 'vite';
+import crypto from 'crypto';
 import dotenv from 'dotenv';
+import express from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
 import nodemailer from 'nodemailer';
+import { createServer as createViteServer } from 'vite';
+import {
+  buildQuoteNotificationEmail,
+  escapeHtml,
+  getActiveEmailProviderName,
+  getConfiguredSender,
+  isEmailProviderConfigured,
+  OFFICIAL_RECIPIENT_EMAIL,
+  processOutboxJob,
+  startOutboxRetryWorker,
+} from './server/emailOutbox.ts';
+import {
+  createQuoteAndOutbox,
+  findQuoteByIdempotencyKey,
+  generateQuoteReference,
+  getPersistenceBackend,
+  hashClientIp,
+  listOutboxForAdmin,
+  listQuotesForAdmin,
+  purgeExpiredLocalRecords,
+} from './server/persistence.ts';
+import { validateAndNormalizeQuote } from './src/shared/quoteSchema.ts';
 
 dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
-app.use(express.json({ limit: '15mb' }));
+app.set('trust proxy', 1);
 
-// Initialize GoogleGenAI SDK with required telemetry
+// Security Headers
+app.use((_req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  next();
+});
+
+// Restrictive CORS Configuration
+const DEFAULT_ALLOWED_ORIGINS = [
+  'https://ophireumtechnology.github.io',
+  'https://momentum-production-7643a06f.up.railway.app',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+];
+
+function getAllowedOrigins(): Set<string> {
+  const configured = (process.env.CORS_ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((o) => o.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+  return new Set([...DEFAULT_ALLOWED_ORIGINS, ...configured]);
+}
+
+function isOriginAllowed(origin: string | undefined): boolean {
+  if (!origin) return true; // Same-origin or curl/server-to-server requests without Origin header
+  const normalized = origin.replace(/\/$/, '');
+  const allowed = getAllowedOrigins();
+  if (allowed.has(normalized)) return true;
+
+  // Allow AI Studio preview origin when running inside AI Studio dev/shared preview
+  if (process.env.NODE_ENV !== 'production') {
+    if (
+      /^https:\/\/ais-(dev|pre)-[a-z0-9-]+\.[a-z0-9-]+\.run\.app$/i.test(normalized) ||
+      /^http:\/\/(localhost|127\.0\.0\.1):3000$/i.test(normalized)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    if (!isOriginAllowed(origin)) {
+      if (req.path.startsWith('/api/')) {
+        return res.status(403).json({
+          success: false,
+          error: 'Origin not permitted by CORS policy.',
+        });
+      }
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Idempotency-Key, Authorization');
+      res.setHeader('Access-Control-Max-Age', '600');
+    }
+  }
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  next();
+});
+
+// Strict JSON body size limit
+app.use(express.json({ limit: '64kb' }));
+
+// Handle malformed JSON payloads cleanly
+app.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {
+  if (err && typeof err === 'object' && 'type' in err && (err as { type?: string }).type === 'entity.parse.failed') {
+    return res.status(400).json({ success: false, error: 'Malformed JSON request payload.' });
+  }
+  if (err && typeof err === 'object' && 'type' in err && (err as { type?: string }).type === 'entity.too.large') {
+    return res.status(413).json({ success: false, error: 'Request payload exceeds maximum allowed size.' });
+  }
+  next(err);
+});
+
+// Sliding-Window Rate Limiter for Public Submission Endpoints
+const rateLimitBuckets = new Map<string, number[]>();
+
+function createRateLimiter(windowMs: number, maxRequests: number) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+    const key = `${req.path}:${clientIp}`;
+    const now = Date.now();
+    const cutoff = now - windowMs;
+    const recent = (rateLimitBuckets.get(key) || []).filter((ts) => ts > cutoff);
+
+    if (recent.length >= maxRequests) {
+      const retryAfterSec = Math.max(1, Math.ceil((recent[0] + windowMs - now) / 1000));
+      res.setHeader('Retry-After', String(retryAfterSec));
+      return res.status(429).json({
+        success: false,
+        error: 'Too many requests submitted. Please wait briefly before trying again.',
+        retryAfterSeconds: retryAfterSec,
+      });
+    }
+
+    recent.push(now);
+    rateLimitBuckets.set(key, recent);
+    if (rateLimitBuckets.size > 5000) {
+      for (const [k, timestamps] of rateLimitBuckets.entries()) {
+        if (timestamps.every((t) => t <= cutoff)) {
+          rateLimitBuckets.delete(k);
+        }
+      }
+    }
+    next();
+  };
+}
+
+const quoteRateLimiter = createRateLimiter(10 * 60 * 1000, 12);
+const contactRateLimiter = createRateLimiter(10 * 60 * 1000, 10);
+
+// Strict Admin Authorization Middleware (never exposes data to anonymous callers)
+function requireAdminAuth(req: Request, res: Response, next: NextFunction) {
+  const configuredToken = process.env.ADMIN_API_TOKEN || '';
+  if (!configuredToken) {
+    return res.status(401).json({
+      success: false,
+      error: 'Unauthorized. Administrative access is disabled or requires authentication.',
+    });
+  }
+
+  const authHeader = req.headers.authorization || '';
+  const providedToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+
+  if (!providedToken) {
+    return res.status(401).json({
+      success: false,
+      error: 'Unauthorized. Missing bearer token.',
+    });
+  }
+
+  const expectedBuf = Buffer.from(configuredToken, 'utf8');
+  const providedBuf = Buffer.from(providedToken, 'utf8');
+
+  if (
+    expectedBuf.length !== providedBuf.length ||
+    !crypto.timingSafeEqual(expectedBuf, providedBuf)
+  ) {
+    return res.status(401).json({
+      success: false,
+      error: 'Unauthorized. Invalid credentials.',
+    });
+  }
+
+  next();
+}
+
+// Optional Gemini SDK for optional quote route feasibility assist
 const ai = process.env.GEMINI_API_KEY
   ? new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY,
@@ -27,1096 +205,175 @@ const ai = process.env.GEMINI_API_KEY
   : null;
 
 // =========================================================================
-// CENTRALIZED EMAIL ROUTING & AUDIT ENGINE
-// Official Recipient: wright.wendell@icloud.com
+// PUBLIC API ENDPOINTS
 // =========================================================================
-export const OFFICIAL_RECIPIENT_EMAIL = process.env.OFFICIAL_RECIPIENT_EMAIL || 'wright.wendell@icloud.com';
-export const OFFICIAL_DISPATCH_PHONE = '(803) 718-5509';
 
-export interface EmailAuditRecord {
-  id: string;
-  referenceNumber: string;
-  category: string;
-  to: string;
-  from: string;
-  replyTo: string;
-  subject: string;
-  status: 'delivered' | 'queued_pending_credentials' | 'failed';
-  timestamp: string;
-  error?: string;
-  customer: {
-    name: string;
-    email: string;
-    phone?: string;
-    company?: string;
-  };
-  summary: string;
-  fields: Record<string, any>;
-  acknowledgmentSent: boolean;
-}
+// 1. Non-sensitive Health Check
+app.get('/api/health', (_req: Request, res: Response) => {
+  return res.json({
+    status: 'ok',
+    service: 'momentum-freight-quote-api',
+    timestamp: new Date().toISOString(),
+    persistence: getPersistenceBackend(),
+    emailProviderConfigured: isEmailProviderConfigured(),
+  });
+});
 
-const emailAuditLog: EmailAuditRecord[] = [];
-
-// Initialize SMTP transporter if credentials are provided in the environment
-const createEmailTransporter = () => {
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-    try {
-      return nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT) || 587,
-        secure: process.env.SMTP_SECURE === 'true',
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      });
-    } catch (err) {
-      console.error('[Momentum Email Config Error] Failed to initialize SMTP transporter:', err);
-      return null;
-    }
-  }
-  return null;
-};
-
-const mailTransporter = createEmailTransporter();
-
-export async function sendNotificationEmail(params: {
-  referenceNumber: string;
-  category: string;
-  subject: string;
-  customer: {
-    name: string;
-    email: string;
-    phone?: string;
-    company?: string;
-  };
-  summary: string;
-  fields: Record<string, any>;
-}) {
-  const auditId = `aud-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
-  const timestamp = new Date().toISOString();
-  const toAddress = OFFICIAL_RECIPIENT_EMAIL;
-  const fromAddress = process.env.EMAIL_FROM || `"Momentum Operations" <dispatch@momentumhauling.com>`;
-  const replyToAddress = params.customer.email;
-
-  const fieldListText = Object.entries(params.fields)
-    .filter(([_, v]) => v !== undefined && v !== null && v !== '')
-    .map(([k, v]) => `${k.replace(/([A-Z])/g, ' $1').toUpperCase()}: ${v}`)
-    .join('\n');
-
-  const fieldListHtml = Object.entries(params.fields)
-    .filter(([_, v]) => v !== undefined && v !== null && v !== '')
-    .map(
-      ([k, v]) => `
-      <tr>
-        <td style="padding: 10px 14px; font-weight: bold; color: #071E41; border-bottom: 1px solid #E5E7EB; width: 35%; text-transform: capitalize; background-color: #F8FAFC;">
-          ${k.replace(/([A-Z])/g, ' $1')}
-        </td>
-        <td style="padding: 10px 14px; color: #1F2937; border-bottom: 1px solid #E5E7EB;">
-          ${String(v).replace(/\n/g, '<br/>')}
-        </td>
-      </tr>`
-    )
-    .join('');
-
-  const htmlBody = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <title>${params.subject}</title>
-      </head>
-      <body style="margin: 0; padding: 24px; background-color: #F5F7FA; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-        <div style="max-width: 640px; margin: 0 auto; background-color: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-          <!-- Header Banner -->
-          <div style="background-color: #071E41; padding: 24px; border-bottom: 4px solid #C99A31; color: #FFFFFF;">
-            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #C99A31; font-weight: bold;">
-              Official Operations Notification
-            </div>
-            <h1 style="margin: 6px 0 0 0; font-size: 22px; font-weight: 800; color: #FFFFFF;">
-              MOMENTUM TRANSPORTATION &amp; HAULING LLC
-            </h1>
-            <div style="font-size: 13px; color: #E5E7EB; margin-top: 4px; font-style: italic;">
-              Moving Business Forward. · Columbia, SC
-            </div>
-          </div>
-
-          <!-- Notification Details Body -->
-          <div style="padding: 24px;">
-            <div style="background-color: #F8FAFC; border-left: 4px solid #071E41; padding: 12px 16px; margin-bottom: 20px;">
-              <span style="font-size: 11px; font-weight: bold; color: #64748B; text-transform: uppercase; display: block;">Reference Number</span>
-              <span style="font-size: 18px; font-weight: 800; color: #071E41; font-family: monospace;">${params.referenceNumber}</span>
-              <span style="font-size: 11px; color: #64748B; display: block; margin-top: 4px;">Submitted: ${new Date(timestamp).toLocaleString('en-US', { timeZone: 'America/New_York' })} EST</span>
-            </div>
-
-            <h2 style="font-size: 16px; color: #071E41; margin: 0 0 12px 0; border-bottom: 2px solid #F1F5F9; padding-bottom: 6px;">
-              ${params.summary}
-            </h2>
-
-            <!-- Customer Overview -->
-            <div style="margin-bottom: 20px; font-size: 13px; line-height: 1.6;">
-              <div><strong>Customer / Sender:</strong> ${params.customer.name}</div>
-              ${params.customer.company ? `<div><strong>Company:</strong> ${params.customer.company}</div>` : ''}
-              <div><strong>Email:</strong> <a href="mailto:${params.customer.email}" style="color: #071E41; font-weight: bold;">${params.customer.email}</a></div>
-              ${params.customer.phone ? `<div><strong>Phone:</strong> <a href="tel:${params.customer.phone.replace(/[^0-9]/g, '')}" style="color: #071E41; font-weight: bold;">${params.customer.phone}</a></div>` : ''}
-            </div>
-
-            <!-- Parameters Table -->
-            <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 24px;">
-              <tbody>
-                ${fieldListHtml}
-              </tbody>
-            </table>
-
-            <!-- Reply Prompt -->
-            <div style="background-color: #FFFBEB; border: 1px solid #FDE68A; padding: 12px 16px; border-radius: 6px; font-size: 12px; color: #92400E;">
-              <strong>Direct Reply Available:</strong> Simply click &quot;Reply&quot; in your email client to send a direct response to ${params.customer.name} (${params.customer.email}).
-            </div>
-          </div>
-
-          <!-- Footer -->
-          <div style="background-color: #F8FAFC; padding: 16px 24px; border-top: 1px solid #E5E7EB; font-size: 11px; color: #64748B; text-align: center;">
-            Momentum Transportation &amp; Hauling LLC · 2 Penhurst Ct., Columbia, SC 29229 · (803) 718-5509<br>
-            Delivered directly to: <strong>${toAddress}</strong>
-          </div>
-        </div>
-      </body>
-    </html>
-  `;
-
-  const textBody = `
-MOMENTUM TRANSPORTATION & HAULING LLC
-Moving Business Forward.
-=========================================
-OFFICIAL NOTIFICATION: ${params.subject}
-REFERENCE NUMBER: ${params.referenceNumber}
-SUBMITTED: ${new Date(timestamp).toLocaleString()} EST
-DESTINATION INBOX: ${toAddress}
-
-CUSTOMER INFORMATION:
-- Name: ${params.customer.name}
-${params.customer.company ? `- Company: ${params.customer.company}\n` : ''}- Email: ${params.customer.email}
-${params.customer.phone ? `- Phone: ${params.customer.phone}\n` : ''}
-DETAILS:
-${fieldListText}
-
-=========================================
-Reply directly to this email to communicate with ${params.customer.name}.
-Momentum Transportation & Hauling LLC · 2 Penhurst Ct., Columbia, SC 29229 · (803) 718-5509
-  `.trim();
-
-  let deliveryStatus: 'delivered' | 'queued_pending_credentials' | 'failed' = 'queued_pending_credentials';
-  let deliveryError: string | undefined = undefined;
-  let acknowledgmentSent = false;
-
-  if (mailTransporter) {
-    try {
-      await mailTransporter.sendMail({
-        from: fromAddress,
-        to: toAddress,
-        replyTo: replyToAddress,
-        subject: params.subject,
-        text: textBody,
-        html: htmlBody,
-      });
-      deliveryStatus = 'delivered';
-
-      // Send Customer Automatic Acknowledgment
-      if (params.customer.email && params.customer.email.includes('@')) {
-        try {
-          await mailTransporter.sendMail({
-            from: fromAddress,
-            to: params.customer.email,
-            subject: `Momentum Transportation & Hauling LLC — Inquiry Received [${params.referenceNumber}]`,
-            text: `Dear ${params.customer.name},
-
-Thank you for contacting Momentum Transportation & Hauling LLC.
-
-Your inquiry has been received and forwarded to our operations team for review.
-
-Reference Number: ${params.referenceNumber}
-
-Our representative will contact you using the information provided.
-
-For urgent transportation or dispatch matters, please contact us at (803) 718-5509.
-
-Sincerely,
-
-Momentum Transportation & Hauling LLC
-Moving Business Forward.
-
-Email: wright.wendell@icloud.com
-Telephone: (803) 718-5509
-2 Penhurst Ct., Columbia, SC 29229`,
-          });
-          acknowledgmentSent = true;
-        } catch (ackErr) {
-          console.warn('Customer acknowledgment email could not be delivered:', ackErr);
-        }
-      }
-    } catch (err: any) {
-      deliveryStatus = 'failed';
-      deliveryError = err?.message || String(err);
-      console.error('[Momentum Email Error]', deliveryError);
-    }
-  } else {
-    deliveryStatus = 'queued_pending_credentials';
-    deliveryError = 'Outbound SMTP transport credentials not provided in environment variables. Inquiry safely recorded and queued for delivery to wright.wendell@icloud.com.';
-  }
-
-  const auditRecord: EmailAuditRecord = {
-    id: auditId,
-    referenceNumber: params.referenceNumber,
-    category: params.category,
-    to: toAddress,
-    from: fromAddress,
-    replyTo: replyToAddress,
-    subject: params.subject,
-    status: deliveryStatus,
-    timestamp,
-    error: deliveryError,
-    customer: params.customer,
-    summary: params.summary,
-    fields: params.fields,
-    acknowledgmentSent,
-  };
-
-  emailAuditLog.unshift(auditRecord);
-  if (emailAuditLog.length > 500) {
-    emailAuditLog.pop();
-  }
-
-  return {
-    delivered: deliveryStatus === 'delivered',
-    status: deliveryStatus,
-    referenceNumber: params.referenceNumber,
-    auditId,
-    recipient: toAddress,
-    error: deliveryError,
-    acknowledgmentSent,
-  };
-}
-
-// In-Memory Data Store with initial operational records
-export interface QuoteRecord {
-  id: string;
-  referenceNumber: string;
-  customerName: string;
-  companyName?: string;
-  email: string;
-  phone: string;
-  serviceCategory: 'dry_van' | 'flatbed' | 'heavy_haul' | 'dedicated' | 'regional_logistics' | 'cargo_van' | 'preconstruction_hauling' | 'ongoing_construction' | 'flatbed_materials' | 'equipment_mobilization' | 'project_logistics' | string;
-  pickupLocation: string;
-  deliveryLocation: string;
-  pickupDate: string;
-  deliveryDate?: string;
-  estimatedWeightLbs: number;
-  dimensions?: string;
-  loadDescription: string;
-  specialHandling?: string;
-  status: 'pending' | 'under_review' | 'quoted' | 'accepted' | 'declined';
-  estimatedRate?: number;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ShipmentRecord {
-  id: string;
-  trackingNumber: string;
-  quoteId?: string;
-  customerName: string;
-  origin: string;
-  destination: string;
-  serviceCategory: string;
-  currentStatus: 'booked' | 'dispatched' | 'loading' | 'in_transit' | 'out_for_delivery' | 'delivered';
-  assignedDriver?: string;
-  assignedVehicle?: string;
-  estimatedDelivery: string;
-  actualDelivery?: string;
-  weightLbs: number;
-  events: Array<{
-    timestamp: string;
-    status: string;
-    location: string;
-    notes: string;
-  }>;
-  proofOfDelivery?: {
-    receivedBy: string;
-    signatureTimestamp: string;
-    notes: string;
-  };
-}
-
-export interface VehicleRecord {
-  id: string;
-  unitNumber: string;
-  type: string;
-  category: 'Class 8 Sleeper' | 'Class 8 Day Cab' | '53ft Dry Van' | '48ft Flatbed' | 'Lowboy / Heavy Haul';
-  makeModel: string;
-  year: number;
-  maxPayloadLbs: number;
-  status: 'available' | 'dispatched' | 'maintenance' | 'inspection_due';
-  lastInspectionDate: string;
-  mileage: number;
-  notes?: string;
-}
-
-export interface DriverRecord {
-  id: string;
-  name: string;
-  cdlNumber: string;
-  cdlClass: 'A' | 'B';
-  phone: string;
-  status: 'active_duty' | 'dispatched' | 'off_duty' | 'rest_period';
-  endorsements: string[];
-  medicalCardExpiry: string;
-  assignedUnit?: string;
-}
-
-// Initial Data Seed
-let quotes: QuoteRecord[] = [
-  {
-    id: 'q-101',
-    referenceNumber: 'MTH-Q-2026-8841',
-    customerName: 'Carolina Industrial Supplies',
-    companyName: 'Carolina Industrial Supplies LLC',
-    email: 'logistics@carolinaindustrial.com',
-    phone: '803-555-0144',
-    serviceCategory: 'dry_van',
-    pickupLocation: 'Columbia, SC 29201',
-    deliveryLocation: 'Charlotte, NC 28202',
-    pickupDate: '2026-11-10',
-    deliveryDate: '2026-11-10',
-    estimatedWeightLbs: 38500,
-    dimensions: '24 Pallets, 48x40x60 in',
-    loadDescription: 'Industrial tooling and commercial electrical enclosures',
-    specialHandling: 'Liftgate at receiver, call 2 hours prior',
-    status: 'quoted',
-    estimatedRate: 1150,
-    notes: 'Standard I-77 North transit corridor. Rate approved by operations.',
-    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    id: 'q-102',
-    referenceNumber: 'MTH-Q-2026-8842',
-    customerName: 'Midlands Construction Partners',
-    companyName: 'Midlands Construction Partners',
-    email: 'dispatch@midlandsbuild.com',
-    phone: '803-555-0199',
-    serviceCategory: 'heavy_haul',
-    pickupLocation: 'West Columbia, SC 29170',
-    deliveryLocation: 'Charleston, SC 29405 (Wando Terminal)',
-    pickupDate: '2026-11-12',
-    deliveryDate: '2026-11-12',
-    estimatedWeightLbs: 42000,
-    dimensions: 'Oversized Track Loader & Excavator Attachments',
-    loadDescription: 'Heavy earthmoving machinery relocation',
-    specialHandling: 'Ramps required, oversized permit escort coordinated',
-    status: 'under_review',
-    estimatedRate: 1850,
-    notes: 'Coordinating lowboy trailer availability.',
-    createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
-
-let shipments: ShipmentRecord[] = [
-  {
-    id: 'shp-501',
-    trackingNumber: 'MTH-TRK-7701',
-    customerName: 'Carolina Industrial Supplies',
-    origin: 'Columbia, SC',
-    destination: 'Charlotte, NC',
-    serviceCategory: 'Dry Van Dedicated',
-    currentStatus: 'in_transit',
-    assignedDriver: 'Marcus Vance (CDL-A)',
-    assignedVehicle: 'Unit #104 (Freightliner Cascadia)',
-    estimatedDelivery: '2026-11-06T14:30:00Z',
-    weightLbs: 38500,
-    events: [
-      {
-        timestamp: '2026-11-06T07:15:00Z',
-        status: 'Booked & Scheduled',
-        location: 'Columbia, SC Terminal',
-        notes: 'Order confirmed and dispatch paperwork generated.',
-      },
-      {
-        timestamp: '2026-11-06T08:45:00Z',
-        status: 'Loaded & Verified',
-        location: 'Columbia Warehouse Dock #4',
-        notes: 'Seal #44921 verified intact. BOL signed.',
-      },
-      {
-        timestamp: '2026-11-06T10:30:00Z',
-        status: 'In Transit',
-        location: 'I-77 N near Rock Hill, SC',
-        notes: 'En route on schedule. Weather clear, traffic normal.',
-      },
-    ],
-  },
-  {
-    id: 'shp-502',
-    trackingNumber: 'MTH-TRK-2604',
-    customerName: 'Palmetto Steel & Fabrication',
-    origin: 'Cayce, SC',
-    destination: 'Charleston Port, SC',
-    serviceCategory: 'Flatbed Freight',
-    currentStatus: 'delivered',
-    assignedDriver: 'Wendell W. (Lead Driver)',
-    assignedVehicle: 'Unit #108 (Peterbilt 579 + 48ft Flatbed)',
-    estimatedDelivery: '2026-11-05T15:00:00Z',
-    actualDelivery: '2026-11-05T14:48:00Z',
-    weightLbs: 44200,
-    events: [
-      {
-        timestamp: '2026-11-05T06:00:00Z',
-        status: 'Dispatched',
-        location: 'Cayce, SC',
-        notes: 'Chains and binders inspected. Tarps secured.',
-      },
-      {
-        timestamp: '2026-11-05T09:15:00Z',
-        status: 'In Transit',
-        location: 'I-26 E Mile Marker 145',
-        notes: 'Scales cleared. Transit on schedule.',
-      },
-      {
-        timestamp: '2026-11-05T14:48:00Z',
-        status: 'Delivered',
-        location: 'Charleston Wando Marine Terminal, SC',
-        notes: 'Safe delivery completed. Receiver signed Bill of Lading.',
-      },
-    ],
-    proofOfDelivery: {
-      receivedBy: 'D. Simmons (Terminal Logistics Manager)',
-      signatureTimestamp: '2026-11-05T14:50:00Z',
-      notes: 'Steel structural framing received in perfect condition. Zero damage.',
-    },
-  },
-];
-
-let fleet: VehicleRecord[] = [
-  {
-    id: 'veh-1',
-    unitNumber: 'TRK-101',
-    type: 'Class 8 Tandem Tractor',
-    category: 'Class 8 Sleeper',
-    makeModel: 'Kenworth T680 NextGen',
-    year: 2024,
-    maxPayloadLbs: 45000,
-    status: 'available',
-    lastInspectionDate: '2026-10-18',
-    mileage: 64200,
-    notes: 'Full DOT pre-inspection passed. Clean emissions, air-ride suspension.',
-  },
-  {
-    id: 'veh-2',
-    unitNumber: 'TRK-104',
-    type: 'Class 8 Regional Tractor',
-    category: 'Class 8 Day Cab',
-    makeModel: 'Freightliner Cascadia 126',
-    year: 2023,
-    maxPayloadLbs: 46000,
-    status: 'dispatched',
-    lastInspectionDate: '2026-10-24',
-    mileage: 98150,
-    notes: 'Currently on I-77 Columbia-to-Charlotte run.',
-  },
-  {
-    id: 'veh-3',
-    unitNumber: 'TRL-301',
-    type: '53ft Dry Freight Van',
-    category: '53ft Dry Van',
-    makeModel: 'Great Dane Champion CP',
-    year: 2024,
-    maxPayloadLbs: 48000,
-    status: 'available',
-    lastInspectionDate: '2026-10-12',
-    mileage: 41200,
-    notes: 'Equipped with dual E-track cargo control and composite scuff liner.',
-  },
-  {
-    id: 'veh-4',
-    unitNumber: 'TRL-402',
-    type: '48ft Aluminum/Steel Flatbed',
-    category: '48ft Flatbed',
-    makeModel: 'Fontaine Infinity',
-    year: 2023,
-    maxPayloadLbs: 52000,
-    status: 'available',
-    lastInspectionDate: '2026-10-28',
-    mileage: 53100,
-    notes: 'Includes steel coil packages, 10 winches per side, full tarp kits.',
-  },
-  {
-    id: 'veh-5',
-    unitNumber: 'TRL-501',
-    type: 'Heavy Haul Hydraulic Detachable Lowboy',
-    category: 'Lowboy / Heavy Haul',
-    makeModel: 'Trail King Advantage 50-Ton',
-    year: 2023,
-    maxPayloadLbs: 70000,
-    status: 'inspection_due',
-    lastInspectionDate: '2026-08-15',
-    mileage: 38400,
-    notes: 'Scheduled for routine quarterly hydraulic maintenance check.',
-  },
-];
-
-let drivers: DriverRecord[] = [
-  {
-    id: 'drv-1',
-    name: 'Wendell W.',
-    cdlNumber: 'SC-CDL-90218A',
-    cdlClass: 'A',
-    phone: '803-718-5509',
-    status: 'active_duty',
-    endorsements: ['T - Doubles/Triples', 'N - Tanker', 'Clean MVR Record'],
-    medicalCardExpiry: '2027-08-30',
-    assignedUnit: 'TRK-101',
-  },
-  {
-    id: 'drv-2',
-    name: 'Marcus Vance',
-    cdlNumber: 'SC-CDL-64192A',
-    cdlClass: 'A',
-    phone: '803-555-0182',
-    status: 'dispatched',
-    endorsements: ['T - Doubles/Triples', 'TWIC Port Certified'],
-    medicalCardExpiry: '2027-04-15',
-    assignedUnit: 'TRK-104',
-  },
-  {
-    id: 'drv-3',
-    name: 'Darius Jenkins',
-    cdlNumber: 'SC-CDL-77401A',
-    cdlClass: 'A',
-    phone: '803-555-0138',
-    status: 'active_duty',
-    endorsements: ['Heavy Haul Specialist', 'Clean MVR Record'],
-    medicalCardExpiry: '2027-11-20',
-    assignedUnit: 'TRK-108',
-  },
-];
-
-// --- REST API ENDPOINTS ---
-
-// 1. Submit Quote Request (With Automatic Email Notification to wright.wendell@icloud.com)
-app.post('/api/quotes', async (req, res) => {
+// 2. Automated Freight Quote Submission (Validated, Idempotent, Durable, Retried Outbox)
+app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) => {
   try {
-    const {
-      customerName,
-      companyName,
-      email,
-      phone,
-      serviceCategory,
-      pickupLocation,
-      deliveryLocation,
-      pickupDate,
-      deliveryDate,
-      estimatedWeightLbs,
-      dimensions,
-      loadDescription,
-      specialHandling,
-    } = req.body;
-
-    if (!customerName || !email || !phone || !pickupLocation || !deliveryLocation || !loadDescription) {
+    const validation = validateAndNormalizeQuote(req.body);
+    if (!validation.valid || !validation.data) {
       return res.status(400).json({
         success: false,
-        error: 'Please fill in all required fields (Name, Email, Phone, Origin, Destination, Load Description).',
+        error: validation.isBotTrap
+          ? 'Unable to process request.'
+          : Object.values(validation.errors)[0] || 'Validation failed.',
+        fieldErrors: validation.isBotTrap ? {} : validation.errors,
       });
     }
 
-    const refNum = `MTH-Q-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-    const weight = Number(estimatedWeightLbs) || 10000;
+    const normalized = validation.data;
+    const headerIdempotency =
+      typeof req.headers['idempotency-key'] === 'string'
+        ? req.headers['idempotency-key'].trim().slice(0, 128)
+        : '';
+    const idempotencyKey =
+      headerIdempotency ||
+      normalized.idempotencyKey ||
+      crypto
+        .createHash('sha256')
+        .update(
+          JSON.stringify({
+            email: normalized.email,
+            pickupLocation: normalized.pickupLocation,
+            deliveryLocation: normalized.deliveryLocation,
+            pickupDate: normalized.pickupDate,
+            serviceCategory: normalized.serviceCategory,
+            estimatedWeightLbs: normalized.estimatedWeightLbs,
+            loadDescription: normalized.loadDescription,
+            bucket: Math.floor(Date.now() / (2 * 60 * 1000)),
+          })
+        )
+        .digest('hex');
 
-    const baseFee = 350;
-    const estDistance = 120;
-    const estimatedRate = Math.round(baseFee + estDistance * 3.4 + (weight > 30000 ? 200 : 0));
-
-    const newQuote: QuoteRecord = {
-      id: `q-${Date.now()}`,
-      referenceNumber: refNum,
-      customerName,
-      companyName: companyName || '',
-      email,
-      phone,
-      serviceCategory: serviceCategory || 'dry_van',
-      pickupLocation,
-      deliveryLocation,
-      pickupDate: pickupDate || new Date().toISOString().split('T')[0],
-      deliveryDate: deliveryDate || '',
-      estimatedWeightLbs: weight,
-      dimensions: dimensions || 'Standard Freight',
-      loadDescription,
-      specialHandling: specialHandling || '',
-      status: 'pending',
-      estimatedRate,
-      notes: 'Customer submitted via online portal. Pending operations review.',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    quotes.unshift(newQuote);
-
-    // Standardized subject lines per Directive §4
-    let emailSubject = `[MOMENTUM] New Freight Quotation Request — ${refNum}`;
-    let categoryKey = 'freight_quote';
-    if (serviceCategory === 'cargo_van') {
-      emailSubject = `[MOMENTUM] Cargo Van Service Request — ${refNum}`;
-      categoryKey = 'cargo_van';
-    } else if (
-      serviceCategory === 'preconstruction_hauling' ||
-      serviceCategory === 'ongoing_construction' ||
-      serviceCategory === 'construction_hauling' ||
-      serviceCategory === 'flatbed_materials' ||
-      serviceCategory === 'project_logistics'
-    ) {
-      emailSubject = `[MOMENTUM] Construction Hauling Inquiry — ${refNum}`;
-      categoryKey = 'construction_hauling';
-    } else if (serviceCategory === 'heavy_haul' || serviceCategory === 'equipment_mobilization') {
-      emailSubject = `[MOMENTUM] Equipment Mobilization & Machinery Haul — ${refNum}`;
-      categoryKey = 'equipment_mobilization';
+    // Duplicate submission protection
+    const existing = await findQuoteByIdempotencyKey(idempotencyKey);
+    if (existing) {
+      const outboxStatus = existing.outbox?.status || 'pending';
+      return res.status(200).json({
+        success: true,
+        duplicatePrevented: true,
+        quoteRecorded: true,
+        referenceNumber: existing.quote.reference_number,
+        createdAt: existing.quote.created_at,
+        emailDelivery: {
+          status:
+            outboxStatus === 'sent'
+              ? 'sent'
+              : !isEmailProviderConfigured()
+              ? 'pending_provider_config'
+              : outboxStatus,
+          provider: existing.outbox?.provider || null,
+          messageId: existing.outbox?.provider_message_id || null,
+          delivered: outboxStatus === 'sent',
+        },
+      });
     }
 
-    // Trigger email notification to official recipient
-    const emailResult = await sendNotificationEmail({
-      referenceNumber: refNum,
-      category: categoryKey,
-      subject: emailSubject,
-      customer: {
-        name: customerName,
-        email,
-        phone,
-        company: companyName,
-      },
-      summary: `New Rate Proposal & Quotation Submission: ${refNum}`,
-      fields: {
-        serviceCategory: (serviceCategory || 'dry_van').replace(/_/g, ' '),
-        origin: pickupLocation,
-        destination: deliveryLocation,
-        targetPickupDate: pickupDate || 'Immediate / Coordinated',
-        estimatedWeight: `${weight.toLocaleString()} lbs`,
-        dimensions: dimensions || 'Standard Freight',
-        loadDescription,
-        specialHandling: specialHandling || 'None noted',
-        systemEstimatedBaseline: `$${estimatedRate.toLocaleString()}`,
-        destinationInbox: OFFICIAL_RECIPIENT_EMAIL,
+    const referenceNumber = generateQuoteReference();
+    const submittedAtIso = new Date().toISOString();
+    const emailContent = buildQuoteNotificationEmail({
+      referenceNumber,
+      submittedAtIso,
+      quote: normalized,
+    });
+
+    const clientIp = req.ip || req.socket.remoteAddress || '';
+    const ipHash = clientIp ? hashClientIp(clientIp) : null;
+
+    // Step 1: Durably persist quote_requests + email_outbox BEFORE attempting send
+    const { quote, outbox } = await createQuoteAndOutbox({
+      input: normalized,
+      referenceNumber,
+      idempotencyKey,
+      ipHash,
+      emailPayload: {
+        recipientEmail: OFFICIAL_RECIPIENT_EMAIL,
+        replyToEmail: normalized.email,
+        senderEmail: getConfiguredSender(),
+        subject: emailContent.subject,
+        htmlBody: emailContent.htmlBody,
+        textBody: emailContent.textBody,
       },
     });
+
+    // Step 2: Attempt immediate outbox dispatch (never misreport queued/retrying as delivered)
+    const providerConfigured = isEmailProviderConfigured();
+    const deliveryResult = await processOutboxJob(outbox.id);
+
+    const effectiveDeliveryStatus =
+      deliveryResult.status === 'sent'
+        ? 'sent'
+        : !providerConfigured
+        ? 'pending_provider_config'
+        : deliveryResult.status === 'failed'
+        ? 'failed'
+        : 'retrying';
 
     return res.status(201).json({
       success: true,
-      message: 'Quotation request securely received and forwarded to wright.wendell@icloud.com.',
-      quote: newQuote,
-      emailNotification: emailResult,
-    });
-  } catch (err: any) {
-    console.error('Error creating quote:', err);
-    return res.status(500).json({ success: false, error: 'Internal server error processing quote.' });
-  }
-});
-
-// 2. Get Quotes
-app.get('/api/quotes', (req, res) => {
-  const { status, search } = req.query;
-  let filtered = [...quotes];
-
-  if (status && status !== 'all') {
-    filtered = filtered.filter((q) => q.status === status);
-  }
-
-  if (search && typeof search === 'string') {
-    const s = search.toLowerCase();
-    filtered = filtered.filter(
-      (q) =>
-        q.referenceNumber.toLowerCase().includes(s) ||
-        q.customerName.toLowerCase().includes(s) ||
-        (q.companyName && q.companyName.toLowerCase().includes(s)) ||
-        q.pickupLocation.toLowerCase().includes(s) ||
-        q.deliveryLocation.toLowerCase().includes(s)
-    );
-  }
-
-  return res.json({ success: true, quotes: filtered });
-});
-
-// 3. Update Quote Status / Rate
-app.patch('/api/quotes/:id', (req, res) => {
-  const { id } = req.params;
-  const quote = quotes.find((q) => q.id === id || q.referenceNumber === id);
-  if (!quote) {
-    return res.status(404).json({ success: false, error: 'Quote not found.' });
-  }
-
-  const { status, estimatedRate, notes } = req.body;
-  if (status) quote.status = status;
-  if (estimatedRate !== undefined) quote.estimatedRate = Number(estimatedRate);
-  if (notes !== undefined) quote.notes = notes;
-  quote.updatedAt = new Date().toISOString();
-
-  // If approved or accepted, create an active shipment automatically
-  if (status === 'accepted') {
-    const existing = shipments.find((s) => s.quoteId === quote.id);
-    if (!existing) {
-      const newShipment: ShipmentRecord = {
-        id: `shp-${Date.now()}`,
-        trackingNumber: `MTH-TRK-${Math.floor(1000 + Math.random() * 9000)}`,
-        quoteId: quote.id,
-        customerName: quote.companyName || quote.customerName,
-        origin: quote.pickupLocation,
-        destination: quote.deliveryLocation,
-        serviceCategory: quote.serviceCategory,
-        currentStatus: 'booked',
-        estimatedDelivery: new Date(Date.now() + 86400000 * 2).toISOString(),
-        weightLbs: quote.estimatedWeightLbs,
-        events: [
-          {
-            timestamp: new Date().toISOString(),
-            status: 'Order Booked',
-            location: 'Columbia, SC Dispatch Operations',
-            notes: `Converted from approved quotation ${quote.referenceNumber}.`,
-          },
-        ],
-      };
-      shipments.unshift(newShipment);
-    }
-  }
-
-  return res.json({ success: true, quote });
-});
-
-// 4. Contact Inquiries (Website-wide email delivery to wright.wendell@icloud.com)
-app.post('/api/contact', async (req, res) => {
-  try {
-    const { name, email, phone, inquiryType, message, company } = req.body;
-    if (!name || !email || !message) {
-      return res.status(400).json({ success: false, error: 'Name, email, and message are required.' });
-    }
-
-    const ticketId = `MTH-MSG-${Math.floor(1000 + Math.random() * 9000)}`;
-
-    // Standardized subject lines per Directive §4
-    let subject = `[MOMENTUM] New General Inquiry — ${ticketId}`;
-    let categoryKey = 'general_inquiry';
-    const typeLower = (inquiryType || '').toLowerCase();
-
-    if (typeLower.includes('concern') || typeLower.includes('complaint') || typeLower.includes('support')) {
-      subject = `[MOMENTUM] Customer Concern — ${ticketId}`;
-      categoryKey = 'customer_concern';
-    } else if (typeLower.includes('billing') || typeLower.includes('invoice') || typeLower.includes('payment')) {
-      subject = `[MOMENTUM] Billing Inquiry — ${ticketId}`;
-      categoryKey = 'billing_inquiry';
-    } else if (typeLower.includes('cargo van')) {
-      subject = `[MOMENTUM] Cargo Van Service Request — ${ticketId}`;
-      categoryKey = 'cargo_van';
-    } else if (typeLower.includes('construction')) {
-      subject = `[MOMENTUM] Construction Hauling Inquiry — ${ticketId}`;
-      categoryKey = 'construction_hauling';
-    } else if (typeLower.includes('driver') || typeLower.includes('career') || typeLower.includes('application')) {
-      subject = `[MOMENTUM] Driver Application — ${ticketId}`;
-      categoryKey = 'driver_application';
-    } else if (typeLower.includes('dispatch') || typeLower.includes('booking') || typeLower.includes('scheduling')) {
-      subject = `[MOMENTUM] Dispatch & Transportation Inquiry — ${ticketId}`;
-      categoryKey = 'dispatch_coordination';
-    }
-
-    const emailResult = await sendNotificationEmail({
-      referenceNumber: ticketId,
-      category: categoryKey,
-      subject,
-      customer: {
-        name,
-        email,
-        phone,
-        company,
-      },
-      summary: `Inquiry Received: ${inquiryType || 'General Communication'}`,
-      fields: {
-        inquiryCategory: inquiryType || 'General Inquiry',
-        customerName: name,
-        customerEmail: email,
-        customerPhone: phone || 'Not provided',
-        companyName: company || 'Not provided',
-        messageContent: message,
-        routingTarget: OFFICIAL_RECIPIENT_EMAIL,
+      duplicatePrevented: false,
+      quoteRecorded: true,
+      referenceNumber: quote.reference_number,
+      createdAt: quote.created_at,
+      emailDelivery: {
+        status: effectiveDeliveryStatus,
+        provider: deliveryResult.provider || getActiveEmailProviderName(),
+        messageId: deliveryResult.messageId || null,
+        delivered: deliveryResult.status === 'sent',
       },
     });
-
-    return res.status(201).json({
-      success: true,
-      ticketId,
-      deliveryStatus: emailResult.status,
-      message: `Your inquiry has been safely received and forwarded to ${OFFICIAL_RECIPIENT_EMAIL}. Reference: ${ticketId}`,
-      emailNotification: emailResult,
+  } catch (err: unknown) {
+    console.error('[Momentum Quote API Error]', err);
+    return res.status(503).json({
+      success: false,
+      quoteRecorded: false,
+      error:
+        'We could not safely record your quote request at this moment. Please retry in a few seconds or call dispatch at (803) 718-5509.',
     });
-  } catch (err: any) {
-    console.error('Error processing contact inquiry:', err);
-    return res.status(500).json({ success: false, error: 'Internal server error processing message.' });
   }
 });
 
-// 4B. Driver Applications & Recruitment (Routed to wright.wendell@icloud.com)
-app.post('/api/careers', async (req, res) => {
-  try {
-    const {
-      applicantName,
-      applicantPhone,
-      applicantEmail,
-      yearsExperience,
-      cdlClass,
-      endorsements,
-      preferredLanes,
-      notes,
-    } = req.body;
+// 3. Optional AI Route & Equipment Feasibility Assistant (No PII stored)
+app.post('/api/ai/quote-assist', quoteRateLimiter, async (req: Request, res: Response) => {
+  const { origin, destination, serviceCategory, weightLbs, dimensions, loadDescription } =
+    req.body || {};
 
-    if (!applicantName || !applicantPhone) {
-      return res.status(400).json({ success: false, error: 'Applicant name and contact phone number are required.' });
-    }
-
-    const applicationId = `MTH-DRV-${Math.floor(1000 + Math.random() * 9000)}`;
-    const subject = `[MOMENTUM] Driver Application — ${applicationId}`;
-
-    const emailResult = await sendNotificationEmail({
-      referenceNumber: applicationId,
-      category: 'driver_application',
-      subject,
-      customer: {
-        name: applicantName,
-        email: applicantEmail || 'unspecified@driver.applicant',
-        phone: applicantPhone,
-      },
-      summary: `Commercial Driver Recruitment Interest: ${applicationId}`,
-      fields: {
-        applicantName,
-        applicantPhone,
-        applicantEmail: applicantEmail || 'Not provided',
-        yearsExperience: yearsExperience || '3+ years',
-        cdlClass: cdlClass || 'Class A',
-        endorsements: endorsements || 'Standard Class A',
-        preferredLanes: preferredLanes || 'Regional Corridors (I-77, I-26, I-20)',
-        driverQualificationsNotes: notes || 'Standard application submission',
-        routingDestination: OFFICIAL_RECIPIENT_EMAIL,
-      },
-    });
-
-    return res.status(201).json({
-      success: true,
-      applicationId,
-      deliveryStatus: emailResult.status,
-      message: `Driver interest application safely forwarded to ${OFFICIAL_RECIPIENT_EMAIL}. Reference: ${applicationId}`,
-      emailNotification: emailResult,
-    });
-  } catch (err: any) {
-    console.error('Error submitting driver application:', err);
-    return res.status(500).json({ success: false, error: 'Internal error processing application.' });
-  }
-});
-
-// 4C. Customer Concerns & Portal Support (Routed to wright.wendell@icloud.com)
-app.post('/api/support', async (req, res) => {
-  try {
-    const customerName = req.body.customerName || req.body.name;
-    const email = req.body.email;
-    const phone = req.body.phone;
-    const description = req.body.description || req.body.message;
-    const issueCategory = req.body.issueCategory || req.body.category || 'General Support & Dispatch';
-    const trackingNumber = req.body.trackingNumber || req.body.shipmentRef || 'N/A';
-    const accountNumber = req.body.accountNumber || 'N/A';
-
-    if (!customerName || !email || !description) {
-      return res.status(400).json({ success: false, error: 'Customer name, email, and description/message are required.' });
-    }
-
-    const supportId = `MTH-SPT-${Math.floor(1000 + Math.random() * 9000)}`;
-    const subject = `[MOMENTUM] Customer Concern — ${supportId}`;
-
-    const emailResult = await sendNotificationEmail({
-      referenceNumber: supportId,
-      category: 'customer_concern',
-      subject,
-      customer: {
-        name: customerName,
-        email,
-        phone,
-      },
-      summary: `Customer Support & Concern Ticket: ${supportId}`,
-      fields: {
-        issueCategory,
-        trackingNumber,
-        accountNumber,
-        customerName,
-        customerEmail: email,
-        customerPhone: phone || 'Not provided',
-        concernDescription: description,
-        routingDestination: OFFICIAL_RECIPIENT_EMAIL,
-      },
-    });
-
-    return res.status(201).json({
-      success: true,
-      ticketId: supportId,
-      deliveryStatus: emailResult.status,
-      message: `Customer support request forwarded to ${OFFICIAL_RECIPIENT_EMAIL}. Reference: ${supportId}`,
-      emailNotification: emailResult,
-    });
-  } catch (err: any) {
-    console.error('Error processing support ticket:', err);
-    return res.status(500).json({ success: false, error: 'Internal error processing support ticket.' });
-  }
-});
-
-// 4D. Email Integration Status & Verification Endpoints
-app.get('/api/email/status', (req, res) => {
-  const totalSent = emailAuditLog.filter((e) => e.status === 'delivered').length;
-  const totalQueued = emailAuditLog.filter((e) => e.status === 'queued_pending_credentials').length;
-  const totalFailed = emailAuditLog.filter((e) => e.status === 'failed').length;
-
-  return res.json({
-    success: true,
-    officialRecipient: OFFICIAL_RECIPIENT_EMAIL,
-    configured: Boolean(mailTransporter),
-    provider: mailTransporter ? 'Active SMTP Transporter' : 'Secure Audit Queue (Pending SMTP Credentials)',
-    totalDeliveries: emailAuditLog.length,
-    deliveredCount: totalSent,
-    queuedCount: totalQueued,
-    failedCount: totalFailed,
-    recentAudits: emailAuditLog.slice(0, 10),
-  });
-});
-
-app.get('/api/email/audit', (req, res) => {
-  return res.json({
-    success: true,
-    totalRecords: emailAuditLog.length,
-    records: emailAuditLog.slice(0, 50),
-  });
-});
-
-app.post('/api/email/test', async (req, res) => {
-  try {
-    const testId = `MTH-TST-${Math.floor(1000 + Math.random() * 9000)}`;
-    const subject = `[MOMENTUM] System Diagnostic Test Email — ${testId}`;
-
-    const result = await sendNotificationEmail({
-      referenceNumber: testId,
-      category: 'test',
-      subject,
-      customer: {
-        name: 'System Diagnostic Runner',
-        email: OFFICIAL_RECIPIENT_EMAIL,
-        phone: OFFICIAL_DISPATCH_PHONE,
-      },
-      summary: `Automated Email Integration Verification Check [${testId}]`,
-      fields: {
-        testType: 'Direct Verification Check',
-        targetRecipient: OFFICIAL_RECIPIENT_EMAIL,
-        dispatchOffice: 'Momentum Transportation & Hauling LLC · Columbia, SC',
-        statusNotice: mailTransporter
-          ? 'Live SMTP outbound connection active.'
-          : 'Live SMTP credentials pending in environment variables. Test safely recorded in audit engine.',
-      },
-    });
-
-    return res.json({
-      success: true,
-      testId,
-      deliveryStatus: result.status,
-      recipient: OFFICIAL_RECIPIENT_EMAIL,
-      result,
-    });
-  } catch (err: any) {
-    return res.status(500).json({ success: false, error: err?.message || String(err) });
-  }
-});
-
-// 5. Shipments / Milestone Tracking
-app.get('/api/shipments', (req, res) => {
-  const { search } = req.query;
-  let result = [...shipments];
-  if (search && typeof search === 'string') {
-    const s = search.toLowerCase();
-    result = result.filter(
-      (shp) =>
-        shp.trackingNumber.toLowerCase().includes(s) ||
-        shp.customerName.toLowerCase().includes(s) ||
-        shp.origin.toLowerCase().includes(s) ||
-        shp.destination.toLowerCase().includes(s)
-    );
-  }
-  return res.json({ success: true, shipments: result });
-});
-
-app.get('/api/shipments/:trackingNumber', (req, res) => {
-  const { trackingNumber } = req.params;
-  const item = shipments.find(
-    (s) => s.trackingNumber.toLowerCase() === trackingNumber.toLowerCase() || s.id === trackingNumber
-  );
-  if (!item) {
-    return res.status(404).json({ success: false, error: 'Tracking record not found.' });
-  }
-  return res.json({ success: true, shipment: item });
-});
-
-// Update shipment status / add milestone
-app.post('/api/shipments/:id/milestones', (req, res) => {
-  const { id } = req.params;
-  const { status, location, notes, assignedDriver, assignedVehicle } = req.body;
-  const shp = shipments.find((s) => s.id === id || s.trackingNumber === id);
-  if (!shp) {
-    return res.status(404).json({ success: false, error: 'Shipment not found.' });
-  }
-
-  if (status) shp.currentStatus = status;
-  if (assignedDriver) shp.assignedDriver = assignedDriver;
-  if (assignedVehicle) shp.assignedVehicle = assignedVehicle;
-
-  shp.events.push({
-    timestamp: new Date().toISOString(),
-    status: status ? status.toUpperCase().replace('_', ' ') : 'Status Update',
-    location: location || 'En Route',
-    notes: notes || 'Operational update logged.',
-  });
-
-  if (status === 'delivered') {
-    shp.actualDelivery = new Date().toISOString();
-    shp.proofOfDelivery = {
-      receivedBy: req.body.receivedBy || 'Authorized Receiver',
-      signatureTimestamp: new Date().toISOString(),
-      notes: notes || 'Delivered on schedule. Bill of lading acknowledged.',
-    };
-  }
-
-  return res.json({ success: true, shipment: shp });
-});
-
-// 6. Fleet & Driver endpoints
-app.get('/api/fleet', (req, res) => {
-  return res.json({ success: true, fleet });
-});
-
-app.get('/api/drivers', (req, res) => {
-  return res.json({ success: true, drivers });
-});
-
-// --- AI-POWERED LOGISTICS ASSISTANT ENDPOINTS (Grounded in Columbia, SC & Real Transportation Rules) ---
-
-// AI Quote Assistant: analyzes cargo, route, equipment recommendation, and gives a rate breakdown
-app.post('/api/ai/quote-assist', async (req, res) => {
-  const { origin, destination, serviceCategory, weightLbs, dimensions, loadDescription } = req.body;
+  const safeOrigin = String(origin || '').slice(0, 120);
+  const safeDest = String(destination || '').slice(0, 120);
+  const safeCategory = String(serviceCategory || 'dry_van').slice(0, 60);
+  const safeWeight = Number(weightLbs) || 15000;
+  const safeDims = String(dimensions || 'Standard').slice(0, 120);
+  const safeDesc = String(loadDescription || '').slice(0, 500);
 
   const defaultEstimate = {
-    recommendedEquipment: serviceCategory === 'heavy_haul' ? 'Hydraulic Lowboy / RGN Trailer' : '53ft Air-Ride Dry Van',
+    recommendedEquipment:
+      safeCategory === 'heavy_haul' || safeCategory === 'equipment_mobilization'
+        ? 'Hydraulic Lowboy / RGN Trailer'
+        : safeCategory === 'flatbed' || safeCategory === 'flatbed_materials'
+        ? '48ft / 53ft Air-Ride Flatbed'
+        : safeCategory === 'cargo_van'
+        ? 'High-Roof Commercial Cargo Van'
+        : '53ft Air-Ride Dry Van',
     estimatedMileage: 145,
     suggestedRateMin: 950,
-    suggestedRateMax: 1250,
-    transitTimeEst: '3.5 - 4.5 Hours',
-    permitsRequired: serviceCategory === 'heavy_haul' || (Number(weightLbs) || 0) > 45000,
+    suggestedRateMax: 1350,
+    transitTimeEst: '3.5 - 5.0 Hours',
+    permitsRequired: safeCategory === 'heavy_haul' || safeWeight > 45000,
     operationalNotes:
-      'Recommended route utilizes SC interstate corridor (I-77 / I-26). Load weight is within standard axle distribution parameters.',
-    fuelSurchargeNotice: 'Includes current regional DOE diesel index adjustments.',
+      'Recommended route utilizes regional Carolina interstate corridors (I-77 / I-26 / I-20). Final pricing is confirmed by operations upon review.',
+    fuelSurchargeNotice: 'Preliminary estimate only; subject to dispatch verification.',
   };
 
   if (!ai) {
@@ -1130,27 +387,27 @@ app.post('/api/ai/quote-assist', async (req, res) => {
   try {
     const prompt = `You are the Lead Logistics Operations Estimator for Momentum Transportation & Hauling LLC based in Columbia, South Carolina.
 Analyze this freight inquiry:
-- Origin: ${origin}
-- Destination: ${destination}
-- Requested Service: ${serviceCategory}
-- Cargo Description: ${loadDescription}
-- Estimated Weight: ${weightLbs} lbs
-- Dimensions: ${dimensions || 'Standard'}
+- Origin: ${safeOrigin}
+- Destination: ${safeDest}
+- Requested Service: ${safeCategory}
+- Cargo Description: ${safeDesc}
+- Estimated Weight: ${safeWeight} lbs
+- Dimensions: ${safeDims}
 
 Respond ONLY with valid JSON with this exact structure:
 {
-  "recommendedEquipment": "String (e.g. 53ft Air-Ride Dry Van, 48ft Flatbed, or RGN Lowboy)",
+  "recommendedEquipment": "String",
   "estimatedMileage": number,
   "suggestedRateMin": number,
   "suggestedRateMax": number,
-  "transitTimeEst": "String (e.g. 3-4 Hours)",
+  "transitTimeEst": "String",
   "permitsRequired": boolean,
-  "operationalNotes": "String (2-3 concise professional sentences on routing, load securement, or corridor efficiency in the Carolinas/Southeastern US)",
+  "operationalNotes": "String",
   "fuelSurchargeNotice": "String"
 }`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
+      model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
@@ -1161,10 +418,10 @@ Respond ONLY with valid JSON with this exact structure:
     return res.json({
       success: true,
       analysis: { ...defaultEstimate, ...parsed },
-      source: 'gemini_3.8_flash',
+      source: 'gemini',
     });
-  } catch (error: any) {
-    console.error('AI Quote Assist Error:', error);
+  } catch (error) {
+    console.error('AI Quote Assist fallback:', error);
     return res.json({
       success: true,
       analysis: defaultEstimate,
@@ -1173,116 +430,246 @@ Respond ONLY with valid JSON with this exact structure:
   }
 });
 
-// AI Dispatch Assistant: optimal driver/truck pairing
-app.post('/api/ai/dispatch-assist', async (req, res) => {
-  const { origin, destination, loadWeight, requiredCategory } = req.body;
+// 4. General Contact & Driver Careers Forms (HTML-escaped & routed to wright.wendell@icloud.com)
+async function sendDirectOperationalEmail(params: {
+  subject: string;
+  replyTo: string;
+  reference: string;
+  rows: Array<[string, string]>;
+}): Promise<{ delivered: boolean; provider: string }> {
+  const sender = getConfiguredSender();
+  const htmlRows = params.rows
+    .map(
+      ([label, value]) => `
+        <tr>
+          <td style="padding: 8px 12px; font-weight: 700; color: #071E41; border-bottom: 1px solid #E5E7EB; width: 35%; background-color: #F8FAFC;">
+            ${escapeHtml(label)}
+          </td>
+          <td style="padding: 8px 12px; color: #1F2937; border-bottom: 1px solid #E5E7EB;">
+            ${escapeHtml(value).replace(/\n/g, '<br/>')}
+          </td>
+        </tr>`
+    )
+    .join('');
 
-  const defaultDispatch = {
-    suggestedVehicle: 'TRK-101 (Kenworth T680)',
-    suggestedDriver: 'Wendell W. (Lead Operator)',
-    reasoning:
-      'Driver has full available Hours of Service (HOS) cycle, Unit #101 passed pre-trip inspection, and payload capacity matches requirements.',
-    safetyChecklist: [
-      'Verify tire pressure and lug torque before departure',
-      'Ensure cargo securement matches FMCSR 393 standards',
-      'Confirm receiver contact and dock delivery window',
-    ],
-  };
+  const html = `<!DOCTYPE html><html><body style="font-family: Arial, sans-serif; padding: 20px; background: #F5F7FA;">
+    <div style="max-width: 640px; margin: 0 auto; background: #fff; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden;">
+      <div style="background: #071E41; color: #fff; padding: 20px; border-bottom: 4px solid #C99A31;">
+        <h2 style="margin: 0; font-size: 18px;">MOMENTUM TRANSPORTATION &amp; HAULING LLC</h2>
+        <div style="font-size: 12px; color: #C99A31; margin-top: 4px;">Reference: ${escapeHtml(params.reference)}</div>
+      </div>
+      <div style="padding: 20px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;"><tbody>${htmlRows}</tbody></table>
+      </div>
+    </div>
+  </body></html>`;
 
-  if (!ai) {
-    return res.json({ success: true, dispatch: defaultDispatch, source: 'rule_engine' });
+  const text = params.rows.map(([k, v]) => `${k}: ${v}`).join('\n');
+
+  if (process.env.RESEND_API_KEY) {
+    const resp = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: sender,
+        to: [OFFICIAL_RECIPIENT_EMAIL],
+        reply_to: params.replyTo,
+        subject: params.subject,
+        html,
+        text,
+      }),
+    });
+    if (resp.ok) return { delivered: true, provider: 'resend' };
+    return { delivered: false, provider: 'resend' };
   }
 
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+    await transporter.sendMail({
+      from: sender,
+      to: OFFICIAL_RECIPIENT_EMAIL,
+      replyTo: params.replyTo,
+      subject: params.subject,
+      html,
+      text,
+    });
+    return { delivered: true, provider: 'smtp' };
+  }
+
+  return { delivered: false, provider: 'unconfigured' };
+}
+
+app.post('/api/contact', contactRateLimiter, async (req: Request, res: Response) => {
   try {
-    const prompt = `You are the Senior Dispatcher at Momentum Transportation & Hauling LLC in Columbia, SC.
-We need to dispatch a load:
-- Route: ${origin} to ${destination}
-- Weight: ${loadWeight} lbs
-- Category: ${requiredCategory}
+    const name = String(req.body?.name || '').trim().slice(0, 120);
+    const email = String(req.body?.email || '').trim().slice(0, 160);
+    const phone = String(req.body?.phone || '').trim().slice(0, 40);
+    const inquiryType = String(req.body?.inquiryType || 'General Inquiries').trim().slice(0, 80);
+    const message = String(req.body?.message || '').trim().slice(0, 2000);
 
-Available Fleet:
-- TRK-101 (Kenworth T680, Class 8 Sleeper, 45,000 lbs max)
-- TRK-104 (Freightliner Cascadia, Class 8 Day Cab, 46,000 lbs max)
-- TRL-301 (53ft Dry Van)
-- TRL-402 (48ft Flatbed)
+    if (name.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || message.length < 5) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide a valid name, email address, and message.',
+      });
+    }
 
-Available Drivers:
-- Wendell W. (Lead Driver, Class A, TWIC/Tanker/Doubles)
-- Marcus Vance (Class A, Regional specialist)
-
-Return ONLY JSON:
-{
-  "suggestedVehicle": "String",
-  "suggestedDriver": "String",
-  "reasoning": "String",
-  "safetyChecklist": ["String", "String", "String"]
-}`;
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-      config: { responseMimeType: 'application/json' },
+    const ticketId = `MTH-MSG-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+    const result = await sendDirectOperationalEmail({
+      subject: `[MOMENTUM] ${inquiryType} — ${ticketId}`,
+      replyTo: email,
+      reference: ticketId,
+      rows: [
+        ['Reference Ticket', ticketId],
+        ['Name', name],
+        ['Email', email],
+        ['Phone', phone || 'Not provided'],
+        ['Category', inquiryType],
+        ['Message', message],
+      ],
     });
 
-    const parsed = JSON.parse(response.text || '{}');
-    return res.json({ success: true, dispatch: { ...defaultDispatch, ...parsed }, source: 'gemini_3.8_flash' });
-  } catch (error: any) {
-    console.error('AI Dispatch Assist Error:', error);
-    return res.json({ success: true, dispatch: defaultDispatch, source: 'fallback' });
+    return res.status(201).json({
+      success: true,
+      ticketId,
+      delivered: result.delivered,
+      message: result.delivered
+        ? `Your inquiry (${ticketId}) has been delivered to our operations team.`
+        : `Your inquiry (${ticketId}) has been recorded. For immediate assistance, please call (803) 718-5509.`,
+    });
+  } catch (err) {
+    console.error('[Momentum Contact API Error]', err);
+    return res.status(500).json({
+      success: false,
+      error: 'Unable to send inquiry right now. Please call (803) 718-5509.',
+    });
   }
 });
 
-// AI Support / Customer Questions
-app.post('/api/ai/support', async (req, res) => {
-  const { question } = req.body;
-  if (!question) {
-    return res.status(400).json({ error: 'Question is required.' });
-  }
-
-  const defaultAnswer =
-    'Momentum Transportation & Hauling LLC is a premier transportation and hauling company based at 2 Penhurst Ct., Columbia, SC 29229. We provide dependable freight transport, dry van logistics, flatbed services, and heavy hauling across South Carolina and regional corridors. For immediate assistance or rate inquiries, please call our dispatch at (803) 718-5509 or submit a quote request.';
-
-  if (!ai) {
-    return res.json({ answer: defaultAnswer });
-  }
-
+app.post('/api/careers', contactRateLimiter, async (req: Request, res: Response) => {
   try {
-    const prompt = `You are the customer service representative for Momentum Transportation & Hauling LLC.
-Company Facts:
-- Company: Momentum Transportation & Hauling LLC
-- Address: 2 Penhurst Ct., Columbia, SC 29229
-- Phone: 803-718-5509
-- Email: wright.wendell@icloud.com
-- Primary Market: Columbia, South Carolina and regional southeastern freight corridors
-- Core Services: Commercial freight transportation, dry van logistics, flatbed transport, heavy hauling & equipment transport
-- Tagline: "Moving Business Forward."
-- Policy: Professional, courteous, direct, never invent fake certifications or unverified claims.
+    const applicantName = String(req.body?.applicantName || '').trim().slice(0, 120);
+    const applicantPhone = String(req.body?.applicantPhone || '').trim().slice(0, 40);
+    const applicantEmail = String(req.body?.applicantEmail || '').trim().slice(0, 160);
+    const cdlClass = String(req.body?.cdlClass || 'A').trim().slice(0, 40);
+    const yearsExperience = String(req.body?.yearsExperience || '3+').trim().slice(0, 40);
+    const endorsements = String(req.body?.endorsements || 'Standard Class A').trim().slice(0, 80);
+    const preferredLanes = String(req.body?.preferredLanes || '').trim().slice(0, 140);
+    const notes = String(req.body?.notes || '').trim().slice(0, 1000);
 
-Customer Question: "${question}"
-Answer cleanly in 2-3 helpful sentences:`;
+    if (applicantName.length < 2 || applicantPhone.replace(/\D/g, '').length < 7) {
+      return res.status(400).json({
+        success: false,
+        error: 'Applicant name and valid phone number are required.',
+      });
+    }
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
+    const applicationId = `MTH-DRV-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+    const replyTo = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(applicantEmail)
+      ? applicantEmail
+      : OFFICIAL_RECIPIENT_EMAIL;
+
+    const result = await sendDirectOperationalEmail({
+      subject: `[MOMENTUM] Driver Application — ${applicationId}`,
+      replyTo,
+      reference: applicationId,
+      rows: [
+        ['Application ID', applicationId],
+        ['Applicant Name', applicantName],
+        ['Phone', applicantPhone],
+        ['Email', applicantEmail || 'Not provided'],
+        ['CDL Class', cdlClass],
+        ['Experience', yearsExperience],
+        ['Endorsements', endorsements],
+        ['Preferred Lanes', preferredLanes || 'Regional Corridors'],
+        ['Notes', notes || 'None'],
+      ],
     });
 
-    return res.json({ answer: response.text?.trim() || defaultAnswer });
-  } catch (err: any) {
-    console.error('AI Support error:', err);
-    return res.json({ answer: defaultAnswer });
+    return res.status(201).json({
+      success: true,
+      applicationId,
+      delivered: result.delivered,
+      message: `Driver application (${applicationId}) recorded.`,
+    });
+  } catch (err) {
+    console.error('[Momentum Careers API Error]', err);
+    return res.status(500).json({
+      success: false,
+      error: 'Unable to submit driver application right now. Please call (803) 718-5509.',
+    });
   }
 });
 
-// Setup Vite middleware in dev or static files in production
+// =========================================================================
+// RESTRICTED MANAGEMENT ENDPOINTS (Protected by ADMIN_API_TOKEN)
+// =========================================================================
+
+app.get('/api/quotes', requireAdminAuth, async (_req: Request, res: Response) => {
+  try {
+    const records = await listQuotesForAdmin(50);
+    return res.json({ success: true, quotes: records });
+  } catch (err) {
+    console.error('[Admin Quotes Error]', err);
+    return res.status(500).json({ success: false, error: 'Failed to load quote records.' });
+  }
+});
+
+app.get('/api/admin/quotes', requireAdminAuth, async (_req: Request, res: Response) => {
+  try {
+    const records = await listQuotesForAdmin(50);
+    return res.json({ success: true, quotes: records });
+  } catch (err) {
+    console.error('[Admin Quotes Error]', err);
+    return res.status(500).json({ success: false, error: 'Failed to load quote records.' });
+  }
+});
+
+app.get('/api/admin/outbox', requireAdminAuth, async (_req: Request, res: Response) => {
+  try {
+    const jobs = await listOutboxForAdmin(50);
+    return res.json({ success: true, outbox: jobs });
+  } catch (err) {
+    console.error('[Admin Outbox Error]', err);
+    return res.status(500).json({ success: false, error: 'Failed to load outbox records.' });
+  }
+});
+
+// Block any unknown /api/* routes cleanly instead of falling through to SPA HTML
+app.all('/api/*', (_req: Request, res: Response) => {
+  return res.status(404).json({
+    success: false,
+    error: 'API endpoint not found.',
+  });
+});
+
+// =========================================================================
+// STATIC ASSETS, VITE MIDDLEWARE & SERVER BOOT
+// =========================================================================
+
 async function startServer() {
-  // Always serve static assets from public (e.g. documents, PDFs, brand assets)
+  // Start durable email retry worker (survives restarts via Supabase / local durable store)
+  startOutboxRetryWorker(30_000);
+  void purgeExpiredLocalRecords();
+
   app.use(express.static(path.resolve(__dirname, 'public')));
   app.use('/momentum', express.static(path.resolve(__dirname, 'public')));
 
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.resolve(__dirname, 'dist')));
     app.use('/momentum', express.static(path.resolve(__dirname, 'dist')));
-    app.get('*', (req, res) => {
+    app.get('*', (_req: Request, res: Response) => {
       res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
     });
   } else {
@@ -1294,10 +681,13 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Momentum Logistics Platform] Server listening on http://0.0.0.0:${PORT}`);
+    console.log(
+      `[Momentum Logistics Platform] Server listening on http://0.0.0.0:${PORT} (persistence=${getPersistenceBackend()}, emailConfigured=${isEmailProviderConfigured()})`
+    );
   });
 }
 
 startServer().catch((err) => {
   console.error('Failed to start server:', err);
+  process.exit(1);
 });

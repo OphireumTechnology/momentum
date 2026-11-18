@@ -26,10 +26,13 @@ jobs:
           node-version: '22'
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npm run lint
       - name: Build
         run: npm run build
         env:
           GITHUB_PAGES: 'true'
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://momentum-production-7643a06f.up.railway.app' }}
       - name: Audit and optimize Pages artifact
         shell: bash
         run: |

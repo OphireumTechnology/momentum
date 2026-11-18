@@ -10,8 +10,6 @@ import { QuotePage } from './components/pages/QuotePage';
 import { ContactPage } from './components/pages/ContactPage';
 import { CareersPage } from './components/pages/CareersPage';
 import { SafetyPage } from './components/pages/SafetyPage';
-import { CustomerPortal } from './components/portal/CustomerPortal';
-import { OperationsCommandCenter } from './components/operations/OperationsCommandCenter';
 import { CompanyProfilePage } from './components/pages/CompanyProfilePage';
 
 export default function App() {
@@ -21,24 +19,6 @@ export default function App() {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  // If in dedicated Operations Command Center view
-  if (currentPage === 'operations') {
-    return <OperationsCommandCenter onNavigate={handleNavigate} />;
-  }
-
-  // If in dedicated Customer Portal view
-  if (currentPage === 'portal') {
-    return (
-      <div className="min-h-screen flex flex-col bg-[#F5F7FA]">
-        <Header currentPage={currentPage} onNavigate={handleNavigate} />
-        <main className="flex-1">
-          <CustomerPortal onNavigate={handleNavigate} />
-        </main>
-        <Footer onNavigate={handleNavigate} />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F7FA]">

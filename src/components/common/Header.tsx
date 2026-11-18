@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Logo } from './Logo';
 import { COMPANY } from '../../config/company';
-import { Phone, Menu, X, ArrowRight, ShieldCheck, UserCheck, FileText } from 'lucide-react';
+import { Phone, Menu, X, ArrowRight, FileText } from 'lucide-react';
 
 export type PageView =
   | 'home'
@@ -13,8 +13,6 @@ export type PageView =
   | 'contact'
   | 'careers'
   | 'safety'
-  | 'portal'
-  | 'operations'
   | 'company-profile';
 
 interface HeaderProps {
@@ -66,21 +64,6 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
               }`}
             >
               Company Profile
-            </button>
-            <span className="text-slate-500">|</span>
-            <button
-              onClick={() => onNavigate('portal')}
-              className="text-slate-300 hover:text-white transition-colors text-xs font-medium cursor-pointer"
-            >
-              Customer Portal
-            </button>
-            <span className="text-slate-500">|</span>
-            <button
-              onClick={() => onNavigate('operations')}
-              className="text-[#C99A31] hover:text-[#E8BE65] transition-colors text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
-            >
-              <ShieldCheck className="w-3 h-3" />
-              <span>Operations</span>
             </button>
           </div>
         </div>
@@ -179,20 +162,6 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
               >
                 <span>Company Profile (8-Page PDF)</span>
                 <FileText className="w-4 h-4 text-[#C99A31]" />
-              </button>
-              <button
-                onClick={() => handleLinkClick('portal')}
-                className="text-left py-2 text-sm text-slate-800 font-semibold flex items-center justify-between"
-              >
-                <span>Customer Portal &amp; Tracking</span>
-                <UserCheck className="w-4 h-4 text-[#C99A31]" />
-              </button>
-              <button
-                onClick={() => handleLinkClick('operations')}
-                className="text-left py-2 text-sm text-[#071E41] font-semibold flex items-center justify-between"
-              >
-                <span>Operations Command Center</span>
-                <ShieldCheck className="w-4 h-4 text-[#C99A31]" />
               </button>
               <button
                 onClick={() => handleLinkClick('quote')}

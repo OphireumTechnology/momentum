@@ -174,26 +174,26 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             </ul>
           </div>
 
-          {/* Col 5: Portals & Security */}
+          {/* Col 5: Quotation & Dispatch */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-white font-display mb-4">
-              Operations &amp; Portals
+              Quotation &amp; Dispatch
             </h4>
             <ul className="space-y-2.5 text-xs text-slate-400">
               <li>
-                <button onClick={() => handleNav('portal')} className="hover:text-[#C99A31] transition-colors text-left cursor-pointer font-medium flex items-center gap-1.5">
-                  <span>Customer Shipment Portal</span>
+                <button onClick={() => handleNav('quote')} className="hover:text-[#C99A31] transition-colors text-left cursor-pointer font-medium flex items-center gap-1.5">
+                  <span>Request a Freight Quote</span>
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('operations')} className="hover:text-[#C99A31] transition-colors text-left cursor-pointer font-medium flex items-center gap-1.5">
-                  <span>Operations Command Suite</span>
+                <button onClick={() => handleNav('contact')} className="hover:text-[#C99A31] transition-colors text-left cursor-pointer font-medium flex items-center gap-1.5">
+                  <span>Direct Dispatch Inquiries</span>
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('quote')} className="hover:text-white transition-colors text-left cursor-pointer">
-                  Instant Freight Quote
-                </button>
+                <a href={COMPANY.contact.phoneTel} className="hover:text-white transition-colors text-left">
+                  24/7 Phone: {COMPANY.contact.formattedPhone}
+                </a>
               </li>
               <li className="pt-2">
                 <div className="bg-[#041228] p-3 rounded border border-slate-700/60 text-[11px] text-slate-400">
