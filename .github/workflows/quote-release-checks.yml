@@ -14,6 +14,8 @@ jobs:
       - run: npm install --no-package-lock
       - run: npm run lint
       - run: npm run build
+      - name: Test dual-recipient outbox delivery and retry isolation
+        run: node --import tsx --test tests/quote-dual-recipient.test.mjs
       - name: Validate quote integration contracts
         run: |
           node --input-type=module <<'NODE'
