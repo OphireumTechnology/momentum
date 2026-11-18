@@ -622,6 +622,17 @@ app.get('/api/admin/outbox', requireAdminAuth, async (_req: Request, res: Respon
   }
 });
 
+// Identify the actual runtime build without exposing secrets.
+app.get('/api/version', (_req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store');
+  return res.json({
+    service: 'momentum',
+    sourceRevision: process.env.RAILWAY_GIT_COMMIT_SHA || process.env.GIT_COMMIT_SHA || 'unknown',
+    deploymentId: process.env.RAILWAY_DEPLOYMENT_ID || 'unknown',
+    frontend: 'vite-react',
+  });
+});
+
 // Block any unknown /api/* routes cleanly instead of falling through to SPA HTML
 app.all('/api/*', (_req: Request, res: Response) => {
   return res.status(404).json({
@@ -645,10 +656,21 @@ async function startServer() {
   app.use('/momentum', express.static(path.resolve(__dirname, 'public')));
 
   if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.resolve(__dirname, 'dist')));
-    app.use('/momentum', express.static(path.resolve(__dirname, 'dist')));
+    const distPath = path.resolve(__dirname, 'dist');
+    const staticOptions = {
+      setHeaders(res: import('http').ServerResponse, filePath: string) {
+        if (filePath.endsWith('index.html')) {
+          res.setHeader('Cache-Control', 'no-store, max-age=0');
+        } else if (filePath.includes('/assets/') || filePath.includes('\\assets\\')) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+      },
+    };
+    app.use(express.static(distPath, staticOptions));
+    app.use('/momentum', express.static(distPath, staticOptions));
     app.get('*', (_req: Request, res: Response) => {
-      res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
+      res.setHeader('Cache-Control', 'no-store, max-age=0');
+      res.sendFile(path.resolve(distPath, 'index.html'));
     });
   } else {
     const vite = await createViteServer({
