@@ -31,6 +31,8 @@ export const COMPANY = {
     phoneTel: COMPANY_PHONE.href,
     email: 'wright.wendell@icloud.com',
     emailMailto: 'mailto:wright.wendell@icloud.com',
+    secondaryEmail: 'info@momentumtransporthauling.com',
+    secondaryEmailMailto: 'mailto:info@momentumtransporthauling.com',
   },
 
   primaryMarket: 'Columbia, South Carolina',
