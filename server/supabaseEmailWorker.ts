@@ -35,7 +35,7 @@ async function patch(query: string, changes: Record<string, unknown>): Promise<O
   const res = await fetch(url() + '?' + query, {
     method: 'PATCH',
     headers: headers(),
-    body: JSON.stringify(changes),
+    body: JSON.stringify({ ...changes, updated_at: new Date().toISOString() }),
     signal: AbortSignal.timeout(12000),
   });
   if (!res.ok) throw new Error('Supabase outbox update failed: HTTP ' + res.status);
@@ -157,11 +157,11 @@ export async function dispatchSupabaseOutboxOnce(): Promise<void> {
     // Recover an interrupted job only after its claim lease has expired.
     // Resend uses the same idempotency key per outbox row on retry.
     const stale = new Date(Date.now() - 10 * 60_000).toISOString();
-    await patch('status=eq.sending&updated_at=lt.' + encodeURIComponent(stale), { status: 'pending' });
+    await patch('status=eq.processing&updated_at=lt.' + encodeURIComponent(stale), { status: 'pending' });
     const due = new URL(url());
     due.searchParams.set(
       'select',
-      'id,recipient_email,reply_to_email,sender_email,subject,html_body,text_body,payload,attempt_count,max_attempts'
+      'id,recipient_email,subject,payload,attempt_count,max_attempts'
     );
     due.searchParams.set('status', 'eq.pending');
     due.searchParams.set('next_attempt_at', 'lte.' + new Date().toISOString());
@@ -171,15 +171,22 @@ export async function dispatchSupabaseOutboxOnce(): Promise<void> {
     if (!res.ok) throw new Error('Supabase outbox read failed: HTTP ' + res.status);
     const jobs = (await res.json()) as OutboxJob[];
     for (const job of jobs) {
+      if (job.attempt_count >= job.max_attempts) {
+        await patch('id=eq.' + encodeURIComponent(job.id) + '&status=eq.pending', {
+          status: 'failed',
+          last_error: 'Maximum email attempts reached',
+        });
+        continue;
+      }
       // Conditional update ensures only one worker instance claims a pending row.
       const claimed = await patch(
         'id=eq.' + encodeURIComponent(job.id) + '&status=eq.pending&attempt_count=eq.' + job.attempt_count,
-        { status: 'sending', attempt_count: job.attempt_count + 1 }
+        { status: 'processing', attempt_count: job.attempt_count + 1 }
       );
       if (claimed.length !== 1) continue;
 
       if (!isAuthorizedRecipient(job.recipient_email)) {
-        await patch('id=eq.' + encodeURIComponent(job.id) + '&status=eq.sending', {
+        await patch('id=eq.' + encodeURIComponent(job.id) + '&status=eq.processing', {
           status: 'failed',
           last_error: 'Recipient not in server allowlist',
         });
@@ -210,9 +217,9 @@ export async function dispatchSupabaseOutboxOnce(): Promise<void> {
           throw new Error('Resend HTTP ' + sent.status);
         }
         const response = (await sent.json()) as { id?: string };
-        await patch('id=eq.' + encodeURIComponent(job.id) + '&status=eq.sending', {
+        if (!response.id) throw new Error('Resend did not return a message ID');
+        await patch('id=eq.' + encodeURIComponent(job.id) + '&status=eq.processing', {
           status: 'sent',
-          provider: 'resend',
           sent_at: new Date().toISOString(),
           provider_message_id: response.id || null,
           last_error: null,
@@ -220,7 +227,7 @@ export async function dispatchSupabaseOutboxOnce(): Promise<void> {
       } catch (error) {
         const attempts = job.attempt_count + 1;
         const final = attempts >= job.max_attempts;
-        await patch('id=eq.' + encodeURIComponent(job.id) + '&status=eq.sending', {
+        await patch('id=eq.' + encodeURIComponent(job.id) + '&status=eq.processing', {
           status: final ? 'failed' : 'pending',
           last_error: String(error).slice(0, 400),
           next_attempt_at: new Date(Date.now() + Math.min(60, 2 ** attempts) * 60_000).toISOString(),

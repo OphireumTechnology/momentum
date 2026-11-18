@@ -245,16 +245,23 @@ function summarizeEmailDelivery(
   messageId: string | null;
   recipients: RecipientDeliverySummary[];
 } {
-  const recipients: RecipientDeliverySummary[] = outboxes.map((o) => ({
-    recipientEmail: o.recipient_email,
-    status: o.status,
-    delivered: o.status === 'sent',
-    provider: o.provider || null,
-    messageId: o.provider_message_id || null,
-  }));
+  const expectedRecipients = getAuthorizedQuoteRecipients();
+  // Missing rows are NOT a successful delivery. This also detects installations
+  // still using the old single-recipient database RPC.
+  const recipients: RecipientDeliverySummary[] = expectedRecipients.map((email) => {
+    const outbox = outboxes.find((o) => o.recipient_email.trim().toLowerCase() === email.toLowerCase());
+    return {
+      recipientEmail: email,
+      status: outbox?.status || 'not_queued',
+      delivered: outbox?.status === 'sent' || outbox?.status === 'delivered',
+      provider: outbox?.provider || null,
+      messageId: outbox?.provider_message_id || null,
+    };
+  });
 
   const sentCount = recipients.filter((r) => r.delivered).length;
-  const allDelivered = recipients.length > 0 && sentCount === recipients.length;
+  const allDelivered = recipients.length === expectedRecipients.length &&
+    recipients.length > 0 && sentCount === expectedRecipients.length;
 
   let status = 'pending_provider_config';
   if (allDelivered) {
@@ -265,6 +272,8 @@ function summarizeEmailDelivery(
     status = 'pending_provider_config';
   } else if (recipients.length > 0 && recipients.every((r) => r.status === 'failed')) {
     status = 'failed';
+  } else if (recipients.some((r) => r.status === 'not_queued')) {
+    status = 'not_queued';
   } else if (recipients.some((r) => r.status === 'retrying')) {
     status = 'retrying';
   } else if (recipients.length > 0) {
@@ -324,11 +333,6 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
     const authorizedRecipients = getAuthorizedQuoteRecipients();
 
     if (supabaseUrl && supabaseKey) {
-      const previewEmail = buildQuoteNotificationEmail({
-        referenceNumber: 'PENDING',
-        submittedAtIso: new Date().toISOString(),
-        quote: normalized,
-      });
       const quotePayload = {
         customer_name: normalized.customerName,
         company_name: normalized.companyName,
@@ -343,8 +347,6 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
         freight_weight_lbs: normalized.estimatedWeightLbs,
         dimensions: normalized.dimensions,
         special_requirements: normalized.specialHandling,
-        html_body: previewEmail.htmlBody,
-        text_body: previewEmail.textBody,
         additional_details: normalized,
       };
       const saved = await fetch(supabaseUrl + '/rest/v1/rpc/submit_quote_request', {
@@ -390,7 +392,7 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
       }> = [];
       if (stored.quote_id) {
         const outboxResp = await fetch(
-          `${supabaseUrl}/rest/v1/email_outbox?quote_request_id=eq.${encodeURIComponent(stored.quote_id)}&select=recipient_email,status,provider,provider_message_id&order=created_at.asc`,
+          `${supabaseUrl}/rest/v1/email_outbox?quote_request_id=eq.${encodeURIComponent(stored.quote_id)}&select=recipient_email,status,provider_message_id&order=created_at.asc`,
           {
             headers: {
               apikey: supabaseKey,
@@ -404,14 +406,8 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
         }
       }
 
-      if (outboxRows.length === 0) {
-        outboxRows = authorizedRecipients.map((recipient) => ({
-          recipient_email: recipient,
-          status: isEmailProviderConfigured() ? 'pending' : 'pending_provider_config',
-          provider: null,
-          provider_message_id: null,
-        }));
-      }
+      // Do not fabricate pending notifications when the database returned no rows.
+      // summarizeEmailDelivery explicitly reports the missing rows as not_queued.
 
       return res.status(stored.created ? 201 : 200).json({
         success: true,

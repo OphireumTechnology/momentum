@@ -74,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
     <header className="sticky top-0 z-50">
       <div className="bg-white/95 backdrop-blur-md border-b border-slate-200 pt-[env(safe-area-inset-top)]">
         {/* Desktop Top Notice Strip (Hidden on Mobile to prevent sticky header crowding & height bloat) */}
-        <div className="hidden md:block bg-[#071E41] text-slate-200 text-xs py-1.5 px-6 lg:px-8 border-b border-[#0D2C5B]">
+        <div className="hidden md:block bg-[#071E41] text-slate-200 text-xs px-6 lg:px-8 border-b border-[#0D2C5B]">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 text-xs min-w-0">
               <span className="font-medium text-white whitespace-nowrap">Columbia, SC Headquarters</span>
@@ -85,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
               <a
                 href={COMPANY_PHONE.href}
                 aria-label={COMPANY_PHONE.ariaLabel}
-                className="inline-flex items-center gap-1.5 text-[#C99A31] font-semibold hover:text-white transition-colors whitespace-nowrap"
+                className="inline-flex min-h-[44px] min-w-[44px] items-center gap-1.5 text-[#C99A31] font-semibold hover:text-white transition-colors whitespace-nowrap"
               >
                 <Phone className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>{COMPANY_PHONE.display}</span>
@@ -94,7 +94,8 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
               <button
                 type="button"
                 onClick={() => handleLinkClick('company-profile')}
-                className={`hover:text-white transition-colors text-xs font-medium cursor-pointer whitespace-nowrap ${
+                aria-current={currentPage === 'company-profile' ? 'page' : undefined}
+                className={`inline-flex min-h-[44px] min-w-[44px] items-center hover:text-white transition-colors text-xs font-medium cursor-pointer whitespace-nowrap ${
                   currentPage === 'company-profile' ? 'text-[#C99A31] font-bold' : 'text-slate-300'
                 }`}
               >
@@ -126,7 +127,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
                   type="button"
                   onClick={() => handleLinkClick(link.page)}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`min-h-[44px] inline-flex items-center whitespace-nowrap shrink-0 transition-colors px-1 cursor-pointer ${
+                  className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center whitespace-nowrap shrink-0 transition-colors px-1 cursor-pointer ${
                     isActive
                       ? 'text-[#071E41] font-bold border-b-2 border-[#C99A31]'
                       : 'text-slate-600 hover:text-[#071E41]'
