@@ -80,7 +80,7 @@ async function assertLayoutAndTargets(page, viewport, routeLabel) {
     const clippedHeaderControls = headerControls.filter((c) => c.x < -1 || c.right > innerWidth + 1);
 
     const bodyText = document.body.innerText || '';
-    const hasBareLegacyPhone = /(^|[^+0-9])\(803\)\s*718-5509/.test(bodyText);
+    const hasBareLegacyPhone = /(?<!\+1\s)\(803\)\s*718-5509/.test(bodyText);
     const telLinks = Array.from(document.querySelectorAll('a[href^="tel:"]')).map((a) =>
       a.getAttribute('href')
     );
