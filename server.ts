@@ -152,6 +152,9 @@ export async function sendNotificationEmail(params: {
     "'": '&#39;',
   }[ch] || ch));
 
+  // Do not claim persistence if the process only holds transient in-memory state.
+  // The production mail service must use a durable outbox before accepting real orders.
+
   const fieldListHtml = Object.entries(params.fields)
     .filter(([_, v]) => v !== undefined && v !== null && v !== '')
     .map(
