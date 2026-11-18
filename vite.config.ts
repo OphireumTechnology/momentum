@@ -5,7 +5,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    base: process.env.GITHUB_PAGES === 'true' ? '/momentum/' : '/',
+    base: '/', // Custom domain momentumtransporthauling.com is served from the domain root.
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
