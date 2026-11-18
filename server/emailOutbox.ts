@@ -14,8 +14,13 @@ import {
 import type { StoredEmailOutbox } from './persistence.ts';
 import { COMPANY_PHONE } from '../src/config/company.ts';
 
+export const OFFICIAL_QUOTE_RECIPIENTS = [
+  'wright.wendell@icloud.com',
+  'info@momentumtransporthauling.com',
+] as const;
+
 export const OFFICIAL_RECIPIENT_EMAIL =
-  process.env.OFFICIAL_RECIPIENT_EMAIL || 'wright.wendell@icloud.com';
+  process.env.OFFICIAL_RECIPIENT_EMAIL || OFFICIAL_QUOTE_RECIPIENTS[0];
 
 export function getConfiguredSender(): string {
   return (
@@ -232,7 +237,7 @@ async function sendViaResend(job: StoredEmailOutbox): Promise<ProviderSendResult
     },
     body: JSON.stringify({
       from: job.sender_email,
-      to: [job.recipient_email],
+      to: job.recipient_email.split(',').map(email => email.trim()).filter(Boolean),
       reply_to: job.reply_to_email,
       subject: job.subject,
       html: job.html_body,
