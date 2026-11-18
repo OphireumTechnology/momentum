@@ -19,10 +19,10 @@ export const Logo: React.FC<LogoProps> = ({
   const sizeMap = {
     sm: { img: 'w-9 h-9 sm:w-10 sm:h-10', text: 'text-sm font-extrabold', sub: 'text-[9px] font-bold', gap: 'gap-2 sm:gap-2.5' },
     md: {
-      img: compactOnMobile ? 'w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14' : 'w-11 h-11 md:w-14 md:h-14',
+      img: compactOnMobile ? 'w-9 h-9 sm:w-11 sm:h-11 md:w-13 md:h-13' : 'w-11 h-11 md:w-14 md:h-14',
       text: compactOnMobile ? 'text-sm sm:text-lg md:text-xl font-extrabold' : 'text-base sm:text-lg md:text-xl font-extrabold',
       sub: compactOnMobile ? 'text-[9px] sm:text-[11px] md:text-xs font-bold' : 'text-[10px] sm:text-[11px] md:text-xs font-bold',
-      gap: compactOnMobile ? 'gap-2 sm:gap-3.5' : 'gap-2.5 sm:gap-3.5',
+      gap: compactOnMobile ? 'gap-2 sm:gap-3' : 'gap-2.5 sm:gap-3.5',
     },
     lg: { img: 'w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16', text: 'text-lg sm:text-2xl font-extrabold', sub: 'text-[10px] sm:text-xs font-bold', gap: 'gap-3 sm:gap-3.5' },
     xl: { img: 'w-14 h-14 sm:w-20 sm:h-20', text: 'text-xl sm:text-3xl font-extrabold', sub: 'text-[11px] sm:text-sm font-bold', gap: 'gap-3 sm:gap-4' },
@@ -54,7 +54,7 @@ export const Logo: React.FC<LogoProps> = ({
   }
 
   return (
-    <div className={`inline-flex items-center min-w-0 ${currentSize.gap} group select-none ${className}`}>
+    <div className={`inline-flex items-center min-w-0 max-w-full ${currentSize.gap} group select-none ${className}`}>
       {EmblemImg}
       <div className="flex flex-col text-left justify-center min-w-0">
         <span
@@ -64,19 +64,19 @@ export const Logo: React.FC<LogoProps> = ({
         >
           MOMENTUM
         </span>
-        <div className="flex items-center gap-1.5 mt-1 sm:mt-1.5 min-w-0">
-          <span className="w-2.5 sm:w-3 h-[2px] bg-[#C99A31] shrink-0" />
+        <div className="flex items-center gap-1 sm:gap-1.5 mt-1 sm:mt-1.5 min-w-0">
+          <span className="w-2 sm:w-3 h-[2px] bg-[#C99A31] shrink-0" />
           {compactOnMobile ? (
             <>
               <span
-                className={`sm:hidden tracking-wide uppercase font-display leading-none whitespace-nowrap ${currentSize.sub} ${
+                className={`sm:hidden tracking-normal uppercase font-display leading-none truncate ${currentSize.sub} ${
                   isDarkBg ? 'text-slate-200' : 'text-[#071E41]'
                 }`}
               >
                 TRANSPORT &amp; HAULING
               </span>
               <span
-                className={`hidden sm:inline tracking-wider uppercase font-display leading-none whitespace-nowrap ${currentSize.sub} ${
+                className={`hidden sm:inline tracking-wider uppercase font-display leading-none truncate ${currentSize.sub} ${
                   isDarkBg ? 'text-slate-200' : 'text-[#071E41]'
                 }`}
               >

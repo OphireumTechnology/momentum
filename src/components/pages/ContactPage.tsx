@@ -225,7 +225,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                  <div>
+                  <div className="min-w-0">
                     <label htmlFor="contact-name" className="block text-sm font-bold text-[#071E41] mb-1.5">
                       Your Name <span className="text-red-700">*</span>
                     </label>
@@ -241,7 +241,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                       className={inputClass}
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label htmlFor="contact-email" className="block text-sm font-bold text-[#071E41] mb-1.5">
                       Email Address <span className="text-red-700">*</span>
                     </label>
@@ -261,7 +261,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                  <div>
+                  <div className="min-w-0">
                     <label htmlFor="contact-phone" className="block text-sm font-bold text-[#071E41] mb-1.5">
                       Telephone
                     </label>
@@ -273,11 +273,11 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      placeholder="(803) 000-0000"
+                      placeholder="+1 (803) 000-0000"
                       className={inputClass}
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label htmlFor="contact-inquiryType" className="block text-sm font-bold text-[#071E41] mb-1.5">
                       Inquiry Category
                     </label>

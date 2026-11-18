@@ -3,15 +3,13 @@ import { PageView } from '../common/Header';
 import { ASSETS, ASSET_METADATA } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 import { COMPANY_PHONE } from '../../config/company';
+import { ResponsiveTabs, ResponsiveTabItem, getPanelId, getTabId } from '../common/ResponsiveTabs';
 import {
   CheckCircle2,
   ArrowRight,
   ShieldCheck,
   Clock,
-  Layers,
   ChevronRight,
-  Truck,
-  HardHat,
   Package,
   Phone,
 } from 'lucide-react';
@@ -22,6 +20,14 @@ interface ServicesPageProps {
 
 type ServiceTab = 'transportation' | 'hauling' | 'dedicated' | 'cargovan' | 'construction';
 
+const SERVICE_TABS: ResponsiveTabItem<ServiceTab>[] = [
+  { id: 'transportation', label: 'Freight Transport' },
+  { id: 'hauling', label: 'Commercial Hauling' },
+  { id: 'dedicated', label: 'Regional Corridors' },
+  { id: 'cargovan', label: 'Cargo Van Delivery' },
+  { id: 'construction', label: 'Construction Hauling & Logistics' },
+];
+
 export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
   const [activeTab, setActiveTab] = useState<ServiceTab>('transportation');
 
@@ -29,7 +35,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
     <div className="bg-[#F5F7FA] min-h-screen">
       {/* Page Header */}
       <section className="bg-[#071E41] text-white py-8 sm:py-14 lg:py-16 border-b border-[#0D2C5B]">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl space-y-2.5 text-left">
             <span className="block text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
               Commercial Capabilities · Official Corporate Services
@@ -42,73 +48,34 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
             </p>
           </div>
 
-          {/* Interactive Filter Control */}
-          <div className="mt-6 flex items-center gap-1.5 p-1.5 bg-[#041228]/90 border border-slate-700/60 rounded-xl overflow-x-auto max-w-full">
-            <button
-              type="button"
-              onClick={() => setActiveTab('transportation')}
-              className={`min-h-[44px] py-2 px-3.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                activeTab === 'transportation'
-                  ? 'bg-[#C99A31] text-[#071E41] shadow-sm'
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              Freight Transport
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('hauling')}
-              className={`min-h-[44px] py-2 px-3.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                activeTab === 'hauling'
-                  ? 'bg-[#C99A31] text-[#071E41] shadow-sm'
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              Commercial Hauling
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('dedicated')}
-              className={`min-h-[44px] py-2 px-3.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                activeTab === 'dedicated'
-                  ? 'bg-[#C99A31] text-[#071E41] shadow-sm'
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              Regional Corridors
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('cargovan')}
-              className={`min-h-[44px] py-2 px-3.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                activeTab === 'cargovan'
-                  ? 'bg-[#C99A31] text-[#071E41] shadow-sm'
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              Cargo Van Delivery
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('construction')}
-              className={`min-h-[44px] py-2 px-3.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                activeTab === 'construction'
-                  ? 'bg-[#C99A31] text-[#071E41] shadow-sm'
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              Construction Hauling &amp; Logistics
-            </button>
+          {/* Responsive Accessible Service Capability Tabs */}
+          <div className="mt-6">
+            <ResponsiveTabs
+              idPrefix="services"
+              ariaLabel="Commercial capabilities"
+              items={SERVICE_TABS}
+              activeId={activeTab}
+              onChange={setActiveTab}
+              mobileLayout="stacked"
+              tone="dark"
+            />
           </div>
         </div>
       </section>
 
+      <div
+        role="tabpanel"
+        id={getPanelId('services', activeTab)}
+        aria-labelledby={getTabId('services', activeTab)}
+        tabIndex={0}
+        className="focus:outline-none"
+      >
       {/* 1. TRANSPORTATION SERVICES SECTION */}
       {activeTab === 'transportation' && (
-        <section className="py-16">
-          <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-12">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-              <div className="lg:col-span-7 space-y-5">
+        <section className="py-10 sm:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-12">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+              <div className="lg:col-span-7 min-w-0 space-y-5">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display">
                   Core Freight Transport · Image 01
                 </span>
@@ -143,29 +110,31 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 pt-2">
+                <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 pt-2">
                   <button
+                    type="button"
                     onClick={() => onNavigate('quote')}
-                    className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded font-display inline-flex items-center gap-2 cursor-pointer"
+                    className="min-h-[48px] w-full sm:w-auto px-6 py-3 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded-md font-display inline-flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span>Request Freight Quote</span>
-                    <ArrowRight className="w-4 h-4 text-[#C99A31]" />
+                    <ArrowRight className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => onNavigate('fleet')}
-                    className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded font-display cursor-pointer"
+                    className="min-h-[48px] w-full sm:w-auto px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-md font-display cursor-pointer"
                   >
                     View Van Specs
                   </button>
                 </div>
               </div>
 
-              <div className="lg:col-span-5">
+              <div className="lg:col-span-5 min-w-0">
                 <div className="rounded-xl overflow-hidden shadow-lg border border-slate-200">
                   <ImageWithFallback
                     src={ASSETS.commercialFreight}
                     alt={ASSET_METADATA.commercialFreight.alt}
-                    className="w-full h-80 object-cover"
+                    className="w-full h-56 sm:h-80 object-cover"
                     fallbackTitle="Dry Van Freight Transport"
                   />
                   <div className="p-4 bg-white border-t border-slate-200 text-xs">
@@ -176,12 +145,48 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
               </div>
             </div>
 
-            {/* Detailed Operational Specs Table */}
-            <div className="bg-white rounded-xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+            {/* Detailed Operational Specs (Mobile Stacked Cards + Desktop Table) */}
+            <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-8 shadow-sm">
               <h3 className="text-lg font-bold text-[#071E41] font-display mb-4">
                 Transportation Operating Specifications
               </h3>
-              <div className="overflow-x-auto">
+
+              {/* Mobile Spec Cards */}
+              <div className="md:hidden space-y-3 text-xs">
+                {[
+                  {
+                    param: 'Maximum Payload',
+                    capability: 'Up to 45,000 lbs',
+                    notes: 'Weight distribution monitored across tandem drive & trailer axles',
+                  },
+                  {
+                    param: 'Trailer Dimensions',
+                    capability: '53ft Length × 102in Width × 110in Interior Height',
+                    notes: 'Accommodates standard 48×40 pallets (up to 26 single, 52 double-stacked)',
+                  },
+                  {
+                    param: 'Cargo Securement',
+                    capability: 'Dual E-Track rows, heavy ratchet straps & load bars',
+                    notes: 'FMCSR 393 compliant tie-down protocols',
+                  },
+                  {
+                    param: 'Dispatch Radius',
+                    capability: 'Same-day regional (up to 350 miles from Columbia, SC)',
+                    notes: 'Extended regional lanes coordinated upon request',
+                  },
+                ].map((spec) => (
+                  <div key={spec.param} className="p-4 rounded-lg bg-[#F5F7FA] border border-slate-200 space-y-1.5">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-[#C99A31]">
+                      {spec.param}
+                    </div>
+                    <div className="text-sm font-bold text-[#071E41]">{spec.capability}</div>
+                    <p className="text-slate-600 leading-relaxed">{spec.notes}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Spec Table */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
                     <tr className="border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold">
@@ -221,10 +226,10 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
 
       {/* 2. HAULING SERVICES SECTION */}
       {activeTab === 'hauling' && (
-        <section className="py-16">
-          <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-12">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-              <div className="lg:col-span-7 space-y-5">
+        <section className="py-10 sm:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-12">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+              <div className="lg:col-span-7 min-w-0 space-y-5">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display">
                   Commercial Hauling · Image 02
                 </span>
@@ -241,47 +246,49 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
                     <div className="flex items-center gap-1.5">
-                      <ChevronRight className="w-3.5 h-3.5 text-[#C99A31]" />
+                      <ChevronRight className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
                       <span>Excavators &amp; Compact Track Loaders</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <ChevronRight className="w-3.5 h-3.5 text-[#C99A31]" />
+                      <ChevronRight className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
                       <span>Structural Steel &amp; Rebar Bundles</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <ChevronRight className="w-3.5 h-3.5 text-[#C99A31]" />
+                      <ChevronRight className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
                       <span>Commercial Generators &amp; Transformers</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <ChevronRight className="w-3.5 h-3.5 text-[#C99A31]" />
+                      <ChevronRight className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
                       <span>Job-Site Staging &amp; Equipment Relocation</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 pt-2">
+                <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 pt-2">
                   <button
+                    type="button"
                     onClick={() => onNavigate('quote')}
-                    className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded font-display inline-flex items-center gap-2 cursor-pointer"
+                    className="min-h-[48px] w-full sm:w-auto px-6 py-3 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded-md font-display inline-flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span>Request Hauling Quote</span>
-                    <ArrowRight className="w-4 h-4 text-[#C99A31]" />
+                    <ArrowRight className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => onNavigate('contact')}
-                    className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded font-display cursor-pointer"
+                    className="min-h-[48px] w-full sm:w-auto px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-md font-display cursor-pointer"
                   >
                     Consult Dispatch
                   </button>
                 </div>
               </div>
 
-              <div className="lg:col-span-5">
+              <div className="lg:col-span-5 min-w-0">
                 <div className="rounded-xl overflow-hidden shadow-lg border border-slate-200">
                   <ImageWithFallback
                     src={ASSETS.commercialHauling}
                     alt={ASSET_METADATA.commercialHauling.alt}
-                    className="w-full h-80 object-cover"
+                    className="w-full h-56 sm:h-80 object-cover"
                     fallbackTitle="Heavy Equipment Hauling"
                   />
                   <div className="p-4 bg-white border-t border-slate-200 text-xs">
@@ -330,10 +337,10 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
 
       {/* 3. DEDICATED CORRIDORS SECTION */}
       {activeTab === 'dedicated' && (
-        <section className="py-16">
-          <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-12">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-              <div className="lg:col-span-7 space-y-5">
+        <section className="py-10 sm:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-12">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+              <div className="lg:col-span-7 min-w-0 space-y-5">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display">
                   Regional Route Mastery · Image 03
                 </span>
@@ -346,24 +353,24 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
 
                 <div className="space-y-3">
                   <div className="p-4 rounded-lg bg-white border border-slate-200 flex items-start gap-3">
-                    <span className="font-bold text-xs text-[#071E41] bg-slate-100 px-2 py-1 rounded">I-77</span>
-                    <div>
+                    <span className="font-bold text-xs text-[#071E41] bg-slate-100 px-2 py-1 rounded shrink-0">I-77</span>
+                    <div className="min-w-0">
                       <div className="text-xs font-bold text-slate-800">Columbia, SC ⇄ Charlotte, NC</div>
                       <div className="text-[11px] text-slate-500">Same-day turnaround for industrial manufacturing and distribution.</div>
                     </div>
                   </div>
 
                   <div className="p-4 rounded-lg bg-white border border-slate-200 flex items-start gap-3">
-                    <span className="font-bold text-xs text-[#071E41] bg-slate-100 px-2 py-1 rounded">I-26</span>
-                    <div>
+                    <span className="font-bold text-xs text-[#071E41] bg-slate-100 px-2 py-1 rounded shrink-0">I-26</span>
+                    <div className="min-w-0">
                       <div className="text-xs font-bold text-slate-800">Columbia, SC ⇄ Port of Charleston</div>
                       <div className="text-[11px] text-slate-500">Container drayage connectors, port facility freight, and export cargo staging.</div>
                     </div>
                   </div>
 
                   <div className="p-4 rounded-lg bg-white border border-slate-200 flex items-start gap-3">
-                    <span className="font-bold text-xs text-[#071E41] bg-slate-100 px-2 py-1 rounded">I-20</span>
-                    <div>
+                    <span className="font-bold text-xs text-[#071E41] bg-slate-100 px-2 py-1 rounded shrink-0">I-20</span>
+                    <div className="min-w-0">
                       <div className="text-xs font-bold text-slate-800">Midlands ⇄ Florence &amp; Augusta / Atlanta</div>
                       <div className="text-[11px] text-slate-500">Cross-state distribution connecting warehouse logistics corridors.</div>
                     </div>
@@ -372,21 +379,22 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
 
                 <div className="pt-2">
                   <button
+                    type="button"
                     onClick={() => onNavigate('quote')}
-                    className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded font-display inline-flex items-center gap-2 cursor-pointer"
+                    className="min-h-[48px] w-full sm:w-auto px-6 py-3 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded-md font-display inline-flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span>Request Contract Lane Quote</span>
-                    <ArrowRight className="w-4 h-4 text-[#C99A31]" />
+                    <ArrowRight className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
                   </button>
                 </div>
               </div>
 
-              <div className="lg:col-span-5">
+              <div className="lg:col-span-5 min-w-0">
                 <div className="rounded-xl overflow-hidden shadow-lg border border-slate-200">
                   <ImageWithFallback
                     src={ASSETS.regionalCorridors}
                     alt={ASSET_METADATA.regionalCorridors.alt}
-                    className="w-full h-80 object-cover"
+                    className="w-full h-56 sm:h-80 object-cover"
                     fallbackTitle="Regional Corridors"
                   />
                   <div className="p-4 bg-white border-t border-slate-200 text-xs">
@@ -402,10 +410,10 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
 
       {/* 4. CARGO VAN TRANSPORTATION & DELIVERY SECTION */}
       {activeTab === 'cargovan' && (
-        <section className="py-16">
-          <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-12">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-              <div className="lg:col-span-7 space-y-5">
+        <section className="py-10 sm:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-12">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+              <div className="lg:col-span-7 min-w-0 space-y-5">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display">
                   Expedited Courier &amp; Jobsite Delivery · Image 04
                 </span>
@@ -422,47 +430,49 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
                     <div className="flex items-center gap-1.5">
-                      <ChevronRight className="w-3.5 h-3.5 text-[#C99A31]" />
+                      <ChevronRight className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
                       <span>Local &amp; Regional Scheduled Deliveries</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <ChevronRight className="w-3.5 h-3.5 text-[#C99A31]" />
+                      <ChevronRight className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
                       <span>Contractor Supplies &amp; Specialty Hardware</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <ChevronRight className="w-3.5 h-3.5 text-[#C99A31]" />
+                      <ChevronRight className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
                       <span>Warehouse-to-Jobsite Staging Shuttles</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <ChevronRight className="w-3.5 h-3.5 text-[#C99A31]" />
+                      <ChevronRight className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
                       <span>Small Commercial Pallet &amp; Crate Logistics</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 pt-2">
+                <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 pt-2">
                   <button
+                    type="button"
                     onClick={() => onNavigate('quote')}
-                    className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded font-display inline-flex items-center gap-2 cursor-pointer"
+                    className="min-h-[48px] w-full sm:w-auto px-6 py-3 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded-md font-display inline-flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span>Request Cargo Van Quote</span>
-                    <ArrowRight className="w-4 h-4 text-[#C99A31]" />
+                    <ArrowRight className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => onNavigate('contact')}
-                    className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded font-display cursor-pointer"
+                    className="min-h-[48px] w-full sm:w-auto px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-md font-display cursor-pointer"
                   >
                     Schedule Direct Delivery
                   </button>
                 </div>
               </div>
 
-              <div className="lg:col-span-5">
+              <div className="lg:col-span-5 min-w-0">
                 <div className="rounded-xl overflow-hidden shadow-lg border border-slate-200">
                   <ImageWithFallback
                     src={ASSETS.cargoVanDelivery}
                     alt={ASSET_METADATA.cargoVanDelivery.alt}
-                    className="w-full h-80 object-cover"
+                    className="w-full h-56 sm:h-80 object-cover"
                     fallbackTitle="Cargo Van Transportation"
                   />
                   <div className="p-4 bg-white border-t border-slate-200 text-xs">
@@ -505,22 +515,22 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
 
       {/* 5. CONSTRUCTION LOGISTICS & HAULING SECTION */}
       {activeTab === 'construction' && (
-        <section className="py-16">
-          <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-14">
+        <section className="py-10 sm:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-14">
             {/* Top Showcase: Dedicated Project Logistics Banner */}
             <div className="rounded-2xl overflow-hidden shadow-xl border border-slate-200 relative">
               <ImageWithFallback
                 src={ASSETS.constructionLogistics}
                 alt={ASSET_METADATA.constructionLogistics.alt}
-                className="w-full h-80 sm:h-96 object-cover"
+                className="w-full h-64 sm:h-96 object-cover"
                 fallbackTitle="Dedicated Construction Logistics"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#071E41] via-transparent to-black/30" />
-              <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 text-white space-y-2">
+              <div className="absolute inset-0 bg-gradient-to-t from-[#071E41] via-[#071E41]/40 to-black/30" />
+              <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-8 text-white space-y-1.5 sm:space-y-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display">
                   Directive Image 08 · Coordinated Jobsite Transport
                 </span>
-                <h2 className="text-2xl sm:text-4xl font-extrabold font-display">
+                <h2 className="text-xl sm:text-4xl font-extrabold font-display">
                   Dedicated Construction Project Logistics
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-200 max-w-2xl">
@@ -530,9 +540,9 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
             </div>
 
             {/* 3 Comprehensive Construction Hauling Pillars */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
               {/* Pillar 1: Pre-Construction Aggregate Dump Truck */}
-              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm flex flex-col justify-between">
+              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm flex flex-col justify-between min-w-0">
                 <div>
                   <div className="h-52 overflow-hidden">
                     <ImageWithFallback
@@ -554,15 +564,15 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
                     </p>
                     <ul className="space-y-1.5 text-xs text-slate-700 pt-1">
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
                         <span>Crushed Stone, Riprap &amp; Sand Supply</span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
                         <span>Site Grading &amp; Foundation Aggregate</span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
                         <span>Heavy Tandem-Axle Dump Truck Hauling</span>
                       </li>
                     </ul>
@@ -570,8 +580,9 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
                 </div>
                 <div className="p-6 pt-0">
                   <button
+                    type="button"
                     onClick={() => onNavigate('quote')}
-                    className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded transition-colors text-center font-display cursor-pointer"
+                    className="min-h-[48px] w-full py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded-md transition-colors text-center font-display cursor-pointer"
                   >
                     Quote Aggregate Hauling
                   </button>
@@ -579,7 +590,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
               </div>
 
               {/* Pillar 2: Ongoing Material Delivery Flatbeds */}
-              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm flex flex-col justify-between">
+              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm flex flex-col justify-between min-w-0">
                 <div>
                   <div className="h-52 overflow-hidden">
                     <ImageWithFallback
@@ -601,15 +612,15 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
                     </p>
                     <ul className="space-y-1.5 text-xs text-slate-700 pt-1">
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
                         <span>Structural Steel &amp; Rebar Transport</span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
                         <span>Lumber, Drywall &amp; Palletized Supplies</span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
                         <span>Certified Winch &amp; Strap Tie-Down Rigor</span>
                       </li>
                     </ul>
@@ -617,8 +628,9 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
                 </div>
                 <div className="p-6 pt-0">
                   <button
+                    type="button"
                     onClick={() => onNavigate('quote')}
-                    className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded transition-colors text-center font-display cursor-pointer"
+                    className="min-h-[48px] w-full py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded-md transition-colors text-center font-display cursor-pointer"
                   >
                     Quote Material Delivery
                   </button>
@@ -626,7 +638,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
               </div>
 
               {/* Pillar 3: Equipment Mobilization Lowboy */}
-              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm flex flex-col justify-between">
+              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm flex flex-col justify-between min-w-0">
                 <div>
                   <div className="h-52 overflow-hidden">
                     <ImageWithFallback
@@ -648,15 +660,15 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
                     </p>
                     <ul className="space-y-1.5 text-xs text-slate-700 pt-1">
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
                         <span>Excavator &amp; Earthmoving Mobilization</span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
                         <span>Grade 70 Transport Chain Rigging</span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
                         <span>RGN / Lowboy Ground-Level Loading</span>
                       </li>
                     </ul>
@@ -664,8 +676,9 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
                 </div>
                 <div className="p-6 pt-0">
                   <button
+                    type="button"
                     onClick={() => onNavigate('quote')}
-                    className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded transition-colors text-center font-display cursor-pointer"
+                    className="min-h-[48px] w-full py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded-md transition-colors text-center font-display cursor-pointer"
                   >
                     Quote Mobilization
                   </button>
@@ -675,10 +688,11 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
           </div>
         </section>
       )}
+      </div>
 
       {/* Customer Action CTA */}
-      <section className="bg-white py-14 border-t border-slate-200">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <section className="bg-white py-12 sm:py-14 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div>
             <h3 className="text-xl font-bold text-[#071E41] font-display">Need a customized freight or hauling solution?</h3>
             <p className="text-sm text-slate-600 mt-1">Our dispatchers will evaluate your exact weight, dimensions, equipment needs, and timeline.</p>

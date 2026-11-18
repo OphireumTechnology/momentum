@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { PageView } from '../common/Header';
-import { COMPANY } from '../../config/company';
 import { ASSETS, ASSET_METADATA } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 import {
@@ -8,8 +7,6 @@ import {
   Navigation,
   Compass,
   ArrowRight,
-  ShieldCheck,
-  CheckCircle2,
 } from 'lucide-react';
 
 interface ServiceAreasPageProps {
@@ -29,6 +26,7 @@ interface CorridorDetail {
 
 export const ServiceAreasPage: React.FC<ServiceAreasPageProps> = ({ onNavigate }) => {
   const [selectedCorridor, setSelectedCorridor] = useState<string>('i77');
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const corridors: CorridorDetail[] = [
     {
@@ -108,24 +106,56 @@ export const ServiceAreasPage: React.FC<ServiceAreasPageProps> = ({ onNavigate }
                 Click a route to view mileage, estimated transit times, and supported freight types originating from Columbia, SC.
               </p>
 
-              <div className="space-y-2.5">
-                {corridors.map((corridor) => {
+              <div
+                role="tablist"
+                aria-label="Operating Freight Corridors"
+                aria-orientation="vertical"
+                className="space-y-2.5"
+              >
+                {corridors.map((corridor, idx) => {
                   const isSelected = corridor.id === selectedCorridor;
                   return (
                     <button
                       key={corridor.id}
+                      ref={(el) => {
+                        tabRefs.current[corridor.id] = el;
+                      }}
+                      type="button"
+                      role="tab"
+                      id={`service-area-tab-${corridor.id}`}
+                      aria-selected={isSelected}
+                      aria-controls={`service-area-panel-${corridor.id}`}
+                      tabIndex={isSelected ? 0 : -1}
                       onClick={() => setSelectedCorridor(corridor.id)}
-                      className={`w-full text-left p-3.5 rounded-lg border transition-all cursor-pointer ${
+                      onKeyDown={(e) => {
+                        let nextIdx: number | null = null;
+                        if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                          nextIdx = (idx + 1) % corridors.length;
+                        } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                          nextIdx = (idx - 1 + corridors.length) % corridors.length;
+                        } else if (e.key === 'Home') {
+                          nextIdx = 0;
+                        } else if (e.key === 'End') {
+                          nextIdx = corridors.length - 1;
+                        }
+                        if (nextIdx !== null) {
+                          e.preventDefault();
+                          const targetId = corridors[nextIdx].id;
+                          setSelectedCorridor(targetId);
+                          requestAnimationFrame(() => tabRefs.current[targetId]?.focus());
+                        }
+                      }}
+                      className={`min-h-[48px] w-full text-left p-3.5 rounded-lg border transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C99A31] ${
                         isSelected
                           ? 'border-[#071E41] bg-[#071E41] text-white shadow-sm'
                           : 'border-slate-200 bg-slate-50 text-slate-800 hover:border-slate-300'
                       }`}
                     >
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2">
                         <span className={`text-xs font-bold font-display ${isSelected ? 'text-[#C99A31]' : 'text-[#071E41]'}`}>
                           {corridor.highway}
                         </span>
-                        <span className={`text-[10px] tabular-nums font-semibold ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
+                        <span className={`text-[10px] tabular-nums font-semibold shrink-0 ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
                           ~{corridor.distanceMiles} mi
                         </span>
                       </div>
@@ -158,9 +188,15 @@ export const ServiceAreasPage: React.FC<ServiceAreasPageProps> = ({ onNavigate }
           </div>
 
           {/* Detailed Corridor Card + Visual Route Map Representation */}
-          <div className="lg:col-span-7 min-w-0 space-y-6">
+          <div
+            role="tabpanel"
+            id={`service-area-panel-${current.id}`}
+            aria-labelledby={`service-area-tab-${current.id}`}
+            tabIndex={0}
+            className="lg:col-span-7 min-w-0 space-y-6 focus:outline-none"
+          >
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-              <div className="h-64 sm:h-72 overflow-hidden relative">
+              <div className="h-56 sm:h-72 overflow-hidden relative">
                 <ImageWithFallback
                   src={ASSETS.serviceAreas}
                   alt={ASSET_METADATA.serviceAreas.alt}

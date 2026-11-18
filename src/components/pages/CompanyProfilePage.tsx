@@ -3,6 +3,7 @@ import { PageView } from '../common/Header';
 import { COMPANY_PHONE } from '../../config/company';
 import { LOGOS, ASSETS, COMPANY_PROFILE_PDF_URL } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
+import { ResponsiveTabs, ResponsiveTabItem, getPanelId, getTabId } from '../common/ResponsiveTabs';
 import {
   FileText,
   Download,
@@ -40,19 +41,19 @@ interface CompanyProfilePageProps {
   onNavigate: (page: PageView) => void;
 }
 
+const PROFILE_TABS: ResponsiveTabItem<string>[] = [
+  { id: '1', badge: 1, label: 'Cover & Executive Summary' },
+  { id: '2', badge: 2, label: 'Corporate Overview' },
+  { id: '3', badge: 3, label: 'Mission & Vision' },
+  { id: '4', badge: 4, label: 'Core Services' },
+  { id: '5', badge: 5, label: 'Industries Served' },
+  { id: '6', badge: 6, label: 'Operational Philosophy' },
+  { id: '7', badge: 7, label: 'Contact Directory' },
+  { id: '8', badge: 8, label: 'Branding & Collaterals' },
+];
+
 export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNavigate }) => {
   const [activeSection, setActiveSection] = useState<number>(1);
-
-  const sections = [
-    { id: 1, title: 'Cover & Executive Summary', subtitle: 'Corporate Identity' },
-    { id: 2, title: 'Corporate Overview', subtitle: 'Columbia Hub & Corridors' },
-    { id: 3, title: 'Mission & Vision', subtitle: 'Strategic Direction' },
-    { id: 4, title: 'Core Services', subtitle: '5 Service Categories' },
-    { id: 5, title: 'Industries Served', subtitle: '9 Commercial Sectors' },
-    { id: 6, title: 'Operational Philosophy', subtitle: 'Safety & Dispatch Model' },
-    { id: 7, title: 'Contact Directory', subtitle: 'Direct Operations & Inquiries' },
-    { id: 8, title: 'Branding & Collaterals', subtitle: 'Identity, Uniforms & Fleet' },
-  ];
 
   return (
     <div className="bg-[#F5F7FA] min-h-screen text-[#1F2937]">
@@ -192,38 +193,24 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
       </section>
 
       {/* =========================================================================
-          8-PAGE INTERACTIVE TAB SELECTOR
+          8-PAGE INTERACTIVE TAB SELECTOR (Non-sticky on mobile to stay < 15% header cap)
           ========================================================================= */}
-      <section className="bg-white border-b border-slate-200 sticky top-16 md:top-[110px] z-40 shadow-xs">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-2.5">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400 font-display shrink-0 pr-2 hidden md:inline">
+      <section className="bg-white border-b border-slate-200 md:sticky md:top-[113px] z-30 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex flex-col md:flex-row md:items-center gap-2.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 font-display shrink-0 hidden md:inline">
               Page Index:
             </span>
-            {sections.map((sec) => {
-              const isActive = activeSection === sec.id;
-              return (
-                <button
-                  key={sec.id}
-                  type="button"
-                  onClick={() => setActiveSection(sec.id)}
-                  className={`min-h-[44px] px-3.5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-2 ${
-                    isActive
-                      ? 'bg-[#071E41] text-white shadow-sm'
-                      : 'bg-[#F5F7FA] text-slate-700 hover:bg-slate-200 hover:text-[#071E41]'
-                  }`}
-                >
-                  <span
-                    className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-bold ${
-                      isActive ? 'bg-[#C99A31] text-[#071E41]' : 'bg-slate-300 text-slate-700'
-                    }`}
-                  >
-                    {sec.id}
-                  </span>
-                  <span>{sec.title}</span>
-                </button>
-              );
-            })}
+            <ResponsiveTabs
+              idPrefix="company-profile"
+              ariaLabel="Company Profile Sections"
+              items={PROFILE_TABS}
+              activeId={String(activeSection)}
+              onChange={(id) => setActiveSection(Number(id))}
+              mobileLayout="select"
+              mobileSelectLabel="Profile Page Index"
+              tone="light"
+            />
           </div>
         </div>
       </section>
@@ -231,7 +218,13 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
       {/* =========================================================================
           PAGE-BY-PAGE DETAILED SECTIONS
           ========================================================================= */}
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-12 space-y-12 sm:space-y-16">
+      <div
+        role="tabpanel"
+        id={getPanelId('company-profile', String(activeSection))}
+        aria-labelledby={getTabId('company-profile', String(activeSection))}
+        tabIndex={0}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 sm:space-y-16 focus:outline-none"
+      >
 
         {/* -----------------------------------------------------------------------
             PAGE 1: COVER & EXECUTIVE SUMMARY
@@ -287,21 +280,22 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 pt-2">
+                <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 pt-2">
                   <a
                     href={COMPANY_PROFILE_PDF_URL}
                     download="Momentum-Transportation-Company-Profile.pdf"
-                    className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded font-display inline-flex items-center gap-2"
+                    className="min-h-[48px] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md font-display inline-flex items-center justify-center gap-2"
                   >
-                    <Download className="w-4 h-4 text-[#071E41]" />
+                    <Download className="w-4 h-4 text-[#071E41]" aria-hidden="true" />
                     <span>Download Official PDF (8 Pages)</span>
                   </a>
                   <button
+                    type="button"
                     onClick={() => setActiveSection(2)}
-                    className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-slate-200 rounded font-display inline-flex items-center gap-1.5"
+                    className="min-h-[48px] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-slate-200 rounded-md font-display inline-flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <span>View Page 2: Corporate Overview</span>
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
               </div>
@@ -1009,28 +1003,29 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
             </div>
 
             {/* Quotations Box */}
-            <div className="p-6 rounded-xl bg-[#071E41] text-white flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="space-y-1 text-center md:text-left">
+            <div className="p-5 sm:p-6 rounded-xl bg-[#071E41] text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="space-y-1 text-left">
                 <h4 className="text-lg font-bold font-display text-white">Business Inquiries &amp; Quotations</h4>
                 <p className="text-xs text-slate-300 max-w-xl">
                   For commercial transportation, cargo van services, equipment hauling, construction logistics and regional freight requirements, customers may contact Momentum directly.
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-3 shrink-0">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full md:w-auto">
                 <a
                   href={COMPANY_PHONE.href}
                   aria-label={COMPANY_PHONE.ariaLabel}
-                  className="min-h-[44px] px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5"
+                  className="min-h-[48px] px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-md text-xs font-bold uppercase tracking-wider inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
                 >
                   <Phone className="w-3.5 h-3.5 text-[#C99A31]" aria-hidden="true" />
                   <span>Call {COMPANY_PHONE.display}</span>
                 </a>
                 <button
+                  type="button"
                   onClick={() => onNavigate('quote')}
-                  className="px-5 py-2.5 bg-[#C99A31] hover:bg-[#E8BE65] text-[#071E41] rounded text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5 font-display"
+                  className="min-h-[48px] px-5 py-2.5 bg-[#C99A31] hover:bg-[#E8BE65] text-[#071E41] rounded-md text-xs font-bold uppercase tracking-wider inline-flex items-center justify-center gap-1.5 font-display cursor-pointer whitespace-nowrap"
                 >
                   <span>Request Online Quote</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -1207,9 +1202,9 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
       {/* =========================================================================
           PERSISTENT BOTTOM DOWNLOAD & ACTION STRIP
           ========================================================================= */}
-      <section className="bg-[#071E41] text-white py-8 border-t border-[#0D2C5B]">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-1 text-center md:text-left">
+      <section className="bg-[#071E41] text-white py-8 sm:py-10 border-t border-[#0D2C5B]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="space-y-1 text-left">
             <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
               Authoritative Documentation · 8 Full Pages
             </span>
@@ -1221,19 +1216,20 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full md:w-auto">
             <a
               href={COMPANY_PROFILE_PDF_URL}
               download="Momentum-Transportation-Company-Profile.pdf"
-              className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md transition-all font-display shadow-md inline-flex items-center gap-2 cursor-pointer"
+              className="min-h-[48px] px-6 py-3 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md transition-colors font-display shadow-md inline-flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
             >
-              <Download className="w-4 h-4 text-[#071E41]" />
+              <Download className="w-4 h-4 text-[#071E41]" aria-hidden="true" />
               <span>DOWNLOAD PDF (2.7 MB)</span>
             </a>
 
             <button
+              type="button"
               onClick={() => onNavigate('quote')}
-              className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-white bg-white/10 hover:bg-white/20 border border-white/25 rounded-md transition-all font-display cursor-pointer"
+              className="min-h-[48px] px-5 py-3 text-xs font-bold uppercase tracking-wider text-white bg-white/10 hover:bg-white/20 border border-white/25 rounded-md transition-colors font-display cursor-pointer whitespace-nowrap"
             >
               Request a Rate Quote
             </button>

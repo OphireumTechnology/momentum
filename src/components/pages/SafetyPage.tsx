@@ -39,7 +39,7 @@ export const SafetyPage: React.FC<SafetyPageProps> = ({ onNavigate }) => {
       {/* Main Content */}
       <section className="py-8 sm:py-14 max-w-7xl mx-auto px-5 sm:px-8 space-y-10 sm:space-y-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-          <div className="lg:col-span-7 space-y-5">
+          <div className="lg:col-span-7 min-w-0 space-y-5">
             <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display">
               Pre-Trip &amp; Post-Trip Discipline
             </span>
@@ -76,12 +76,12 @@ export const SafetyPage: React.FC<SafetyPageProps> = ({ onNavigate }) => {
             </div>
           </div>
 
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-5 min-w-0">
             <div className="rounded-xl overflow-hidden shadow-lg border border-slate-200">
               <ImageWithFallback
                 src={ASSETS.safetyHero}
                 alt={ASSET_METADATA.safetyHero.alt}
-                className="w-full h-80 object-cover"
+                className="w-full h-56 sm:h-80 object-cover"
                 fallbackTitle="Safety Inspection Protocol"
               />
               <div className="p-4 bg-white border-t border-slate-200 text-xs text-slate-600">

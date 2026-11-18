@@ -3,19 +3,27 @@ import { PageView } from '../common/Header';
 import { ASSETS, ASSET_METADATA } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 import { COMPANY_PHONE } from '../../config/company';
+import { ResponsiveTabs, ResponsiveTabItem, getPanelId, getTabId } from '../common/ResponsiveTabs';
 import {
-  ShieldAlert,
-  ArrowRight,
   Info,
-  CheckCircle,
-  Truck,
-  Filter,
   Phone,
 } from 'lucide-react';
 
 interface FleetPageProps {
   onNavigate: (page: PageView) => void;
 }
+
+type FleetFilterId = 'all' | 'Tractor' | 'Dry Van' | 'Flatbed' | 'Heavy Haul' | 'Cargo Van' | 'Dump Truck';
+
+const FLEET_FILTER_TABS: ResponsiveTabItem<FleetFilterId>[] = [
+  { id: 'all', label: 'All Configurations' },
+  { id: 'Tractor', label: 'Tractors' },
+  { id: 'Dry Van', label: '53ft Dry Vans' },
+  { id: 'Flatbed', label: 'Flatbeds' },
+  { id: 'Heavy Haul', label: 'Heavy Haul' },
+  { id: 'Cargo Van', label: 'Cargo Vans' },
+  { id: 'Dump Truck', label: 'Dump Trucks' },
+];
 
 interface EquipmentCard {
   id: string;
@@ -31,7 +39,7 @@ interface EquipmentCard {
 }
 
 export const FleetPage: React.FC<FleetPageProps> = ({ onNavigate }) => {
-  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterCategory, setFilterCategory] = useState<FleetFilterId>('all');
 
   const equipmentList: EquipmentCard[] = [
     {
@@ -169,45 +177,42 @@ export const FleetPage: React.FC<FleetPageProps> = ({ onNavigate }) => {
       </section>
 
       {/* Equipment Cards & Interactive Filter */}
-      <section className="pb-16 sm:pb-20 max-w-7xl mx-auto px-5 sm:px-8">
-        {/* Category Filter Controls */}
-        <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-1.5 p-1.5 bg-white border border-slate-200 rounded-lg overflow-x-auto max-w-full">
-            {[
-              { id: 'all', label: 'All Configurations' },
-              { id: 'Tractor', label: 'Tractors' },
-              { id: 'Dry Van', label: '53ft Dry Vans' },
-              { id: 'Flatbed', label: 'Flatbeds' },
-              { id: 'Heavy Haul', label: 'Heavy Haul' },
-              { id: 'Cargo Van', label: 'Cargo Vans' },
-              { id: 'Dump Truck', label: 'Dump Trucks' },
-            ].map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setFilterCategory(cat.id)}
-                className={`min-h-[44px] px-3.5 py-2 text-xs font-bold uppercase rounded-md transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                  filterCategory === cat.id
-                    ? 'bg-[#071E41] text-white'
-                    : 'text-slate-700 hover:text-[#071E41] hover:bg-slate-100'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+      <section className="pb-14 sm:pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Responsive Accessible Equipment Category Tabs */}
+        <div className="mb-8 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-[#071E41] font-display">
+              Filter by Equipment Type
+            </h2>
+            <div className="text-xs text-slate-500 font-medium">
+              Showing <span className="font-bold text-[#071E41]">{filteredEquipment.length}</span> equipment profiles
+            </div>
           </div>
 
-          <div className="text-xs text-slate-500 font-medium">
-            Showing <span className="font-bold text-[#071E41]">{filteredEquipment.length}</span> equipment profiles
-          </div>
+          <ResponsiveTabs
+            idPrefix="fleet"
+            ariaLabel="Equipment Category"
+            items={FLEET_FILTER_TABS}
+            activeId={filterCategory}
+            onChange={setFilterCategory}
+            mobileLayout="select"
+            mobileSelectLabel="Select Equipment Type"
+            tone="light"
+          />
         </div>
 
         {/* Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+          role="tabpanel"
+          id={getPanelId('fleet', filterCategory)}
+          aria-labelledby={getTabId('fleet', filterCategory)}
+          tabIndex={0}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 focus:outline-none"
+        >
           {filteredEquipment.map((eq) => (
             <div
               key={eq.id}
-              className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+              className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between min-w-0"
             >
               <div>
                 {eq.image && (

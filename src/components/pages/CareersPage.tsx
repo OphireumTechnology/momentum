@@ -199,7 +199,7 @@ export const CareersPage: React.FC<CareersPageProps> = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                  <div>
+                  <div className="min-w-0">
                     <label htmlFor="career-phone" className="block text-sm font-bold text-[#071E41] mb-1.5">
                       Direct Phone <span className="text-red-700">*</span>
                     </label>
@@ -211,11 +211,11 @@ export const CareersPage: React.FC<CareersPageProps> = () => {
                       value={applicantPhone}
                       onChange={(e) => setApplicantPhone(e.target.value)}
                       required
-                      placeholder="803-000-0000"
+                      placeholder="+1 (803) 000-0000"
                       className={inputClass}
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label htmlFor="career-email" className="block text-sm font-bold text-[#071E41] mb-1.5">
                       Email Address
                     </label>
@@ -233,7 +233,7 @@ export const CareersPage: React.FC<CareersPageProps> = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
+                  <div className="min-w-0">
                     <label htmlFor="career-cdl" className="block text-sm font-bold text-[#071E41] mb-1.5">
                       CDL Class
                     </label>
@@ -248,7 +248,7 @@ export const CareersPage: React.FC<CareersPageProps> = () => {
                       <option value="Commercial Non-CDL">Commercial Hotshot / Non-CDL</option>
                     </select>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label htmlFor="career-exp" className="block text-sm font-bold text-[#071E41] mb-1.5">
                       Experience
                     </label>
@@ -264,7 +264,7 @@ export const CareersPage: React.FC<CareersPageProps> = () => {
                       <option value="10+">10+ Years Senior</option>
                     </select>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label htmlFor="career-endorsements" className="block text-sm font-bold text-[#071E41] mb-1.5">
                       Endorsements
                     </label>

@@ -457,29 +457,29 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
             </div>
 
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm border-y border-slate-200 py-5 text-slate-700">
-              <div>
+              <div className="min-w-0">
                 <dt className="text-xs uppercase tracking-wider font-bold text-[#071E41]">Pickup Location</dt>
-                <dd className="mt-0.5">{submittedData.pickupLocation}</dd>
+                <dd className="mt-0.5 break-words">{submittedData.pickupLocation}</dd>
               </div>
-              <div>
+              <div className="min-w-0">
                 <dt className="text-xs uppercase tracking-wider font-bold text-[#071E41]">Delivery Location</dt>
-                <dd className="mt-0.5">{submittedData.deliveryLocation}</dd>
+                <dd className="mt-0.5 break-words">{submittedData.deliveryLocation}</dd>
               </div>
-              <div>
+              <div className="min-w-0">
                 <dt className="text-xs uppercase tracking-wider font-bold text-[#071E41]">Service Category</dt>
-                <dd className="mt-0.5">{getServiceCategoryLabel(submittedData.serviceCategory)}</dd>
+                <dd className="mt-0.5 break-words">{getServiceCategoryLabel(submittedData.serviceCategory)}</dd>
               </div>
-              <div>
+              <div className="min-w-0">
                 <dt className="text-xs uppercase tracking-wider font-bold text-[#071E41]">Cargo Type &amp; Weight</dt>
-                <dd className="mt-0.5 tabular-nums">
+                <dd className="mt-0.5 tabular-nums break-words">
                   {submittedData.cargoType} ({submittedData.estimatedWeightLbs.toLocaleString()} lbs)
                 </dd>
               </div>
-              <div>
+              <div className="min-w-0">
                 <dt className="text-xs uppercase tracking-wider font-bold text-[#071E41]">Requested Pickup Date</dt>
                 <dd className="mt-0.5">{submittedData.pickupDate}</dd>
               </div>
-              <div>
+              <div className="min-w-0">
                 <dt className="text-xs uppercase tracking-wider font-bold text-[#071E41]">Preferred Contact</dt>
                 <dd className="mt-0.5 uppercase">{submittedData.preferredContactMethod}</dd>
               </div>
@@ -699,7 +699,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
                       aria-invalid={Boolean(fieldErrors.phone)}
                       aria-describedby={fieldErrors.phone ? 'err-phone' : undefined}
                       required
-                      placeholder="(803) 555-0199"
+                      placeholder="+1 (803) 555-0199"
                       className={`${inputBaseClass} ${
                         fieldErrors.phone ? 'border-red-600 bg-red-50/40' : 'border-slate-300'
                       }`}
@@ -1376,37 +1376,37 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
                     Summary of Entered Details
                   </div>
                   <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-slate-700">
-                    <div>
+                    <div className="min-w-0">
                       <dt className="text-xs font-semibold text-slate-500">Contact</dt>
                       <dd className="font-medium text-[#071E41] break-words">
                         {formData.customerName.trim() || 'Not entered yet'}
                         {formData.companyName.trim() ? ` · ${formData.companyName.trim()}` : ''}
                       </dd>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <dt className="text-xs font-semibold text-slate-500">Email / Phone</dt>
                       <dd className="font-medium text-[#071E41] break-words">
                         {formData.email.trim() || '—'} · {formData.phone.trim() || '—'}
                       </dd>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <dt className="text-xs font-semibold text-slate-500">Route</dt>
                       <dd className="font-medium text-[#071E41] break-words">
                         {formData.pickupLocation.trim() || 'Origin'} → {formData.deliveryLocation.trim() || 'Destination'}
                       </dd>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <dt className="text-xs font-semibold text-slate-500">Service &amp; Weight</dt>
-                      <dd className="font-medium text-[#071E41] tabular-nums">
+                      <dd className="font-medium text-[#071E41] tabular-nums break-words">
                         {getServiceCategoryLabel(formData.serviceCategory)} ·{' '}
                         {formData.estimatedWeightLbs ? `${Number(formData.estimatedWeightLbs).toLocaleString()} lbs` : 'Weight TBD'}
                       </dd>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <dt className="text-xs font-semibold text-slate-500">Requested Pickup</dt>
                       <dd className="font-medium text-[#071E41]">{formData.pickupDate || 'Not selected'}</dd>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <dt className="text-xs font-semibold text-slate-500">Cargo Type</dt>
                       <dd className="font-medium text-[#071E41] break-words">
                         {formData.cargoType.trim() || 'Not entered yet'}

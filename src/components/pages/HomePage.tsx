@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { PageView } from '../common/Header';
 import { COMPANY, COMPANY_PHONE } from '../../config/company';
 import { ASSETS, ASSET_METADATA, LOGOS, COMPANY_PROFILE_PDF_URL } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
+import { ResponsiveTabs, ResponsiveTabItem, getPanelId, getTabId } from '../common/ResponsiveTabs';
 import {
   ArrowRight,
   ShieldCheck,
@@ -10,13 +11,9 @@ import {
   MapPin,
   CheckCircle2,
   Phone,
-  Layers,
-  Calculator,
   Navigation,
   Activity,
   FileCheck,
-  Truck,
-  Box,
   Compass,
   Radio,
   SlidersHorizontal,
@@ -30,15 +27,29 @@ interface HomePageProps {
   onOpenQuickQuote?: (prefill?: any) => void;
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote }) => {
+type HomeCapabilityTab = 'all' | 'freight' | 'hauling' | 'corridors' | 'cargovan' | 'construction';
+
+const HOME_CAPABILITY_TABS: ResponsiveTabItem<HomeCapabilityTab>[] = [
+  { id: 'all', label: 'All Capabilities' },
+  { id: 'freight', label: 'Freight Transport' },
+  { id: 'hauling', label: 'Commercial Hauling' },
+  { id: 'corridors', label: 'Regional Corridors' },
+  { id: 'cargovan', label: 'Cargo Van Delivery' },
+  { id: 'construction', label: 'Construction Hauling' },
+];
+
+export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
   // Section 03: Smart Freight Corridor Estimator State
   const [calcOrigin, setCalcOrigin] = useState('Columbia, SC (29229)');
   const [calcDest, setCalcDest] = useState('charlotte');
   const [calcCategory, setCalcCategory] = useState('dry_van');
-  const [isCalculated, setIsCalculated] = useState(true);
+
+  // Section 04: Commercial Capabilities Filter Tabs
+  const [activeCapability, setActiveCapability] = useState<HomeCapabilityTab>('all');
 
   // Section 07: Regional Corridors Interactive Inspector State
   const [activeCorridorId, setActiveCorridorId] = useState<'i77' | 'i26_port' | 'i26_upstate' | 'i20' | 'midlands'>('i77');
+  const corridorTabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   // Corridor Estimation Matrix
   const corridorData: Record<string, { label: string; miles: number; hours: string; baseRateMin: number; baseRateMax: number; corridor: string }> = {
@@ -208,7 +219,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
             <div className="w-full min-w-0 space-y-5">
               
               {/* 1. Official Momentum Logo & Company Name */}
-              <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                 <img
                   src={LOGOS.original}
                   alt="Momentum Transportation & Hauling LLC Official Emblem"
@@ -219,12 +230,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                   decoding="async"
                 />
                 <div className="flex flex-col justify-center min-w-0">
-                  <span className="text-xl sm:text-3xl font-extrabold tracking-tight font-display text-white leading-none truncate">
+                  <span className="text-xl sm:text-3xl font-extrabold tracking-tight font-display text-white leading-none">
                     MOMENTUM
                   </span>
-                  <div className="flex items-center gap-2 mt-1 sm:mt-1.5">
-                    <span className="w-3.5 h-[2px] bg-[#C99A31] shrink-0" />
-                    <span className="text-[10px] sm:text-xs font-bold tracking-wider uppercase text-slate-200 font-display truncate">
+                  <div className="flex items-center gap-1.5 sm:gap-2 mt-1 sm:mt-1.5 min-w-0">
+                    <span className="w-3 sm:w-3.5 h-[2px] bg-[#C99A31] shrink-0" />
+                    <span className="text-[10px] sm:text-xs font-bold tracking-wide sm:tracking-wider uppercase text-slate-200 font-display leading-tight">
                       TRANSPORTATION &amp; HAULING LLC
                     </span>
                   </div>
@@ -276,13 +287,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
 
               {/* 8. Regional Location & Dispatch Contact */}
               <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-xs text-slate-300 border-t border-slate-800/80 pt-4">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-h-[44px]">
                   <ShieldCheck className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
                   <span>Columbia, SC Regional Market Base</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-h-[44px]">
                   <Clock className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
-                  <span>Direct Dispatch: <a href={COMPANY_PHONE.href} aria-label={COMPANY_PHONE.ariaLabel} className="font-semibold text-white hover:text-[#C99A31] underline">{COMPANY_PHONE.display}</a></span>
+                  <span>Direct Dispatch: <a href={COMPANY_PHONE.href} aria-label={COMPANY_PHONE.ariaLabel} className="font-semibold text-white hover:text-[#C99A31] underline py-2">{COMPANY_PHONE.display}</a></span>
                 </div>
               </div>
             </div>
@@ -505,17 +516,17 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
 
       {/* =========================================================================
           SECTION 04: TRANSPORTATION & HAULING SOLUTIONS
-          Five distinct service categories with photorealistic branded images,
-          consistent card heights, key capabilities, and Request a Quote actions.
+          Five distinct service categories with accessible responsive tabs,
+          photorealistic branded images, consistent card heights, and Quote actions.
           ========================================================================= */}
-      <section className="py-20 bg-[#F5F7FA]">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
-            <div>
+      <section className="py-14 sm:py-20 bg-[#F5F7FA]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
+            <div className="min-w-0">
               <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display block mb-1">
-                Verified Capabilities &amp; Specialized Equipment
+                Commercial Capabilities &amp; Specialized Equipment
               </span>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#071E41] tracking-tight font-display">
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#071E41] tracking-tight font-display">
                 Transportation &amp; Hauling Solutions
               </h2>
               <p className="text-sm text-slate-600 mt-1 max-w-2xl">
@@ -523,18 +534,39 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               </p>
             </div>
             <button
+              type="button"
               onClick={() => onNavigate('services')}
-              className="text-xs font-bold uppercase tracking-wider text-[#071E41] hover:text-[#C99A31] transition-colors inline-flex items-center gap-1.5 font-display self-start md:self-auto cursor-pointer"
+              className="min-h-[44px] text-xs font-bold uppercase tracking-wider text-[#071E41] hover:text-[#C99A31] transition-colors inline-flex items-center gap-1.5 font-display self-start md:self-auto cursor-pointer shrink-0"
             >
               <span>View All Service Specifications</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Accessible Commercial Capabilities Filter Tabs (Stacked Mobile / Horizontal Desktop) */}
+          <div className="mb-8">
+            <ResponsiveTabs
+              idPrefix="home-capabilities"
+              ariaLabel="Commercial Capabilities"
+              items={HOME_CAPABILITY_TABS}
+              activeId={activeCapability}
+              onChange={setActiveCapability}
+              mobileLayout="stacked"
+              tone="light"
+            />
+          </div>
+
+          <div
+            role="tabpanel"
+            id={getPanelId('home-capabilities', activeCapability)}
+            aria-labelledby={getTabId('home-capabilities', activeCapability)}
+            tabIndex={0}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 focus:outline-none"
+          >
             
             {/* Service Card 1: Commercial Freight Transportation */}
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+            {(activeCapability === 'all' || activeCapability === 'freight') && (
+            <div className={`bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between min-w-0 ${activeCapability === 'freight' ? 'md:col-span-2 lg:col-span-2' : ''}`}>
               <div>
                 <div className="h-52 overflow-hidden relative">
                   <ImageWithFallback
@@ -572,16 +604,19 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               </div>
               <div className="px-6 pb-6 pt-2">
                 <button
+                  type="button"
                   onClick={() => onNavigate('quote')}
-                  className="min-h-[44px] w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded-md transition-colors text-center font-display cursor-pointer"
+                  className="min-h-[48px] w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded-md transition-colors text-center font-display cursor-pointer"
                 >
                   Request Freight Quote
                 </button>
               </div>
             </div>
+            )}
 
             {/* Service Card 2: Commercial Hauling & Machinery */}
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+            {(activeCapability === 'all' || activeCapability === 'hauling') && (
+            <div className={`bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between min-w-0 ${activeCapability === 'hauling' ? 'md:col-span-2 lg:col-span-2' : ''}`}>
               <div>
                 <div className="h-52 overflow-hidden relative">
                   <ImageWithFallback
@@ -619,16 +654,19 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               </div>
               <div className="px-6 pb-6 pt-2">
                 <button
+                  type="button"
                   onClick={() => onNavigate('quote')}
-                  className="min-h-[44px] w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded-md transition-colors text-center font-display cursor-pointer"
+                  className="min-h-[48px] w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded-md transition-colors text-center font-display cursor-pointer"
                 >
                   Request Hauling Quote
                 </button>
               </div>
             </div>
+            )}
 
             {/* Service Card 3: Regional Corridors & Port Access */}
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+            {(activeCapability === 'all' || activeCapability === 'corridors') && (
+            <div className={`bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between min-w-0 ${activeCapability === 'corridors' ? 'md:col-span-2 lg:col-span-2' : ''}`}>
               <div>
                 <div className="h-52 overflow-hidden relative">
                   <ImageWithFallback
@@ -666,16 +704,19 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               </div>
               <div className="px-6 pb-6 pt-2">
                 <button
+                  type="button"
                   onClick={() => onNavigate('service-areas')}
-                  className="min-h-[44px] w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded-md transition-colors text-center font-display cursor-pointer"
+                  className="min-h-[48px] w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded-md transition-colors text-center font-display cursor-pointer"
                 >
                   Explore Route Corridors
                 </button>
               </div>
             </div>
+            )}
 
             {/* Service Card 4: Cargo Van Transportation & Delivery */}
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+            {(activeCapability === 'all' || activeCapability === 'cargovan') && (
+            <div className={`bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between min-w-0 ${activeCapability === 'cargovan' ? 'md:col-span-2 lg:col-span-2' : ''}`}>
               <div>
                 <div className="h-52 overflow-hidden relative">
                   <ImageWithFallback
@@ -713,16 +754,19 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               </div>
               <div className="px-6 pb-6 pt-2">
                 <button
+                  type="button"
                   onClick={() => onNavigate('quote')}
-                  className="min-h-[44px] w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded-md transition-colors text-center font-display cursor-pointer"
+                  className="min-h-[48px] w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded-md transition-colors text-center font-display cursor-pointer"
                 >
                   Request Cargo Van Quote
                 </button>
               </div>
             </div>
+            )}
 
             {/* Service Card 5: Construction Transportation & Hauling Solutions */}
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between md:col-span-2 lg:col-span-2">
+            {(activeCapability === 'all' || activeCapability === 'construction') && (
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between md:col-span-2 lg:col-span-2 min-w-0">
               <div>
                 <div className="h-52 overflow-hidden relative">
                   <ImageWithFallback
@@ -764,19 +808,22 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               </div>
               <div className="px-6 pb-6 pt-2 flex flex-col sm:flex-row gap-3">
                 <button
+                  type="button"
                   onClick={() => onNavigate('quote')}
-                  className="min-h-[44px] flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded transition-colors text-center font-display cursor-pointer"
+                  className="min-h-[48px] flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded-md transition-colors text-center font-display cursor-pointer"
                 >
                   Quote Construction Hauling
                 </button>
                 <button
+                  type="button"
                   onClick={() => onNavigate('contact')}
-                  className="min-h-[44px] flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-slate-200 rounded transition-colors text-center font-display cursor-pointer"
+                  className="min-h-[48px] flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-slate-200 rounded-md transition-colors text-center font-display cursor-pointer"
                 >
                   Speak With Dispatch Team
                 </button>
               </div>
             </div>
+            )}
 
           </div>
         </div>
@@ -917,17 +964,19 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                   <p className="text-xs text-slate-300 leading-relaxed">
                     Momentum coordinates freight across a dedicated web of primary regional hubs: connecting Columbia with Charlotte, Charleston Port, Greenville-Spartanburg, and the I-20 Atlanta artery.
                   </p>
-                  <div className="pt-1 flex items-center justify-between">
+                  <div className="pt-1 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                     <button
+                      type="button"
                       onClick={() => onNavigate('service-areas')}
-                      className="text-xs font-bold uppercase text-[#C99A31] hover:text-[#E8BE65] inline-flex items-center gap-1.5 font-display"
+                      className="min-h-[44px] text-xs font-bold uppercase text-[#C99A31] hover:text-[#E8BE65] inline-flex items-center gap-1.5 font-display cursor-pointer text-left"
                     >
                       <span>Explore Regional Service Network</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <ArrowRight className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => onNavigate('quote')}
-                      className="px-3 py-1.5 rounded bg-[#C99A31] hover:bg-[#E8BE65] text-[#071E41] text-xs font-bold cursor-pointer"
+                      className="min-h-[44px] px-4 py-2 rounded-md bg-[#C99A31] hover:bg-[#E8BE65] text-[#071E41] text-xs font-bold cursor-pointer text-center whitespace-nowrap"
                     >
                       Request a Quote
                     </button>
@@ -950,17 +999,17 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
           5 Stages: Pre-construction, Equipment mobilization, Active hauling,
           Supplier-to-jobsite transport, Project logistics coordination.
           ========================================================================= */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <section className="py-14 sm:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
             {/* Visual Column */}
-            <div className="lg:col-span-6 space-y-4">
+            <div className="lg:col-span-6 min-w-0 space-y-4">
               <div className="rounded-2xl overflow-hidden shadow-xl border border-slate-200 relative group">
                 <ImageWithFallback
                   src={ASSETS.constructionLogistics}
                   alt={ASSET_METADATA.constructionLogistics.alt}
-                  className="w-full h-[400px] object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-56 sm:h-80 lg:h-[400px] object-cover group-hover:scale-105 transition-transform duration-500"
                   fallbackTitle="Momentum Construction Staging & Equipment Logistics"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
@@ -1078,11 +1127,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
 
               <div className="pt-2">
                 <button
+                  type="button"
                   onClick={() => onNavigate('quote')}
-                  className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded font-display transition-colors inline-flex items-center gap-2 cursor-pointer"
+                  className="min-h-[48px] w-full sm:w-auto px-6 py-3 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded-md font-display transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span>Request Construction Hauling Proposal</span>
-                  <ArrowRight className="w-4 h-4 text-[#C99A31]" />
+                  <ArrowRight className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -1096,14 +1146,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
           Interactive regional corridor explorer featuring Columbia and primary
           operating corridors. Deep navy lines, metallic gold markers.
           ========================================================================= */}
-      <section className="py-20 bg-[#F5F7FA] border-y border-slate-200">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
-            <div>
+      <section className="py-14 sm:py-20 bg-[#F5F7FA] border-y border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-4">
+            <div className="min-w-0">
               <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display block mb-1">
                 Regional Logistics Reach
               </span>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#071E41] tracking-tight font-display">
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#071E41] tracking-tight font-display">
                 Regional Transportation Coverage
               </h2>
               <p className="text-sm text-slate-600 mt-1 max-w-2xl">
@@ -1111,11 +1161,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               </p>
             </div>
             <button
+              type="button"
               onClick={() => onNavigate('service-areas')}
-              className="text-xs font-bold uppercase tracking-wider text-[#071E41] hover:text-[#C99A31] transition-colors inline-flex items-center gap-1.5 font-display self-start md:self-auto cursor-pointer"
+              className="min-h-[44px] text-xs font-bold uppercase tracking-wider text-[#071E41] hover:text-[#C99A31] transition-colors inline-flex items-center gap-1.5 font-display self-start md:self-auto cursor-pointer shrink-0"
             >
               <span>Explore Complete Coverage Map</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
 
@@ -1127,40 +1178,80 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                 Select Operating Corridor to Inspect:
               </span>
 
-              {[
-                { id: 'i77', name: 'I-77 Corridor: Columbia ⇄ Charlotte', miles: '94 Miles' },
-                { id: 'i26_port', name: 'I-26 Corridor: Port of Charleston', miles: '114 Miles' },
-                { id: 'i26_upstate', name: 'I-26 Corridor: Greenville / Upstate', miles: '102 Miles' },
-                { id: 'i20', name: 'I-20 Interstate: Florence ⇄ Atlanta', miles: '76 - 215 Miles' },
-                { id: 'midlands', name: 'Greater Midlands Infrastructure Zone', miles: 'Local Radius' },
-              ].map((corridor) => {
-                const isSelected = activeCorridorId === corridor.id;
-                return (
-                  <button
-                    key={corridor.id}
-                    onClick={() => setActiveCorridorId(corridor.id as any)}
-                    className={`w-full text-left p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                      isSelected
-                        ? 'bg-[#071E41] text-white border-[#071E41] shadow-md ring-1 ring-[#C99A31]'
-                        : 'bg-white text-slate-800 border-slate-200 hover:border-slate-300'
-                    }`}
-                  >
-                    <div>
-                      <div className={`text-xs font-bold font-display ${isSelected ? 'text-[#C99A31]' : 'text-[#071E41]'}`}>
-                        {corridor.name}
+              <div
+                role="tablist"
+                aria-label="Regional operating corridors"
+                aria-orientation="vertical"
+                className="space-y-3"
+              >
+                {[
+                  { id: 'i77', name: 'I-77 Corridor: Columbia ⇄ Charlotte', miles: '94 Miles' },
+                  { id: 'i26_port', name: 'I-26 Corridor: Port of Charleston', miles: '114 Miles' },
+                  { id: 'i26_upstate', name: 'I-26 Corridor: Greenville / Upstate', miles: '102 Miles' },
+                  { id: 'i20', name: 'I-20 Interstate: Florence ⇄ Atlanta', miles: '76 - 215 Miles' },
+                  { id: 'midlands', name: 'Greater Midlands Infrastructure Zone', miles: 'Local Radius' },
+                ].map((corridor, idx, arr) => {
+                  const isSelected = activeCorridorId === corridor.id;
+                  return (
+                    <button
+                      key={corridor.id}
+                      ref={(el) => {
+                        corridorTabRefs.current[corridor.id] = el;
+                      }}
+                      type="button"
+                      role="tab"
+                      id={`home-corridor-tab-${corridor.id}`}
+                      aria-selected={isSelected}
+                      aria-controls={`home-corridor-panel-${corridor.id}`}
+                      tabIndex={isSelected ? 0 : -1}
+                      onClick={() => setActiveCorridorId(corridor.id as typeof activeCorridorId)}
+                      onKeyDown={(e) => {
+                        let nextIdx: number | null = null;
+                        if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                          nextIdx = (idx + 1) % arr.length;
+                        } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                          nextIdx = (idx - 1 + arr.length) % arr.length;
+                        } else if (e.key === 'Home') {
+                          nextIdx = 0;
+                        } else if (e.key === 'End') {
+                          nextIdx = arr.length - 1;
+                        }
+                        if (nextIdx !== null) {
+                          e.preventDefault();
+                          const targetId = arr[nextIdx].id as typeof activeCorridorId;
+                          setActiveCorridorId(targetId);
+                          requestAnimationFrame(() => corridorTabRefs.current[targetId]?.focus());
+                        }
+                      }}
+                      className={`min-h-[48px] w-full text-left p-4 rounded-xl border transition-colors cursor-pointer flex items-center justify-between gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C99A31] ${
+                        isSelected
+                          ? 'bg-[#071E41] text-white border-[#071E41] shadow-md ring-1 ring-[#C99A31]'
+                          : 'bg-white text-slate-800 border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <div className={`text-xs font-bold font-display ${isSelected ? 'text-[#C99A31]' : 'text-[#071E41]'}`}>
+                          {corridor.name}
+                        </div>
+                        <div className={`text-[11px] mt-0.5 ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
+                          {corridor.miles} · Highway transit corridor
+                        </div>
                       </div>
-                      <div className={`text-[11px] mt-0.5 ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
-                        {corridor.miles} · Highway transit corridor
-                      </div>
-                    </div>
-                    <ArrowRight className={`w-4 h-4 ${isSelected ? 'text-[#C99A31]' : 'text-slate-400'}`} />
-                  </button>
-                );
-              })}
+                      <ArrowRight className={`w-4 h-4 shrink-0 ${isSelected ? 'text-[#C99A31]' : 'text-slate-400'}`} aria-hidden="true" />
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Detailed Corridor Inspector Card */}
-            <div className="lg:col-span-7 min-w-0 bg-white rounded-xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+            <div
+              role="tabpanel"
+              id={`home-corridor-panel-${activeCorridorId}`}
+              aria-labelledby={`home-corridor-tab-${activeCorridorId}`}
+              tabIndex={0}
+              className="lg:col-span-7 min-w-0 bg-white rounded-xl border border-slate-200 p-5 sm:p-8 shadow-sm space-y-6 focus:outline-none"
+            >
               <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <span className="text-[10px] uppercase font-bold tracking-wider text-[#C99A31] font-display">
@@ -1170,7 +1261,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                     {selectedCorridor.name}
                   </h3>
                 </div>
-                <div className="bg-[#F5F7FA] px-3 py-1.5 rounded border border-slate-200 text-xs font-bold text-[#071E41]">
+                <div className="bg-[#F5F7FA] px-3 py-1.5 rounded border border-slate-200 text-xs font-bold text-[#071E41] self-start sm:self-auto">
                   {selectedCorridor.distance}
                 </div>
               </div>
@@ -1197,9 +1288,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-lg bg-[#071E41]/5 border border-[#071E41]/10 flex items-center justify-between">
+                <div className="p-3.5 rounded-lg bg-[#071E41]/5 border border-[#071E41]/10 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-[#C99A31]" />
+                    <Clock className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
                     <span className="font-semibold text-[#071E41]">Dispatch Frequency:</span>
                   </div>
                   <strong className="text-slate-900">{selectedCorridor.frequency}</strong>
@@ -1208,15 +1299,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
 
               <div className="pt-2 flex flex-col sm:flex-row gap-3">
                 <button
+                  type="button"
                   onClick={() => onNavigate('quote')}
-                  className="min-h-[44px] flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded font-display transition-colors text-center cursor-pointer"
+                  className="min-h-[48px] flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded-md font-display transition-colors text-center cursor-pointer"
                 >
                   Quote Freight On This Lane
                 </button>
                 <a
                   href={COMPANY_PHONE.href}
                   aria-label={COMPANY_PHONE.ariaLabel}
-                  className="min-h-[44px] flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-slate-200 rounded font-display transition-colors inline-flex items-center justify-center text-center"
+                  className="min-h-[48px] flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-slate-200 rounded-md font-display transition-colors inline-flex items-center justify-center text-center"
                 >
                   Speak With Lane Dispatcher
                 </a>
@@ -1420,21 +1512,22 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               </div>
 
               {/* Standardized View & Download Controls */}
-              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="pt-2 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
                 <button
+                  type="button"
                   onClick={() => onNavigate('company-profile')}
-                  className="w-full sm:w-auto px-6 py-3.5 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md transition-all font-display shadow-md hover:shadow-lg inline-flex items-center justify-center gap-2 text-center cursor-pointer"
+                  className="min-h-[48px] w-full sm:w-auto px-6 py-3 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md transition-colors font-display shadow-md hover:shadow-lg inline-flex items-center justify-center gap-2 text-center cursor-pointer"
                 >
-                  <FileText className="w-4 h-4 text-[#071E41]" />
+                  <FileText className="w-4 h-4 text-[#071E41]" aria-hidden="true" />
                   <span>VIEW COMPANY PROFILE</span>
                 </button>
 
                 <a
                   href={COMPANY_PROFILE_PDF_URL}
                   download="Momentum-Transportation-Company-Profile.pdf"
-                  className="w-full sm:w-auto px-6 py-3.5 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-white hover:bg-slate-100 border border-slate-300 rounded-md transition-all font-display inline-flex items-center justify-center gap-2 text-center shadow-xs"
+                  className="min-h-[48px] w-full sm:w-auto px-6 py-3 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-white hover:bg-slate-100 border border-slate-300 rounded-md transition-colors font-display inline-flex items-center justify-center gap-2 text-center shadow-xs"
                 >
-                  <Download className="w-4 h-4 text-[#C99A31]" />
+                  <Download className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
                   <span>DOWNLOAD COMPANY PROFILE</span>
                 </a>
 
@@ -1442,9 +1535,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                   href={COMPANY_PROFILE_PDF_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-4 py-3.5 text-xs font-semibold text-slate-600 hover:text-[#071E41] inline-flex items-center justify-center gap-1.5 transition-colors"
+                  className="min-h-[48px] w-full sm:w-auto px-4 py-3 text-xs font-semibold text-slate-600 hover:text-[#071E41] inline-flex items-center justify-center gap-1.5 transition-colors"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" />
+                  <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>View PDF in Browser</span>
                 </a>
               </div>
@@ -1456,6 +1549,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                 <div className="absolute -inset-1 bg-gradient-to-r from-[#C99A31] to-[#071E41] rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-500" />
                 <div className="relative rounded-xl overflow-hidden border border-slate-200 shadow-2xl bg-white">
                   <button
+                    type="button"
                     onClick={() => onNavigate('company-profile')}
                     className="block relative overflow-hidden group cursor-pointer w-full text-left"
                     title="Click to view full 8-page company profile interactive edition"
@@ -1472,18 +1566,19 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                       </span>
                     </div>
                   </button>
-                  <div className="p-3.5 bg-[#071E41] text-center border-t border-slate-800 text-white flex items-center justify-between px-4">
-                    <div className="text-left">
+                  <div className="p-3.5 bg-[#071E41] text-center border-t border-slate-800 text-white flex items-center justify-between px-4 gap-3">
+                    <div className="text-left min-w-0">
                       <span className="text-xs font-bold block text-white">Official 8-Page Profile</span>
                       <span className="text-[11px] text-slate-300 block">Columbia, South Carolina</span>
                     </div>
                     <a
                       href={COMPANY_PROFILE_PDF_URL}
                       download="Momentum-Transportation-Company-Profile.pdf"
-                      className="p-1.5 bg-[#C99A31] text-[#071E41] rounded hover:bg-[#E8BE65] transition-colors"
+                      aria-label="Download Official 8-Page Profile PDF"
+                      className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center bg-[#C99A31] text-[#071E41] rounded-md hover:bg-[#E8BE65] transition-colors shrink-0"
                       title="Direct PDF Download"
                     >
-                      <Download className="w-4 h-4" />
+                      <Download className="w-4 h-4" aria-hidden="true" />
                     </a>
                   </div>
                 </div>
@@ -1500,8 +1595,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
           Buttons: REQUEST A QUOTE, CONTACT OPERATIONS.
           Direct contacts: +1 (803) 718-5509, wright.wendell@icloud.com
           ========================================================================= */}
-      <section className="bg-gradient-to-r from-[#071E41] via-[#0B2B5C] to-[#071E41] text-white py-16 border-t border-[#0D2C5B]">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 text-center space-y-6">
+      <section className="bg-gradient-to-r from-[#071E41] via-[#0B2B5C] to-[#071E41] text-white py-14 sm:py-16 border-t border-[#0D2C5B]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
             Direct Dispatch Line · Columbia, SC
           </span>
@@ -1512,24 +1607,26 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
             Discuss your transportation, hauling or construction logistics requirements with Momentum. Our Columbia dispatch team provides verified rate confirmations and rapid capacity answers.
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center gap-3 sm:gap-4 pt-2 max-w-lg sm:max-w-none mx-auto">
             <button
+              type="button"
               onClick={() => onNavigate('quote')}
-              className="px-8 py-3.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md transition-all font-display shadow-lg hover:shadow-xl cursor-pointer inline-flex items-center gap-2"
+              className="min-h-[48px] w-full sm:w-auto px-8 py-3.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md transition-colors font-display shadow-lg hover:shadow-xl cursor-pointer inline-flex items-center justify-center gap-2"
             >
               <span>REQUEST A QUOTE</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </button>
             <button
+              type="button"
               onClick={() => onNavigate('contact')}
-              className="px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-600 rounded-md transition-colors font-display inline-flex items-center gap-2 cursor-pointer"
+              className="min-h-[48px] w-full sm:w-auto px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-600 rounded-md transition-colors font-display inline-flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Phone className="w-3.5 h-3.5 text-[#C99A31]" />
+              <Phone className="w-3.5 h-3.5 text-[#C99A31]" aria-hidden="true" />
               <span>CONTACT OPERATIONS</span>
             </button>
           </div>
 
-          <div className="pt-6 border-t border-slate-700/60 max-w-md mx-auto flex flex-col sm:flex-row items-center justify-center gap-4 text-xs text-slate-300">
+          <div className="pt-6 border-t border-slate-700/60 max-w-md mx-auto flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-slate-300">
             <a
               href={COMPANY_PHONE.href}
               aria-label={COMPANY_PHONE.ariaLabel}
@@ -1539,7 +1636,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               <span>{COMPANY_PHONE.display}</span>
             </a>
             <span className="hidden sm:inline text-slate-500">·</span>
-            <a href={COMPANY.contact.emailMailto} className="font-semibold text-white hover:text-[#C99A31]">
+            <a href={COMPANY.contact.emailMailto} className="min-h-[44px] inline-flex items-center font-semibold text-white hover:text-[#C99A31] break-all">
               wright.wendell@icloud.com
             </a>
           </div>
