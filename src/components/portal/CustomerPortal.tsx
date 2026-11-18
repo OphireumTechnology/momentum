@@ -26,7 +26,7 @@ interface CustomerPortalProps {
 }
 
 export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onNavigate }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated] = useState(false);
   const [customerUser, setCustomerUser] = useState({
     name: 'Carolina Industrial Supplies',
     email: 'logistics@carolinaindustrial.com',
@@ -64,6 +64,28 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onNavigate }) =>
   ]);
   const [inputMsg, setInputMsg] = useState('');
   const [isAiReplying, setIsAiReplying] = useState(false);
+
+  // Customer authentication is not implemented. This page intentionally does not
+  // retrieve shipment, quote, or customer records until verified sessions and
+  // tenant-isolated backend queries are available.
+  if (!isAuthenticated) {
+    return (
+      <section className="min-h-[60vh] flex items-center justify-center bg-[#F5F7FA] px-6 py-16">
+        <div className="max-w-xl bg-white border border-slate-200 rounded-xl p-8 text-center shadow-sm space-y-5">
+          <ShieldCheck className="w-12 h-12 text-[#071E41] mx-auto" />
+          <h1 className="text-2xl font-bold text-[#071E41]">Customer Portal Access Restricted</h1>
+          <p className="text-slate-700">
+            Secure customer sign-in is being configured. Shipment details, account records,
+            and freight documents cannot be accessed without verified authentication.
+          </p>
+          <button onClick={() => onNavigate('contact')}
+            className="bg-[#071E41] text-white rounded px-5 py-3 font-semibold">
+            Contact Dispatch
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   // Fetch data
   const fetchData = async () => {

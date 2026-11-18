@@ -1,5 +1,5 @@
 import express from 'express';
-import { createServer as createViteServer } from 'vite';
+import crypto from 'node:crypto';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -10,9 +10,49 @@ dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT || 3000);
+if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
+  throw new Error('Invalid PORT environment variable');
+}
 
-app.use(express.json({ limit: '15mb' }));
+// Fail closed until server-side authentication, authorization, and tenancy are implemented.
+// Only allow demo operations on an explicitly opted-in non-production server.
+const allowDevelopmentOperations =
+  process.env.NODE_ENV !== 'production' && process.env.ENABLE_DEMO_OPERATIONS === 'true';
+app.use('/api', (req, res, next) => {
+  const publicSubmit = req.method === 'POST' &&
+    ['/quotes', '/contact', '/careers', '/support'].includes(req.path);
+  const publicAiSupport = req.method === 'POST' && req.path === '/ai/support';
+  if (publicSubmit || publicAiSupport || allowDevelopmentOperations) return next();
+  return res.status(503).json({
+    success: false,
+    code: 'SECURE_BACKEND_REQUIRED',
+    error: 'Operations and customer data APIs are disabled until secure authentication and isolation are configured.',
+  });
+});
+
+app.use(express.json({ limit: '128kb' }));
+// Basic per-instance protection for public endpoints. Multi-instance production
+// requires a shared, trusted reverse-proxy or external limiter.
+const requestWindows = new Map<string, { count: number; resetAt: number }>();
+app.use('/api', (req, res, next) => {
+  if (req.method !== 'POST') return next();
+  const now = Date.now();
+  if (requestWindows.size > 5000) {
+    for (const [key, w] of requestWindows) if (w.resetAt <= now) requestWindows.delete(key);
+  }
+  const key = req.ip || 'unknown';
+  const w = requestWindows.get(key);
+  if (!w || w.resetAt <= now) {
+    requestWindows.set(key, { count: 1, resetAt: now + 60_000 });
+    return next();
+  }
+  if (++w.count > 15) {
+    res.set('Retry-After', String(Math.ceil((w.resetAt - now) / 1000)));
+    return res.status(429).json({ success: false, code: 'RATE_LIMITED' });
+  }
+  return next();
+});
 
 // Initialize GoogleGenAI SDK with required telemetry
 const ai = process.env.GEMINI_API_KEY
@@ -93,16 +133,29 @@ export async function sendNotificationEmail(params: {
   summary: string;
   fields: Record<string, any>;
 }) {
-  const auditId = `aud-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
+  const auditId = `aud-${crypto.randomUUID()}`;
   const timestamp = new Date().toISOString();
   const toAddress = OFFICIAL_RECIPIENT_EMAIL;
   const fromAddress = process.env.EMAIL_FROM || `"Momentum Operations" <dispatch@momentumhauling.com>`;
-  const replyToAddress = params.customer.email;
+  const replyToAddress = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(params.customer.email)
+    ? params.customer.email
+    : OFFICIAL_RECIPIENT_EMAIL;
 
   const fieldListText = Object.entries(params.fields)
     .filter(([_, v]) => v !== undefined && v !== null && v !== '')
     .map(([k, v]) => `${k.replace(/([A-Z])/g, ' $1').toUpperCase()}: ${v}`)
     .join('\n');
+
+  const escapeHtml = (value: unknown): string => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[ch] || ch));
+
+  // Do not claim persistence if the process only holds transient in-memory state.
+  // The production mail service must use a durable outbox before accepting real orders.
 
   const fieldListHtml = Object.entries(params.fields)
     .filter(([_, v]) => v !== undefined && v !== null && v !== '')
@@ -110,10 +163,10 @@ export async function sendNotificationEmail(params: {
       ([k, v]) => `
       <tr>
         <td style="padding: 10px 14px; font-weight: bold; color: #071E41; border-bottom: 1px solid #E5E7EB; width: 35%; text-transform: capitalize; background-color: #F8FAFC;">
-          ${k.replace(/([A-Z])/g, ' $1')}
+          ${escapeHtml(k.replace(/([A-Z])/g, ' $1'))}
         </td>
         <td style="padding: 10px 14px; color: #1F2937; border-bottom: 1px solid #E5E7EB;">
-          ${String(v).replace(/\n/g, '<br/>')}
+          ${escapeHtml(v).replace(/\n/g, '<br/>')}
         </td>
       </tr>`
     )
@@ -124,7 +177,7 @@ export async function sendNotificationEmail(params: {
     <html>
       <head>
         <meta charset="utf-8">
-        <title>${params.subject}</title>
+        <title>${escapeHtml(params.subject)}</title>
       </head>
       <body style="margin: 0; padding: 24px; background-color: #F5F7FA; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
         <div style="max-width: 640px; margin: 0 auto; background-color: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
@@ -145,20 +198,20 @@ export async function sendNotificationEmail(params: {
           <div style="padding: 24px;">
             <div style="background-color: #F8FAFC; border-left: 4px solid #071E41; padding: 12px 16px; margin-bottom: 20px;">
               <span style="font-size: 11px; font-weight: bold; color: #64748B; text-transform: uppercase; display: block;">Reference Number</span>
-              <span style="font-size: 18px; font-weight: 800; color: #071E41; font-family: monospace;">${params.referenceNumber}</span>
+              <span style="font-size: 18px; font-weight: 800; color: #071E41; font-family: monospace;">${escapeHtml(params.referenceNumber)}</span>
               <span style="font-size: 11px; color: #64748B; display: block; margin-top: 4px;">Submitted: ${new Date(timestamp).toLocaleString('en-US', { timeZone: 'America/New_York' })} EST</span>
             </div>
 
             <h2 style="font-size: 16px; color: #071E41; margin: 0 0 12px 0; border-bottom: 2px solid #F1F5F9; padding-bottom: 6px;">
-              ${params.summary}
+              ${escapeHtml(params.summary)}
             </h2>
 
             <!-- Customer Overview -->
             <div style="margin-bottom: 20px; font-size: 13px; line-height: 1.6;">
-              <div><strong>Customer / Sender:</strong> ${params.customer.name}</div>
-              ${params.customer.company ? `<div><strong>Company:</strong> ${params.customer.company}</div>` : ''}
-              <div><strong>Email:</strong> <a href="mailto:${params.customer.email}" style="color: #071E41; font-weight: bold;">${params.customer.email}</a></div>
-              ${params.customer.phone ? `<div><strong>Phone:</strong> <a href="tel:${params.customer.phone.replace(/[^0-9]/g, '')}" style="color: #071E41; font-weight: bold;">${params.customer.phone}</a></div>` : ''}
+              <div><strong>Customer / Sender:</strong> ${escapeHtml(params.customer.name)}</div>
+              ${params.customer.company ? `<div><strong>Company:</strong> ${escapeHtml(params.customer.company)}</div>` : ''}
+              <div><strong>Email:</strong> <a href="mailto:${escapeHtml(params.customer.email)}" style="color: #071E41; font-weight: bold;">${escapeHtml(params.customer.email)}</a></div>
+              ${params.customer.phone ? `<div><strong>Phone:</strong> <a href="tel:${params.customer.phone.replace(/[^0-9]/g, '')}" style="color: #071E41; font-weight: bold;">${escapeHtml(params.customer.phone)}</a></div>` : ''}
             </div>
 
             <!-- Parameters Table -->
@@ -170,14 +223,14 @@ export async function sendNotificationEmail(params: {
 
             <!-- Reply Prompt -->
             <div style="background-color: #FFFBEB; border: 1px solid #FDE68A; padding: 12px 16px; border-radius: 6px; font-size: 12px; color: #92400E;">
-              <strong>Direct Reply Available:</strong> Simply click &quot;Reply&quot; in your email client to send a direct response to ${params.customer.name} (${params.customer.email}).
+              <strong>Direct Reply Available:</strong> Simply click &quot;Reply&quot; in your email client to send a direct response to ${escapeHtml(params.customer.name)} (${escapeHtml(params.customer.email)}).
             </div>
           </div>
 
           <!-- Footer -->
           <div style="background-color: #F8FAFC; padding: 16px 24px; border-top: 1px solid #E5E7EB; font-size: 11px; color: #64748B; text-align: center;">
             Momentum Transportation &amp; Hauling LLC · 2 Penhurst Ct., Columbia, SC 29229 · (803) 718-5509<br>
-            Delivered directly to: <strong>${toAddress}</strong>
+            Delivered directly to: <strong>${escapeHtml(toAddress)}</strong>
           </div>
         </div>
       </body>
@@ -261,7 +314,7 @@ Telephone: (803) 718-5509
     }
   } else {
     deliveryStatus = 'queued_pending_credentials';
-    deliveryError = 'Outbound SMTP transport credentials not provided in environment variables. Inquiry safely recorded and queued for delivery to wright.wendell@icloud.com.';
+    deliveryError = 'SMTP credentials are not configured. No durable queue is configured; delivery is unavailable.';
   }
 
   const auditRecord: EmailAuditRecord = {
@@ -622,15 +675,22 @@ app.post('/api/quotes', async (req, res) => {
       specialHandling,
     } = req.body;
 
-    if (!customerName || !email || !phone || !pickupLocation || !deliveryLocation || !loadDescription) {
+    if (![customerName, email, phone, pickupLocation, deliveryLocation, loadDescription].every(
+      (value) => typeof value === 'string' && value.trim().length > 0 && value.length <= 2000
+    ) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({
         success: false,
         error: 'Please fill in all required fields (Name, Email, Phone, Origin, Destination, Load Description).',
       });
     }
 
-    const refNum = `MTH-Q-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-    const weight = Number(estimatedWeightLbs) || 10000;
+    const refNum = `MTH-Q-${new Date().getUTCFullYear()}-${crypto.randomUUID().slice(0, 12).toUpperCase()}`;
+    const weight = estimatedWeightLbs === undefined || estimatedWeightLbs === null || estimatedWeightLbs === ''
+      ? 10000
+      : Number(estimatedWeightLbs);
+    if (!Number.isFinite(weight) || weight <= 0 || weight > 200_000) {
+      return res.status(400).json({ success: false, error: 'Invalid estimated freight weight.' });
+    }
 
     const baseFee = 350;
     const estDistance = 120;
@@ -709,7 +769,7 @@ app.post('/api/quotes', async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Quotation request securely received and forwarded to wright.wendell@icloud.com.',
+      message: emailResult.delivered ? 'Quote request delivered to operations.' : 'Quote received by this server; email delivery is unconfirmed.',
       quote: newQuote,
       emailNotification: emailResult,
     });
@@ -792,11 +852,13 @@ app.patch('/api/quotes/:id', (req, res) => {
 app.post('/api/contact', async (req, res) => {
   try {
     const { name, email, phone, inquiryType, message, company } = req.body;
-    if (!name || !email || !message) {
+    if (![name, email, message].every(
+      (value) => typeof value === 'string' && value.trim().length > 0 && value.length <= 5000
+    ) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ success: false, error: 'Name, email, and message are required.' });
     }
 
-    const ticketId = `MTH-MSG-${Math.floor(1000 + Math.random() * 9000)}`;
+    const ticketId = `MTH-MSG-${crypto.randomUUID().slice(0, 12).toUpperCase()}`;
 
     // Standardized subject lines per Directive §4
     let subject = `[MOMENTUM] New General Inquiry — ${ticketId}`;
@@ -849,7 +911,7 @@ app.post('/api/contact', async (req, res) => {
       success: true,
       ticketId,
       deliveryStatus: emailResult.status,
-      message: `Your inquiry has been safely received and forwarded to ${OFFICIAL_RECIPIENT_EMAIL}. Reference: ${ticketId}`,
+      message: emailResult.delivered ? `Inquiry delivered. Reference: ${ticketId}` : `Inquiry received but email delivery unconfirmed. Reference: ${ticketId}`,
       emailNotification: emailResult,
     });
   } catch (err: any) {
@@ -872,11 +934,13 @@ app.post('/api/careers', async (req, res) => {
       notes,
     } = req.body;
 
-    if (!applicantName || !applicantPhone) {
+    if (![applicantName, applicantPhone].every(
+      (value) => typeof value === 'string' && value.trim().length > 0 && value.length <= 200
+    )) {
       return res.status(400).json({ success: false, error: 'Applicant name and contact phone number are required.' });
     }
 
-    const applicationId = `MTH-DRV-${Math.floor(1000 + Math.random() * 9000)}`;
+    const applicationId = `MTH-DRV-${crypto.randomUUID().slice(0, 12).toUpperCase()}`;
     const subject = `[MOMENTUM] Driver Application — ${applicationId}`;
 
     const emailResult = await sendNotificationEmail({
@@ -906,7 +970,7 @@ app.post('/api/careers', async (req, res) => {
       success: true,
       applicationId,
       deliveryStatus: emailResult.status,
-      message: `Driver interest application safely forwarded to ${OFFICIAL_RECIPIENT_EMAIL}. Reference: ${applicationId}`,
+      message: emailResult.delivered ? `Driver application delivered. Reference: ${applicationId}` : `Application received but email delivery unconfirmed. Reference: ${applicationId}`,
       emailNotification: emailResult,
     });
   } catch (err: any) {
@@ -926,11 +990,13 @@ app.post('/api/support', async (req, res) => {
     const trackingNumber = req.body.trackingNumber || req.body.shipmentRef || 'N/A';
     const accountNumber = req.body.accountNumber || 'N/A';
 
-    if (!customerName || !email || !description) {
+    if (![customerName, email, description].every(
+      (value) => typeof value === 'string' && value.trim().length > 0 && value.length <= 5000
+    ) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ success: false, error: 'Customer name, email, and description/message are required.' });
     }
 
-    const supportId = `MTH-SPT-${Math.floor(1000 + Math.random() * 9000)}`;
+    const supportId = `MTH-SPT-${crypto.randomUUID().slice(0, 12).toUpperCase()}`;
     const subject = `[MOMENTUM] Customer Concern — ${supportId}`;
 
     const emailResult = await sendNotificationEmail({
@@ -959,7 +1025,7 @@ app.post('/api/support', async (req, res) => {
       success: true,
       ticketId: supportId,
       deliveryStatus: emailResult.status,
-      message: `Customer support request forwarded to ${OFFICIAL_RECIPIENT_EMAIL}. Reference: ${supportId}`,
+      message: emailResult.delivered ? `Support request delivered. Reference: ${supportId}` : `Support request received but email delivery unconfirmed. Reference: ${supportId}`,
       emailNotification: emailResult,
     });
   } catch (err: any) {
@@ -1286,6 +1352,7 @@ async function startServer() {
       res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
     });
   } else {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
@@ -1300,4 +1367,5 @@ async function startServer() {
 
 startServer().catch((err) => {
   console.error('Failed to start server:', err);
+  process.exitCode = 1;
 });

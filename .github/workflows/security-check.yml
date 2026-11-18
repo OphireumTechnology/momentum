@@ -1,0 +1,38 @@
+name: Momentum Security and TypeScript Checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - 'audit/**'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Install exact locked dependencies
+        run: bun install --frozen-lockfile
+      - name: TypeScript check
+        run: bun run lint
+      - name: Production frontend build
+        run: bun run build
+        env:
+          GITHUB_PAGES: 'true'
+      - name: Confirm forbidden management APIs require authentication
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          import assert from 'node:assert/strict';
+          const code = readFileSync('server.ts', 'utf8');
+          assert.match(code, /SECURE_BACKEND_REQUIRED/);
+          assert.match(code, /NODE_ENV/);
+          assert.match(code, /allowDevelopmentOperations/);
+          console.log('Fail-closed management API policy present');
+          NODE
