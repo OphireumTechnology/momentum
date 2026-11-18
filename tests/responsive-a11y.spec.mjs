@@ -214,7 +214,7 @@ async function verifyInteractiveTabs(page, viewport) {
     const select = page.locator('#fleet-mobile-select');
     await select.selectOption('Flatbed');
     assert.equal(await select.inputValue(), 'Flatbed');
-    await page.getByRole('button', { name: /next fleet equipment category/i }).click();
+    await page.getByRole('button', { name: /next equipment category/i }).click();
     assert.equal(await select.inputValue(), 'Heavy Haul');
   } else {
     const heavyHaulTab = page.getByRole('tab', { name: /Heavy Haul/i });
