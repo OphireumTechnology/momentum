@@ -711,7 +711,7 @@ app.post('/api/quotes', async (req, res) => {
         quote_request_id: id,
         recipient_email: 'wright.wendell@icloud.com',
         subject: '[MOMENTUM] New Freight Quotation Request — ' + reference,
-        payload: { reference_number: reference, ...request },
+        payload: { ...request },
         status: 'pending'
       }),
       signal: AbortSignal.timeout(10000)
