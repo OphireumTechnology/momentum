@@ -26,25 +26,26 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
   return (
     <div className="bg-[#F5F7FA] min-h-screen">
       {/* Page Header */}
-      <section className="bg-[#071E41] text-white py-16 lg:py-20 border-b border-[#0D2C5B]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
-          <div className="max-w-3xl space-y-3">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
+      <section className="bg-[#071E41] text-white py-8 sm:py-14 lg:py-16 border-b border-[#0D2C5B]">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
+          <div className="max-w-3xl space-y-2.5 text-left">
+            <span className="block text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
               Commercial Capabilities · Official Corporate Services
             </span>
-            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight font-display text-white">
+            <h1 className="text-[28px] sm:text-4xl lg:text-5xl font-extrabold tracking-tight font-display text-white leading-tight">
               Transportation &amp; Hauling Solutions
             </h1>
-            <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+            <p className="text-base text-slate-200 leading-relaxed">
               Engineered for South Carolina and southeastern businesses needing safe freight movement, reliable dry van transport, cargo van deliveries, and specialized heavy construction hauling.
             </p>
           </div>
 
           {/* Interactive Filter Control */}
-          <div className="mt-8 flex items-center gap-1.5 p-1.5 bg-[#041228]/90 border border-slate-700/60 rounded-xl overflow-x-auto max-w-full">
+          <div className="mt-6 flex items-center gap-1.5 p-1.5 bg-[#041228]/90 border border-slate-700/60 rounded-xl overflow-x-auto max-w-full">
             <button
+              type="button"
               onClick={() => setActiveTab('transportation')}
-              className={`py-2 px-3.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+              className={`min-h-[44px] py-2 px-3.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                 activeTab === 'transportation'
                   ? 'bg-[#C99A31] text-[#071E41] shadow-sm'
                   : 'text-slate-300 hover:text-white'
@@ -53,8 +54,9 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
               Freight Transport
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('hauling')}
-              className={`py-2 px-3.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+              className={`min-h-[44px] py-2 px-3.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                 activeTab === 'hauling'
                   ? 'bg-[#C99A31] text-[#071E41] shadow-sm'
                   : 'text-slate-300 hover:text-white'
@@ -63,8 +65,9 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
               Commercial Hauling
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('dedicated')}
-              className={`py-2 px-3.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+              className={`min-h-[44px] py-2 px-3.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                 activeTab === 'dedicated'
                   ? 'bg-[#C99A31] text-[#071E41] shadow-sm'
                   : 'text-slate-300 hover:text-white'
@@ -73,8 +76,9 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
               Regional Corridors
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('cargovan')}
-              className={`py-2 px-3.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+              className={`min-h-[44px] py-2 px-3.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                 activeTab === 'cargovan'
                   ? 'bg-[#C99A31] text-[#071E41] shadow-sm'
                   : 'text-slate-300 hover:text-white'
@@ -83,8 +87,9 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
               Cargo Van Delivery
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('construction')}
-              className={`py-2 px-3.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+              className={`min-h-[44px] py-2 px-3.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                 activeTab === 'construction'
                   ? 'bg-[#C99A31] text-[#071E41] shadow-sm'
                   : 'text-slate-300 hover:text-white'
@@ -99,7 +104,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
       {/* 1. TRANSPORTATION SERVICES SECTION */}
       {activeTab === 'transportation' && (
         <section className="py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-8 space-y-12">
+          <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-12">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
               <div className="lg:col-span-7 space-y-5">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display">
@@ -116,7 +121,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
                   <h4 className="text-xs font-bold uppercase tracking-wider text-[#071E41] font-display">
                     Supported Load Types:
                   </h4>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-700">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
                     <div className="flex items-center gap-1.5">
                       <ChevronRight className="w-3.5 h-3.5 text-[#C99A31]" />
                       <span>Palletized Commercial Freight</span>
@@ -215,7 +220,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
       {/* 2. HAULING SERVICES SECTION */}
       {activeTab === 'hauling' && (
         <section className="py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-8 space-y-12">
+          <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-12">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
               <div className="lg:col-span-7 space-y-5">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display">
@@ -232,7 +237,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
                   <h4 className="text-xs font-bold uppercase tracking-wider text-[#071E41] font-display">
                     Supported Hauling Categories:
                   </h4>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-700">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
                     <div className="flex items-center gap-1.5">
                       <ChevronRight className="w-3.5 h-3.5 text-[#C99A31]" />
                       <span>Excavators &amp; Compact Track Loaders</span>
@@ -324,7 +329,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
       {/* 3. DEDICATED CORRIDORS SECTION */}
       {activeTab === 'dedicated' && (
         <section className="py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-8 space-y-12">
+          <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-12">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
               <div className="lg:col-span-7 space-y-5">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display">
@@ -396,7 +401,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
       {/* 4. CARGO VAN TRANSPORTATION & DELIVERY SECTION */}
       {activeTab === 'cargovan' && (
         <section className="py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-8 space-y-12">
+          <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-12">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
               <div className="lg:col-span-7 space-y-5">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display">
@@ -499,7 +504,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
       {/* 5. CONSTRUCTION LOGISTICS & HAULING SECTION */}
       {activeTab === 'construction' && (
         <section className="py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-8 space-y-14">
+          <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-14">
             {/* Top Showcase: Dedicated Project Logistics Banner */}
             <div className="rounded-2xl overflow-hidden shadow-xl border border-slate-200 relative">
               <ImageWithFallback
@@ -671,21 +676,23 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
 
       {/* Customer Action CTA */}
       <section className="bg-white py-14 border-t border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div>
             <h3 className="text-xl font-bold text-[#071E41] font-display">Need a customized freight or hauling solution?</h3>
-            <p className="text-xs text-slate-600 mt-1">Our dispatchers will evaluate your exact weight, dimensions, equipment needs, and timeline.</p>
+            <p className="text-sm text-slate-600 mt-1">Our dispatchers will evaluate your exact weight, dimensions, equipment needs, and timeline.</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
             <button
+              type="button"
               onClick={() => onNavigate('quote')}
-              className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded font-display cursor-pointer"
+              className="min-h-[48px] px-6 py-3 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md font-display cursor-pointer"
             >
               Request Quote
             </button>
             <button
+              type="button"
               onClick={() => onNavigate('contact')}
-              className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-slate-700 bg-slate-100 hover:bg-slate-200 rounded font-display cursor-pointer"
+              className="min-h-[48px] px-6 py-3 text-xs font-bold uppercase tracking-wider text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md font-display cursor-pointer"
             >
               Contact Dispatch
             </button>

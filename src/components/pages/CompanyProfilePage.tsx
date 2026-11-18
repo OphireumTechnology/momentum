@@ -59,7 +59,7 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
       {/* =========================================================================
           PAGE HERO & DOWNLOAD HEADER
           ========================================================================= */}
-      <section className="relative bg-[#071E41] text-white py-14 sm:py-18 border-b border-[#0D2C5B] overflow-hidden">
+      <section className="relative bg-[#071E41] text-white py-8 sm:py-14 border-b border-[#0D2C5B] overflow-hidden">
         {/* Subtle ambient lighting */}
         <div
           className="absolute inset-0 pointer-events-none opacity-20"
@@ -68,12 +68,12 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
           }}
         />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Left Header Copy */}
-            <div className="lg:col-span-7 min-w-0 space-y-5">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full border border-white/20 text-[#C99A31] text-xs font-bold uppercase tracking-wider font-display">
-                <FileText className="w-3.5 h-3.5" />
+            <div className="lg:col-span-7 min-w-0 space-y-4 sm:space-y-5 text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-md border border-white/20 text-[#C99A31] text-xs font-bold uppercase tracking-wider font-display">
+                <FileText className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Authoritative 8-Page Corporate Publication</span>
               </div>
 
@@ -86,8 +86,8 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
                     height={48}
                     className="w-12 h-12 object-contain shrink-0 aspect-square select-none"
                   />
-                  <div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-300 font-display block">
+                  <div className="min-w-0">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-300 font-display block truncate">
                       MOMENTUM TRANSPORTATION &amp; HAULING LLC
                     </span>
                     <span className="text-sm font-bold text-[#C99A31] font-display italic">
@@ -96,22 +96,22 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
                   </div>
                 </div>
 
-                <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight font-display text-white leading-tight">
+                <h1 className="text-[28px] sm:text-4xl lg:text-5xl font-extrabold tracking-tight font-display text-white leading-tight">
                   Corporate Company Profile
                 </h1>
-                <p className="text-sm sm:text-base text-slate-300 max-w-xl leading-relaxed pt-1">
+                <p className="text-base text-slate-200 max-w-xl leading-relaxed pt-1">
                   Complete eight-page corporate profile detailing our Columbia, SC logistics base, core commercial freight and hauling solutions, operational philosophy, contact directory, and official brand standards.
                 </p>
               </div>
 
               {/* Primary Download and View Actions */}
-              <div className="pt-2 flex flex-wrap items-center gap-3">
+              <div className="pt-2 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
                 <a
                   href={COMPANY_PROFILE_PDF_URL}
                   download="Momentum-Transportation-Company-Profile.pdf"
-                  className="px-6 py-3.5 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md transition-all font-display shadow-lg hover:shadow-xl inline-flex items-center gap-2 cursor-pointer text-center"
+                  className="min-h-[48px] px-6 py-3 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md transition-colors font-display shadow-lg inline-flex items-center justify-center gap-2 cursor-pointer text-center"
                 >
-                  <Download className="w-4 h-4 text-[#071E41]" />
+                  <Download className="w-4 h-4 text-[#071E41]" aria-hidden="true" />
                   <span>DOWNLOAD COMPANY PROFILE (PDF)</span>
                 </a>
 
@@ -119,18 +119,19 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
                   href={COMPANY_PROFILE_PDF_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-5 py-3.5 text-xs font-bold tracking-wider uppercase text-white bg-white/10 hover:bg-white/20 border border-white/25 rounded-md transition-all font-display backdrop-blur-sm inline-flex items-center gap-2 text-center"
+                  className="min-h-[48px] px-5 py-3 text-xs font-bold tracking-wider uppercase text-white bg-white/10 hover:bg-white/20 border border-white/25 rounded-md transition-colors font-display inline-flex items-center justify-center gap-2 text-center"
                 >
-                  <ExternalLink className="w-4 h-4 text-[#C99A31]" />
+                  <ExternalLink className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
                   <span>VIEW PDF IN BROWSER</span>
                 </a>
 
                 <button
+                  type="button"
                   onClick={() => onNavigate('quote')}
-                  className="px-5 py-3.5 text-xs font-bold tracking-wider uppercase text-slate-200 hover:text-white bg-slate-900/60 hover:bg-slate-800/80 border border-slate-600 rounded-md transition-all font-display cursor-pointer inline-flex items-center gap-2 text-center"
+                  className="min-h-[48px] px-5 py-3 text-xs font-bold tracking-wider uppercase text-slate-200 hover:text-white bg-slate-900/60 hover:bg-slate-800/80 border border-slate-600 rounded-md transition-colors font-display cursor-pointer inline-flex items-center justify-center gap-2 text-center"
                 >
                   <span>REQUEST A QUOTE</span>
-                  <ArrowRight className="w-4 h-4 text-[#C99A31]" />
+                  <ArrowRight className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
                 </button>
               </div>
 
@@ -189,8 +190,8 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
       {/* =========================================================================
           8-PAGE INTERACTIVE TAB SELECTOR
           ========================================================================= */}
-      <section className="bg-white border-b border-slate-200 sticky top-16 sm:top-20 z-40 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3">
+      <section className="bg-white border-b border-slate-200 sticky top-16 md:top-[110px] z-40 shadow-xs">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-2.5">
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 font-display shrink-0 pr-2 hidden md:inline">
               Page Index:
@@ -200,8 +201,9 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
               return (
                 <button
                   key={sec.id}
+                  type="button"
                   onClick={() => setActiveSection(sec.id)}
-                  className={`px-3.5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-2 ${
+                  className={`min-h-[44px] px-3.5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-2 ${
                     isActive
                       ? 'bg-[#071E41] text-white shadow-sm'
                       : 'bg-[#F5F7FA] text-slate-700 hover:bg-slate-200 hover:text-[#071E41]'
@@ -225,13 +227,13 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
       {/* =========================================================================
           PAGE-BY-PAGE DETAILED SECTIONS
           ========================================================================= */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-12 space-y-16">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-12 space-y-12 sm:space-y-16">
 
         {/* -----------------------------------------------------------------------
             PAGE 1: COVER & EXECUTIVE SUMMARY
             ----------------------------------------------------------------------- */}
         {(activeSection === 1 || activeSection === 0) && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 shadow-sm space-y-8">
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 lg:p-10 shadow-sm space-y-8">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-1 bg-[#071E41] text-[#C99A31] text-xs font-bold rounded">
@@ -316,7 +318,7 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
             PAGE 2: CORPORATE OVERVIEW
             ----------------------------------------------------------------------- */}
         {(activeSection === 2 || activeSection === 0) && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 shadow-sm space-y-8">
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 lg:p-10 shadow-sm space-y-8">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-1 bg-[#071E41] text-[#C99A31] text-xs font-bold rounded">
@@ -392,7 +394,7 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
             PAGE 3: MISSION AND VISION
             ----------------------------------------------------------------------- */}
         {(activeSection === 3 || activeSection === 0) && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 shadow-sm space-y-8">
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 lg:p-10 shadow-sm space-y-8">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-1 bg-[#071E41] text-[#C99A31] text-xs font-bold rounded">
@@ -460,7 +462,7 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
             PAGE 4: CORE TRANSPORTATION & HAULING SERVICES
             ----------------------------------------------------------------------- */}
         {(activeSection === 4 || activeSection === 0) && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 shadow-sm space-y-8">
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 lg:p-10 shadow-sm space-y-8">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-1 bg-[#071E41] text-[#C99A31] text-xs font-bold rounded">
@@ -530,7 +532,7 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
                 <p className="text-sm text-slate-600 leading-relaxed">
                   Transportation solutions for industrial machinery, construction equipment, and specialized commercial cargo.
                 </p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                   <div className="bg-white p-3 rounded-lg border border-slate-200 font-semibold text-slate-800 text-center">
                     Flatbed Transportation
                   </div>
@@ -649,7 +651,7 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
             PAGE 5: INDUSTRIES AND CUSTOMERS SERVED
             ----------------------------------------------------------------------- */}
         {(activeSection === 5 || activeSection === 0) && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 shadow-sm space-y-8">
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 lg:p-10 shadow-sm space-y-8">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-1 bg-[#071E41] text-[#C99A31] text-xs font-bold rounded">
@@ -791,7 +793,7 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
             PAGE 6: OPERATIONAL PHILOSOPHY
             ----------------------------------------------------------------------- */}
         {(activeSection === 6 || activeSection === 0) && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 shadow-sm space-y-8">
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 lg:p-10 shadow-sm space-y-8">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-1 bg-[#071E41] text-[#C99A31] text-xs font-bold rounded">
@@ -878,7 +880,7 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
                 <p className="text-xs text-slate-600 leading-relaxed">
                   The website identifies a direct dispatch contact model intended to simplify customer communication and freight coordination. Customers may inquire about:
                 </p>
-                <div className="grid grid-cols-2 gap-2 text-xs text-slate-700">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
                   <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" /><span>Freight bookings</span></div>
                   <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" /><span>Cargo van deliveries</span></div>
                   <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-[#C99A31]" /><span>Machinery movement</span></div>
@@ -895,7 +897,7 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
             PAGE 7: CORPORATE CONTACT DIRECTORY
             ----------------------------------------------------------------------- */}
         {(activeSection === 7 || activeSection === 0) && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 shadow-sm space-y-8">
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 lg:p-10 shadow-sm space-y-8">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-1 bg-[#071E41] text-[#C99A31] text-xs font-bold rounded">
@@ -1026,7 +1028,7 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
             PAGE 8: CORPORATE BRANDING AND COLLATERALS
             ----------------------------------------------------------------------- */}
         {(activeSection === 8 || activeSection === 0) && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 shadow-sm space-y-10">
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 lg:p-10 shadow-sm space-y-10">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-1 bg-[#071E41] text-[#C99A31] text-xs font-bold rounded">
@@ -1075,7 +1077,7 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
                 <Palette className="w-4 h-4 text-[#C99A31]" />
                 <span>Brand Color Palette</span>
               </h4>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="p-4 rounded-xl border border-slate-200 bg-white space-y-2">
                   <div className="h-12 w-full rounded-lg bg-[#071E41] shadow-xs" />
                   <div className="text-xs">
@@ -1193,7 +1195,7 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
           PERSISTENT BOTTOM DOWNLOAD & ACTION STRIP
           ========================================================================= */}
       <section className="bg-[#071E41] text-white py-8 border-t border-[#0D2C5B]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="space-y-1 text-center md:text-left">
             <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
               Authoritative Documentation · 8 Full Pages

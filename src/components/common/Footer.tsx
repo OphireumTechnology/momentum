@@ -18,8 +18,8 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   return (
     <footer className="bg-[#071E41] text-slate-300 border-t border-[#0D2C5B]">
       {/* Top CTA Bar */}
-      <div className="border-b border-[#0D2C5B]/80 bg-[#041228]/60 py-10 px-4 sm:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+      <div className="border-b border-[#0D2C5B]/80 bg-[#041228]/60 py-10 px-5 sm:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6 text-left">
           <div>
             <span className="text-[#C99A31] text-xs font-bold uppercase tracking-widest font-display">
               Columbia, South Carolina · Regional Logistics
@@ -27,56 +27,63 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <h3 className="text-2xl sm:text-3xl font-extrabold text-white mt-1 font-display tracking-tight">
               Ready to Move Your Freight Forward?
             </h3>
-            <p className="text-slate-400 text-sm mt-1 max-w-xl">
+            <p className="text-slate-300 text-sm mt-1.5 max-w-xl leading-relaxed">
               Connect directly with our dispatch team for accurate rate estimates, dedicated lane scheduling, and reliable freight transport.
             </p>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
+          <div className="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <a
               href={COMPANY.contact.phoneTel}
-              className="px-5 py-3 text-xs font-bold tracking-wider uppercase text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-600 rounded-md transition-colors inline-flex items-center gap-2"
+              className="min-h-[48px] px-5 py-3 text-xs font-bold tracking-wider uppercase text-white bg-slate-800/90 hover:bg-slate-700/90 border border-slate-600 rounded-md transition-colors inline-flex items-center justify-center gap-2"
             >
-              <Phone className="w-3.5 h-3.5 text-[#C99A31]" />
-              <span>Call (803) 718-5509</span>
+              <Phone className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
+              <span>Call {COMPANY.contact.formattedPhone}</span>
             </a>
             <button
+              type="button"
               onClick={() => handleNav('quote')}
-              className="px-6 py-3 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md transition-all font-display shadow-md cursor-pointer inline-flex items-center gap-2"
+              className="min-h-[48px] px-6 py-3 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md transition-colors font-display shadow-md cursor-pointer inline-flex items-center justify-center gap-2"
             >
               <span>Request a Quote</span>
-              <ArrowUpRight className="w-4 h-4" />
+              <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         </div>
       </div>
 
       {/* Main Footer Links */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-14">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-12 pb-[max(3rem,env(safe-area-inset-bottom))]">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           {/* Col 1 & 2: Brand Lockup & Official Contact */}
           <div className="lg:col-span-2 space-y-4">
-            <button onClick={() => handleNav('home')} className="text-left focus:outline-none cursor-pointer">
+            <button type="button" onClick={() => handleNav('home')} className="text-left focus:outline-none cursor-pointer">
               <Logo variant="horizontal-dark" size="lg" />
             </button>
             <p className="text-slate-300 text-sm max-w-sm leading-relaxed">
               &ldquo;{COMPANY.tagline}&rdquo; Commercial freight transportation and hauling solutions designed around your business needs, centered in Columbia, South Carolina.
             </p>
 
-            <div className="pt-2 space-y-2.5 text-xs text-slate-300">
-              <div className="flex items-start gap-2.5">
-                <MapPin className="w-4 h-4 text-[#C99A31] shrink-0 mt-0.5" />
+            <div className="pt-2 space-y-1 text-sm text-slate-300">
+              <div className="flex items-start gap-2.5 py-1.5">
+                <MapPin className="w-4 h-4 text-[#C99A31] shrink-0 mt-0.5" aria-hidden="true" />
                 <span>{COMPANY.contact.address}</span>
               </div>
-              <div className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-[#C99A31] shrink-0" />
-                <a href={COMPANY.contact.phoneTel} className="hover:text-white transition-colors">
-                  {COMPANY.contact.phone}
+              <div>
+                <a
+                  href={COMPANY.contact.phoneTel}
+                  className="min-h-[44px] inline-flex items-center gap-2.5 text-slate-200 hover:text-white transition-colors font-medium"
+                >
+                  <Phone className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
+                  <span>{COMPANY.contact.phone}</span>
                 </a>
               </div>
-              <div className="flex items-center gap-2.5">
-                <Mail className="w-4 h-4 text-[#C99A31] shrink-0" />
-                <a href={COMPANY.contact.emailMailto} className="hover:text-white transition-colors">
-                  {COMPANY.contact.email}
+              <div>
+                <a
+                  href={COMPANY.contact.emailMailto}
+                  className="min-h-[44px] inline-flex items-center gap-2.5 text-slate-200 hover:text-white transition-colors break-all"
+                >
+                  <Mail className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
+                  <span>{COMPANY.contact.email}</span>
                 </a>
               </div>
             </div>
@@ -84,32 +91,32 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
 
           {/* Col 3: Services */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white font-display mb-4">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white font-display mb-3">
               Core Capabilities
             </h4>
-            <ul className="space-y-2.5 text-xs text-slate-400">
+            <ul className="space-y-0.5 text-sm text-slate-300">
               <li>
-                <button onClick={() => handleNav('services')} className="hover:text-white transition-colors text-left cursor-pointer">
+                <button type="button" onClick={() => handleNav('services')} className="min-h-[44px] w-full flex items-center hover:text-white transition-colors text-left cursor-pointer">
                   Commercial Freight Transport
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('services')} className="hover:text-white transition-colors text-left cursor-pointer">
+                <button type="button" onClick={() => handleNav('services')} className="min-h-[44px] w-full flex items-center hover:text-white transition-colors text-left cursor-pointer">
                   Heavy Hauling &amp; Machinery
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('services')} className="hover:text-white transition-colors text-left cursor-pointer">
+                <button type="button" onClick={() => handleNav('services')} className="min-h-[44px] w-full flex items-center hover:text-white transition-colors text-left cursor-pointer">
                   53ft Air-Ride Dry Van Cargo
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('services')} className="hover:text-white transition-colors text-left cursor-pointer">
+                <button type="button" onClick={() => handleNav('services')} className="min-h-[44px] w-full flex items-center hover:text-white transition-colors text-left cursor-pointer">
                   Flatbed &amp; Step Deck Transport
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('service-areas')} className="hover:text-white transition-colors text-left cursor-pointer">
+                <button type="button" onClick={() => handleNav('service-areas')} className="min-h-[44px] w-full flex items-center hover:text-white transition-colors text-left cursor-pointer">
                   Regional Corridor Logistics
                 </button>
               </li>
@@ -118,46 +125,47 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
 
           {/* Col 4: Company & Fleet */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white font-display mb-4">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white font-display mb-3">
               Company &amp; Roster
             </h4>
-            <ul className="space-y-2.5 text-xs text-slate-400">
+            <ul className="space-y-0.5 text-sm text-slate-300">
               <li>
-                <button onClick={() => handleNav('about')} className="hover:text-white transition-colors text-left cursor-pointer">
+                <button type="button" onClick={() => handleNav('about')} className="min-h-[44px] w-full flex items-center hover:text-white transition-colors text-left cursor-pointer">
                   About Momentum
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('fleet')} className="hover:text-white transition-colors text-left cursor-pointer">
+                <button type="button" onClick={() => handleNav('fleet')} className="min-h-[44px] w-full flex items-center hover:text-white transition-colors text-left cursor-pointer">
                   Fleet &amp; Equipment
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('service-areas')} className="hover:text-white transition-colors text-left cursor-pointer">
+                <button type="button" onClick={() => handleNav('service-areas')} className="min-h-[44px] w-full flex items-center hover:text-white transition-colors text-left cursor-pointer">
                   Service Area Map
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('safety')} className="hover:text-white transition-colors text-left cursor-pointer">
+                <button type="button" onClick={() => handleNav('safety')} className="min-h-[44px] w-full flex items-center hover:text-white transition-colors text-left cursor-pointer">
                   Safety &amp; Compliance
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('careers')} className="hover:text-white transition-colors text-left cursor-pointer">
+                <button type="button" onClick={() => handleNav('careers')} className="min-h-[44px] w-full flex items-center hover:text-white transition-colors text-left cursor-pointer">
                   Careers &amp; CDL Drivers
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('contact')} className="hover:text-white transition-colors text-left cursor-pointer">
+                <button type="button" onClick={() => handleNav('contact')} className="min-h-[44px] w-full flex items-center hover:text-white transition-colors text-left cursor-pointer">
                   Contact Dispatch
                 </button>
               </li>
               <li className="pt-1.5 border-t border-slate-700/60">
                 <button
+                  type="button"
                   onClick={() => handleNav('company-profile')}
-                  className="hover:text-[#C99A31] transition-colors text-left inline-flex items-center gap-1.5 font-medium text-slate-300 cursor-pointer"
+                  className="min-h-[44px] w-full hover:text-[#C99A31] transition-colors text-left inline-flex items-center gap-2 font-medium text-slate-200 cursor-pointer"
                 >
-                  <FileText className="w-3.5 h-3.5 text-[#C99A31] shrink-0" />
+                  <FileText className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
                   <span>Company Profile (8-Page)</span>
                 </button>
               </li>
@@ -165,10 +173,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <a
                   href={COMPANY_PROFILE_PDF_URL}
                   download="Momentum-Transportation-Company-Profile.pdf"
-                  className="hover:text-white transition-colors text-left inline-flex items-center gap-1.5 text-[11px] text-slate-400 group ml-5"
+                  className="min-h-[44px] hover:text-white transition-colors text-left inline-flex items-center gap-1.5 text-xs text-slate-300 group ml-6"
                 >
                   <span>Download Profile PDF</span>
-                  <ArrowUpRight className="w-3 h-3 opacity-70 group-hover:opacity-100 text-[#C99A31]" />
+                  <ArrowUpRight className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100 text-[#C99A31]" aria-hidden="true" />
                 </a>
               </li>
             </ul>
@@ -176,29 +184,29 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
 
           {/* Col 5: Quotation & Dispatch */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white font-display mb-4">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white font-display mb-3">
               Quotation &amp; Dispatch
             </h4>
-            <ul className="space-y-2.5 text-xs text-slate-400">
+            <ul className="space-y-0.5 text-sm text-slate-300">
               <li>
-                <button onClick={() => handleNav('quote')} className="hover:text-[#C99A31] transition-colors text-left cursor-pointer font-medium flex items-center gap-1.5">
+                <button type="button" onClick={() => handleNav('quote')} className="min-h-[44px] w-full flex items-center hover:text-[#C99A31] transition-colors text-left cursor-pointer font-medium">
                   <span>Request a Freight Quote</span>
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('contact')} className="hover:text-[#C99A31] transition-colors text-left cursor-pointer font-medium flex items-center gap-1.5">
+                <button type="button" onClick={() => handleNav('contact')} className="min-h-[44px] w-full flex items-center hover:text-[#C99A31] transition-colors text-left cursor-pointer font-medium">
                   <span>Direct Dispatch Inquiries</span>
                 </button>
               </li>
               <li>
-                <a href={COMPANY.contact.phoneTel} className="hover:text-white transition-colors text-left">
+                <a href={COMPANY.contact.phoneTel} className="min-h-[44px] w-full flex items-center hover:text-white transition-colors text-left">
                   24/7 Phone: {COMPANY.contact.formattedPhone}
                 </a>
               </li>
-              <li className="pt-2">
-                <div className="bg-[#041228] p-3 rounded border border-slate-700/60 text-[11px] text-slate-400">
+              <li className="pt-3">
+                <div className="bg-[#041228] p-3.5 rounded-md border border-slate-700/60 text-xs text-slate-300 leading-relaxed">
                   <div className="flex items-center gap-1.5 text-white font-semibold mb-1">
-                    <Shield className="w-3.5 h-3.5 text-[#C99A31]" />
+                    <Shield className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
                     <span>Operating Transparency</span>
                   </div>
                   Verified South Carolina transport entity committed to safety, punctuality, and regulatory standards.
@@ -209,21 +217,21 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         </div>
 
         {/* Regulatory & Conceptual Disclosure */}
-        <div className="mt-12 pt-6 border-t border-[#0D2C5B] text-[11px] text-slate-400 leading-relaxed">
+        <div className="mt-10 pt-6 border-t border-[#0D2C5B] text-xs text-slate-400 leading-relaxed">
           <p>
             <strong>Operating Disclosure:</strong> Momentum Transportation &amp; Hauling LLC is registered in South Carolina (2 Penhurst Ct., Columbia, SC 29229). All vehicle photography presented on this corporate website represents illustrative commercial transportation concepts until verified company fleet photographs are authorized. Rate quotes provided online are subject to final operational review and route verification.
           </p>
         </div>
 
         {/* Bottom Copyright */}
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+        <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-slate-400">
           <p>&copy; {new Date().getFullYear()} Momentum Transportation &amp; Hauling LLC. All rights reserved.</p>
-          <div className="flex items-center gap-4">
-            <span className="text-slate-400">Columbia, SC 29229</span>
-            <span>·</span>
-            <span>Phone: 803-718-5509</span>
-            <span>·</span>
-            <span>Tagline proposal: &ldquo;Moving Business Forward.&rdquo;</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span>Columbia, SC 29229</span>
+            <a href={COMPANY.contact.phoneTel} className="hover:text-white transition-colors">
+              {COMPANY.contact.formattedPhone}
+            </a>
+            <span>&ldquo;Moving Business Forward.&rdquo;</span>
           </div>
         </div>
       </div>

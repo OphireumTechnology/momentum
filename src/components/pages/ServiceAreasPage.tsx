@@ -78,16 +78,16 @@ export const ServiceAreasPage: React.FC<ServiceAreasPageProps> = ({ onNavigate }
   return (
     <div className="bg-[#F5F7FA] min-h-screen">
       {/* Hero Header */}
-      <section className="bg-[#071E41] text-white py-16 lg:py-20 border-b border-[#0D2C5B]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
-          <div className="max-w-3xl space-y-3">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
+      <section className="bg-[#071E41] text-white py-8 sm:py-14 lg:py-16 border-b border-[#0D2C5B]">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
+          <div className="max-w-3xl space-y-2.5 text-left">
+            <span className="block text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
               Regional Geographic Coverage
             </span>
-            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight font-display text-white">
+            <h1 className="text-[28px] sm:text-4xl lg:text-5xl font-extrabold tracking-tight font-display text-white leading-tight">
               Service Areas &amp; Corridors
             </h1>
-            <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+            <p className="text-base text-slate-200 leading-relaxed">
               Centered at 2 Penhurst Ct., Columbia, SC 29229. We provide reliable freight transportation and hauling focused on verified southeastern interstate corridors.
             </p>
           </div>
@@ -95,7 +95,7 @@ export const ServiceAreasPage: React.FC<ServiceAreasPageProps> = ({ onNavigate }
       </section>
 
       {/* Main Map & Corridor Explorer */}
-      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-8">
+      <section className="py-8 sm:py-14 max-w-7xl mx-auto px-5 sm:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* Corridor Selection List */}
           <div className="lg:col-span-5 min-w-0 space-y-4">
@@ -173,7 +173,7 @@ export const ServiceAreasPage: React.FC<ServiceAreasPageProps> = ({ onNavigate }
                 </div>
               </div>
 
-              <div className="p-6 sm:p-8 space-y-5">
+              <div className="p-5 sm:p-8 space-y-5">
                 <div>
                   <span className="text-[11px] font-bold uppercase tracking-wider text-[#C99A31] font-display">
                     Corridor Details
@@ -183,7 +183,7 @@ export const ServiceAreasPage: React.FC<ServiceAreasPageProps> = ({ onNavigate }
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-lg bg-slate-50 border border-slate-200 text-xs">
                   <div>
                     <span className="text-slate-500 block uppercase text-[10px] font-bold">Estimated Distance:</span>
                     <span className="font-bold text-slate-800 text-sm tabular-nums">~{current.distanceMiles} Miles</span>
@@ -194,12 +194,12 @@ export const ServiceAreasPage: React.FC<ServiceAreasPageProps> = ({ onNavigate }
                   </div>
                 </div>
 
-                <div className="space-y-3 text-xs">
+                <div className="space-y-3 text-sm">
                   <div>
-                    <strong className="text-slate-800 block mb-1">Key Connecting Hubs:</strong>
+                    <strong className="text-slate-800 block mb-1.5 text-xs uppercase tracking-wider">Key Connecting Hubs:</strong>
                     <div className="flex flex-wrap gap-1.5">
                       {current.primaryHubs.map((hub, i) => (
-                        <span key={i} className="bg-white border border-slate-300 text-slate-700 px-2 py-1 rounded text-xs">
+                        <span key={i} className="bg-white border border-slate-300 text-slate-700 px-2.5 py-1 rounded text-xs">
                           {hub}
                         </span>
                       ))}
@@ -207,26 +207,27 @@ export const ServiceAreasPage: React.FC<ServiceAreasPageProps> = ({ onNavigate }
                   </div>
 
                   <div>
-                    <strong className="text-slate-800 block mb-0.5">Primary Cargo Focus:</strong>
-                    <p className="text-slate-600">{current.cargoTypes}</p>
+                    <strong className="text-slate-800 block mb-0.5 text-xs uppercase tracking-wider">Primary Cargo Focus:</strong>
+                    <p className="text-slate-600 text-sm leading-relaxed">{current.cargoTypes}</p>
                   </div>
 
                   <div>
-                    <strong className="text-slate-800 block mb-0.5">Key Freight Access Points:</strong>
-                    <p className="text-slate-600">{current.keyAccessPoints}</p>
+                    <strong className="text-slate-800 block mb-0.5 text-xs uppercase tracking-wider">Key Freight Access Points:</strong>
+                    <p className="text-slate-600 text-sm leading-relaxed">{current.keyAccessPoints}</p>
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                  <div className="text-xs text-slate-500">
+                <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="text-sm text-slate-600">
                     Need freight quoted along this lane?
                   </div>
                   <button
+                    type="button"
                     onClick={() => onNavigate('quote')}
-                    className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded transition-colors inline-flex items-center gap-1.5 font-display cursor-pointer"
+                    className="min-h-[48px] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded-md transition-colors inline-flex items-center justify-center gap-2 font-display cursor-pointer"
                   >
                     <span>Quote This Corridor</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#C99A31]" />
+                    <ArrowRight className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
                   </button>
                 </div>
               </div>

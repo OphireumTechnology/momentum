@@ -201,25 +201,25 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
           }}
         />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-12 sm:py-16 lg:py-20">
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 py-8 sm:py-14 lg:py-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16 items-center w-full">
             
-            {/* Left Column: 50% Allocated Width (Strictly bounded with min-w-0) */}
-            <div className="w-full min-w-0 space-y-6">
+            {/* Left Column */}
+            <div className="w-full min-w-0 space-y-5">
               
               {/* 1. Official Momentum Logo & Company Name */}
-              <div className="flex items-center gap-3.5 sm:gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <img
                   src={LOGOS.original}
                   alt="Momentum Transportation & Hauling LLC Official Emblem"
-                  width={72}
-                  height={72}
-                  className="w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 object-contain shrink-0 aspect-square filter drop-shadow-md select-none"
+                  width={64}
+                  height={64}
+                  className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 object-contain shrink-0 aspect-square filter drop-shadow-md select-none"
                   loading="eager"
                   decoding="async"
                 />
                 <div className="flex flex-col justify-center min-w-0">
-                  <span className="text-2xl sm:text-3xl font-extrabold tracking-tight font-display text-white leading-none truncate">
+                  <span className="text-xl sm:text-3xl font-extrabold tracking-tight font-display text-white leading-none truncate">
                     MOMENTUM
                   </span>
                   <div className="flex items-center gap-2 mt-1 sm:mt-1.5">
@@ -233,53 +233,56 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
 
               {/* 2 & 3. Primary Headlines & Tagline */}
               <div className="space-y-2">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight font-display text-white leading-[1.15] text-balance">
+                <h1 className="text-[28px] sm:text-4xl lg:text-5xl font-extrabold tracking-tight font-display text-white leading-[1.15] text-balance">
                   Moving Business Forward.
                 </h1>
-                <p className="text-lg sm:text-xl font-bold text-[#C99A31] font-display">
+                <p className="text-base sm:text-xl font-bold text-[#C99A31] font-display">
                   Transportation &amp; Hauling, Connected by Technology.
                 </p>
                 {/* 4. Supporting Company Description */}
-                <p className="text-sm sm:text-base text-slate-300 font-normal leading-relaxed pt-1 max-w-xl">
+                <p className="text-base text-slate-200 font-normal leading-relaxed pt-1 max-w-xl">
                   Dependable freight transportation, cargo van delivery, construction hauling and regional logistics solutions—supported by responsive coordination and modern transportation technology.
                 </p>
               </div>
 
-              {/* 5, 6, 7. Standardized Calls to Action (Never overlaps truck; wraps naturally or stacks on mobile) */}
-              <div className="pt-2 flex flex-wrap items-center gap-3 w-full">
+              {/* 5, 6, 7. Standardized Calls to Action */}
+              <div className="pt-1 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 w-full">
                 <button
+                  type="button"
                   onClick={() => onNavigate('quote')}
-                  className="w-full sm:w-auto px-5 py-3 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md transition-all font-display shadow-md hover:shadow-lg inline-flex items-center justify-center gap-2 cursor-pointer text-center shrink-0"
+                  className="min-h-[48px] w-full sm:w-auto px-5 py-3 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md transition-colors font-display shadow-md inline-flex items-center justify-center gap-2 cursor-pointer text-center shrink-0"
                 >
                   <span>REQUEST A QUOTE</span>
-                  <ArrowRight className="w-4 h-4 text-[#071E41]" />
+                  <ArrowRight className="w-4 h-4 text-[#071E41]" aria-hidden="true" />
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => onNavigate('services')}
-                  className="w-full sm:w-auto px-5 py-3 text-xs font-bold tracking-wider uppercase text-white bg-white/10 hover:bg-white/20 border border-white/25 rounded-md transition-all font-display backdrop-blur-sm cursor-pointer inline-flex items-center justify-center text-center shrink-0"
+                  className="min-h-[48px] w-full sm:w-auto px-5 py-3 text-xs font-bold tracking-wider uppercase text-white bg-white/10 hover:bg-white/20 border border-white/25 rounded-md transition-colors font-display cursor-pointer inline-flex items-center justify-center text-center shrink-0"
                 >
                   EXPLORE OUR SERVICES
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => onNavigate('contact')}
-                  className="w-full sm:w-auto px-5 py-3 text-xs font-bold tracking-wider uppercase text-slate-200 hover:text-white bg-slate-900/60 hover:bg-slate-800/80 border border-slate-600 rounded-md transition-all font-display cursor-pointer inline-flex items-center justify-center gap-2 text-center shrink-0"
+                  className="min-h-[48px] w-full sm:w-auto px-5 py-3 text-xs font-bold tracking-wider uppercase text-slate-200 hover:text-white bg-slate-900/60 hover:bg-slate-800/80 border border-slate-600 rounded-md transition-colors font-display cursor-pointer inline-flex items-center justify-center gap-2 text-center shrink-0"
                 >
-                  <Phone className="w-3.5 h-3.5 text-[#C99A31]" />
+                  <Phone className="w-3.5 h-3.5 text-[#C99A31]" aria-hidden="true" />
                   <span>CONTACT OPERATIONS</span>
                 </button>
               </div>
 
               {/* 8. Regional Location & Dispatch Contact */}
-              <div className="pt-2 flex flex-wrap items-center gap-y-2 gap-x-6 text-xs text-slate-300 border-t border-slate-800/80 pt-4">
+              <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-xs text-slate-300 border-t border-slate-800/80 pt-4">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#C99A31] shrink-0" />
+                  <ShieldCheck className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
                   <span>Columbia, SC Regional Market Base</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[#C99A31] shrink-0" />
-                  <span>Direct Dispatch: <a href={COMPANY.contact.phoneTel} className="font-semibold text-white hover:text-[#C99A31]">(803) 718-5509</a></span>
+                  <Clock className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
+                  <span>Direct Dispatch: <a href={COMPANY.contact.phoneTel} className="font-semibold text-white hover:text-[#C99A31] underline">{COMPANY.contact.formattedPhone}</a></span>
                 </div>
               </div>
             </div>
@@ -316,21 +319,18 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                       strokeOpacity="0.4"
                     />
 
-                    {/* Animated Pulse Beam along highway route */}
+                    {/* Static Route Highlight */}
                     <path
                       d="M 50 320 C 180 320, 260 250, 360 210 S 520 150, 560 120"
                       stroke="#E8BE65"
                       strokeWidth="3"
-                      strokeDasharray="40 180"
+                      strokeDasharray="16 10"
                       strokeLinecap="round"
-                      style={{
-                        animation: 'dashRoute 6s ease-in-out infinite',
-                      }}
                     />
 
                     {/* Origin Hub Beacon: Columbia, SC */}
                     <circle cx="90" cy="310" r="6" fill="#071E41" stroke="#C99A31" strokeWidth="2.5" />
-                    <circle cx="90" cy="310" r="11" stroke="#C99A31" strokeWidth="1" strokeOpacity="0.5" className="animate-ping" />
+                    <circle cx="90" cy="310" r="10" stroke="#C99A31" strokeWidth="1" strokeOpacity="0.45" />
 
                     {/* Corridor Checkpoints */}
                     <circle cx="360" cy="210" r="5" fill="#C99A31" />
@@ -379,7 +379,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
           navy primary button, gold highlights, and indicative calculation transparency.
           ========================================================================= */}
       <section className="bg-white border-b border-slate-200 shadow-sm relative z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-8">
           <div className="mb-4">
             <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display block">
               Freight Transit &amp; Rate Planning
@@ -387,40 +387,42 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
             <h2 className="text-xl sm:text-2xl font-bold text-[#071E41] font-display">
               Smart Freight Corridor Estimator
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-sm text-slate-600 mt-1">
               Calculate preliminary regional transit times and rate benchmarks based on standard southeastern commercial corridors.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end bg-[#F5F7FA] p-5 sm:p-6 rounded-xl border border-slate-200">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-end bg-[#F5F7FA] p-4 sm:p-6 rounded-xl border border-slate-200">
             {/* Input 1: Origin */}
-            <div className="lg:col-span-3">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 font-display">
+            <div className="lg:col-span-3 min-w-0">
+              <label htmlFor="est-origin" className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 font-display">
                 Origin Logistics Hub
               </label>
               <div className="relative">
-                <MapPin className="w-4 h-4 text-[#C99A31] absolute left-3.5 top-3 pointer-events-none" />
+                <MapPin className="w-4 h-4 text-[#C99A31] absolute left-3.5 top-3.5 pointer-events-none" aria-hidden="true" />
                 <input
+                  id="est-origin"
                   type="text"
                   value={calcOrigin}
                   onChange={(e) => setCalcOrigin(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 text-xs font-semibold text-slate-900 bg-white border border-slate-300 rounded focus:border-[#071E41] focus:ring-1 focus:ring-[#071E41] focus:outline-none"
+                  className="w-full min-w-0 min-h-[48px] pl-10 pr-3.5 py-2.5 text-base font-medium text-slate-900 bg-white border border-slate-300 rounded-md focus:border-[#071E41] focus:ring-2 focus:ring-[#071E41]/15 focus:outline-none"
                   placeholder="Columbia, SC (29229)"
                 />
               </div>
             </div>
 
             {/* Input 2: Destination Market */}
-            <div className="lg:col-span-3">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 font-display">
+            <div className="lg:col-span-3 min-w-0">
+              <label htmlFor="est-dest" className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 font-display">
                 Destination Market
               </label>
               <div className="relative">
-                <Navigation className="w-4 h-4 text-[#C99A31] absolute left-3.5 top-3 pointer-events-none" />
+                <Navigation className="w-4 h-4 text-[#C99A31] absolute left-3.5 top-3.5 pointer-events-none" aria-hidden="true" />
                 <select
+                  id="est-dest"
                   value={calcDest}
                   onChange={(e) => setCalcDest(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 text-xs font-semibold text-slate-900 bg-white border border-slate-300 rounded focus:border-[#071E41] focus:ring-1 focus:ring-[#071E41] focus:outline-none"
+                  className="w-full min-w-0 min-h-[48px] pl-10 pr-3.5 py-2.5 text-base font-medium text-slate-900 bg-white border border-slate-300 rounded-md focus:border-[#071E41] focus:ring-2 focus:ring-[#071E41]/15 focus:outline-none"
                 >
                   <option value="charlotte">Charlotte, NC (I-77 N Corridor)</option>
                   <option value="charleston">Charleston Port, SC (I-26 E Corridor)</option>
@@ -434,67 +436,68 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
             </div>
 
             {/* Input 3: Service Category */}
-            <div className="lg:col-span-3">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 font-display">
+            <div className="lg:col-span-3 min-w-0">
+              <label htmlFor="est-category" className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 font-display">
                 Equipment / Service Type
               </label>
               <div className="relative">
-                <SlidersHorizontal className="w-4 h-4 text-[#C99A31] absolute left-3.5 top-3 pointer-events-none" />
+                <SlidersHorizontal className="w-4 h-4 text-[#C99A31] absolute left-3.5 top-3.5 pointer-events-none" aria-hidden="true" />
                 <select
+                  id="est-category"
                   value={calcCategory}
                   onChange={(e) => setCalcCategory(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 text-xs font-semibold text-slate-900 bg-white border border-slate-300 rounded focus:border-[#071E41] focus:ring-1 focus:ring-[#071E41] focus:outline-none"
+                  className="w-full min-w-0 min-h-[48px] pl-10 pr-3.5 py-2.5 text-base font-medium text-slate-900 bg-white border border-slate-300 rounded-md focus:border-[#071E41] focus:ring-2 focus:ring-[#071E41]/15 focus:outline-none"
                 >
-                  <option value="dry_van">Commercial Freight (53ft Air-Ride Dry Van)</option>
-                  <option value="heavy_haul">Commercial Hauling (Heavy Machinery Lowboy)</option>
-                  <option value="cargo_van">Cargo Van Delivery (Jobsite / Courier)</option>
-                  <option value="dump_truck">Pre-Construction Aggregate Dump Truck</option>
-                  <option value="flatbed">Construction Material Flatbed (Steel &amp; Lumber)</option>
+                  <option value="dry_van">Commercial Freight (53ft Dry Van)</option>
+                  <option value="heavy_haul">Commercial Hauling (Lowboy)</option>
+                  <option value="cargo_van">Cargo Van Delivery</option>
+                  <option value="dump_truck">Aggregate Dump Truck</option>
+                  <option value="flatbed">Construction Material Flatbed</option>
                 </select>
               </div>
             </div>
 
             {/* Calculate / Action Button */}
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 min-w-0">
               <button
                 type="button"
                 onClick={handleApplyEstimateToQuote}
-                className="w-full py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded transition-colors inline-flex items-center justify-center gap-2 font-display cursor-pointer shadow-sm hover:shadow"
+                className="min-h-[48px] w-full py-3 px-4 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded-md transition-colors inline-flex items-center justify-center gap-2 font-display cursor-pointer shadow-sm"
               >
                 <span>Lock In Rate Quote</span>
-                <ArrowRight className="w-4 h-4 text-[#C99A31]" />
+                <ArrowRight className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
               </button>
             </div>
           </div>
 
           {/* Real-Time Calculated Benchmark Box */}
-          <div className="mt-4 p-4 rounded-xl bg-white border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
-            <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-slate-700">
+          <div className="mt-4 p-4 rounded-xl bg-white border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap items-center gap-y-3 gap-x-6 text-slate-700 w-full lg:w-auto">
               <div>
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Corridor Highway Distance</span>
+                <span className="text-slate-500 block text-[11px] uppercase font-bold">Corridor Distance</span>
                 <strong className="text-slate-900 font-bold tabular-nums text-sm">{currentCorridor.miles} Miles</strong>
               </div>
-              <div className="hidden sm:block text-slate-300">|</div>
+              <div className="hidden lg:block text-slate-300">|</div>
               <div>
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Estimated Transit Window</span>
+                <span className="text-slate-500 block text-[11px] uppercase font-bold">Estimated Transit</span>
                 <strong className="text-slate-900 font-bold text-sm">{currentCorridor.hours}</strong>
               </div>
-              <div className="hidden sm:block text-slate-300">|</div>
+              <div className="hidden lg:block text-slate-300">|</div>
               <div>
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Selected Freight Category</span>
-                <span className="text-slate-800 font-semibold">{categoryLabel}</span>
+                <span className="text-slate-500 block text-[11px] uppercase font-bold">Freight Category</span>
+                <span className="text-slate-800 font-semibold text-sm">{categoryLabel}</span>
               </div>
-              <div className="hidden sm:block text-slate-300">|</div>
+              <div className="hidden lg:block text-slate-300">|</div>
               <div>
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Indicative Rate Calculation</span>
+                <span className="text-slate-500 block text-[11px] uppercase font-bold">Indicative Range</span>
                 <strong className="text-[#071E41] font-bold text-sm tabular-nums">
                   ${calculatedMin} – ${calculatedMax} USD
                 </strong>
               </div>
             </div>
 
-            <div className="text-[11px] text-slate-500 italic text-right max-w-xs">
-              *Indicative corridor calculation based on regional carrier averages. Official binding rate sheet finalized upon dispatch review.
+            <div className="text-xs text-slate-500 italic text-left md:text-right max-w-xs">
+              *Indicative corridor calculation based on regional averages. Final binding rate confirmed upon dispatch review.
             </div>
           </div>
         </div>
@@ -506,7 +509,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
           consistent card heights, key capabilities, and Request a Quote actions.
           ========================================================================= */}
       <section className="py-20 bg-[#F5F7FA]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display block mb-1">
@@ -570,7 +573,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               <div className="px-6 pb-6 pt-2">
                 <button
                   onClick={() => onNavigate('quote')}
-                  className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded transition-colors text-center font-display cursor-pointer"
+                  className="min-h-[44px] w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded-md transition-colors text-center font-display cursor-pointer"
                 >
                   Request Freight Quote
                 </button>
@@ -617,7 +620,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               <div className="px-6 pb-6 pt-2">
                 <button
                   onClick={() => onNavigate('quote')}
-                  className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded transition-colors text-center font-display cursor-pointer"
+                  className="min-h-[44px] w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded-md transition-colors text-center font-display cursor-pointer"
                 >
                   Request Hauling Quote
                 </button>
@@ -664,7 +667,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               <div className="px-6 pb-6 pt-2">
                 <button
                   onClick={() => onNavigate('service-areas')}
-                  className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded transition-colors text-center font-display cursor-pointer"
+                  className="min-h-[44px] w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded-md transition-colors text-center font-display cursor-pointer"
                 >
                   Explore Route Corridors
                 </button>
@@ -711,7 +714,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               <div className="px-6 pb-6 pt-2">
                 <button
                   onClick={() => onNavigate('quote')}
-                  className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded transition-colors text-center font-display cursor-pointer"
+                  className="min-h-[44px] w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-[#071E41] hover:text-white rounded-md transition-colors text-center font-display cursor-pointer"
                 >
                   Request Cargo Van Quote
                 </button>
@@ -762,13 +765,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               <div className="px-6 pb-6 pt-2 flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => onNavigate('quote')}
-                  className="flex-1 py-2.5 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded transition-colors text-center font-display cursor-pointer"
+                  className="min-h-[44px] flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded transition-colors text-center font-display cursor-pointer"
                 >
                   Quote Construction Hauling
                 </button>
                 <button
                   onClick={() => onNavigate('contact')}
-                  className="flex-1 py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-slate-200 rounded transition-colors text-center font-display cursor-pointer"
+                  className="min-h-[44px] flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-slate-200 rounded transition-colors text-center font-display cursor-pointer"
                 >
                   Speak With Dispatch Team
                 </button>
@@ -796,7 +799,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
           }}
         />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8">
           <div className="max-w-3xl mb-14">
             <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display block mb-1">
               Technology &amp; Operational Coordination
@@ -942,7 +945,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
           Supplier-to-jobsite transport, Project logistics coordination.
           ========================================================================= */}
       <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
             {/* Visual Column */}
@@ -968,12 +971,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 text-xs text-slate-700">
-                <div className="p-3 rounded-lg bg-[#F5F7FA] border border-slate-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700">
+                <div className="p-3.5 rounded-lg bg-[#F5F7FA] border border-slate-200">
                   <strong className="block text-[#071E41]">Aggregate Capacity:</strong>
                   <span>Crushed run, gravel, stone, and sand hauling.</span>
                 </div>
-                <div className="p-3 rounded-lg bg-[#F5F7FA] border border-slate-200">
+                <div className="p-3.5 rounded-lg bg-[#F5F7FA] border border-slate-200">
                   <strong className="block text-[#071E41]">Structural Freight:</strong>
                   <span>Structural steel, joists, framing, and lumber.</span>
                 </div>
@@ -1088,7 +1091,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
           operating corridors. Deep navy lines, metallic gold markers.
           ========================================================================= */}
       <section className="py-20 bg-[#F5F7FA] border-y border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display block mb-1">
@@ -1200,13 +1203,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
               <div className="pt-2 flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => onNavigate('quote')}
-                  className="flex-1 py-2.5 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded font-display transition-colors text-center cursor-pointer"
+                  className="min-h-[44px] flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded font-display transition-colors text-center cursor-pointer"
                 >
                   Quote Freight On This Lane
                 </button>
                 <a
                   href={COMPANY.contact.phoneTel}
-                  className="flex-1 py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-slate-200 rounded font-display transition-colors text-center"
+                  className="min-h-[44px] flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-slate-200 rounded font-display transition-colors text-center"
                 >
                   Speak With Lane Dispatcher
                 </a>
@@ -1224,7 +1227,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
           Transportation Coordination, Customer-Focused Service.
           ========================================================================= */}
       <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
           <div className="max-w-3xl mb-14">
             <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display block mb-1">
               Foundational Principles
@@ -1307,7 +1310,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
           </div>
 
           {/* Operational Headquarters Anchor Card */}
-          <div className="mt-10 p-6 sm:p-8 rounded-2xl bg-[#071E41] text-white flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="mt-10 p-5 sm:p-8 rounded-2xl bg-[#071E41] text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#C99A31] font-display">
                 Corporate Headquarters &amp; Terminal Staging
@@ -1319,16 +1322,18 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                 2 Penhurst Ct., Columbia, South Carolina 29229 · Operational Dispatch: (803) 718-5509
               </p>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full md:w-auto">
               <button
+                type="button"
                 onClick={() => onNavigate('about')}
-                className="px-5 py-2.5 text-xs font-bold uppercase text-white bg-white/10 hover:bg-white/20 border border-white/25 rounded font-display"
+                className="min-h-[44px] px-5 py-2.5 text-xs font-bold uppercase text-white bg-white/10 hover:bg-white/20 border border-white/25 rounded-md font-display cursor-pointer"
               >
                 About Our Company
               </button>
               <button
+                type="button"
                 onClick={() => onNavigate('contact')}
-                className="px-5 py-2.5 text-xs font-bold uppercase text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded font-display"
+                className="min-h-[44px] px-5 py-2.5 text-xs font-bold uppercase text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md font-display cursor-pointer"
               >
                 Contact Operations
               </button>
@@ -1346,7 +1351,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
           Preview: Actual first page of the PDF as high-resolution thumbnail
           ========================================================================= */}
       <section className="py-20 bg-[#F5F7FA] border-t border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Content Column */}
             <div className="lg:col-span-7 min-w-0 space-y-6">
@@ -1482,7 +1487,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
           Direct contacts: (803) 718-5509, wright.wendell@icloud.com
           ========================================================================= */}
       <section className="bg-gradient-to-r from-[#071E41] via-[#0B2B5C] to-[#071E41] text-white py-16 border-t border-[#0D2C5B]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 text-center space-y-6">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 text-center space-y-6">
           <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
             Direct Dispatch Line · Columbia, SC
           </span>

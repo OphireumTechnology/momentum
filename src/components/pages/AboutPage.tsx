@@ -14,7 +14,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
   return (
     <div className="bg-[#F5F7FA] min-h-screen">
       {/* Hero Header */}
-      <section className="relative bg-[#071E41] text-white py-16 lg:py-24 overflow-hidden">
+      <section className="relative bg-[#071E41] text-white py-8 sm:py-14 lg:py-20 overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <ImageWithFallback
             src={ASSETS.aboutOperations}
@@ -22,17 +22,17 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             className="w-full h-full object-cover"
           />
         </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8">
-          <div className="max-w-3xl space-y-4">
-            <div className="flex items-center gap-4">
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8">
+          <div className="max-w-3xl space-y-3 text-left">
+            <div className="flex items-center gap-3 sm:gap-4">
               <img
                 src={LOGOS.original}
                 alt="Momentum Transportation Official Emblem"
-                width={80}
-                height={80}
-                className="w-16 h-16 sm:w-20 sm:h-20 object-contain shrink-0 filter drop-shadow-md select-none"
+                width={64}
+                height={64}
+                className="w-12 h-12 sm:w-16 sm:h-16 object-contain shrink-0 filter drop-shadow-md select-none"
               />
-              <div>
+              <div className="min-w-0">
                 <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display block">
                   About Momentum Transportation &amp; Hauling LLC
                 </span>
@@ -41,10 +41,10 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
                 </span>
               </div>
             </div>
-            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight font-display text-white">
+            <h1 className="text-[28px] sm:text-4xl lg:text-5xl font-extrabold tracking-tight font-display text-white leading-tight">
               Disciplined Freight &amp; Commercial Hauling
             </h1>
-            <p className="text-base sm:text-lg text-slate-300 leading-relaxed">
+            <p className="text-base text-slate-200 leading-relaxed">
               Based in Columbia, South Carolina, our operations are founded on dependable logistics execution, driver professionalism, and direct customer accountability.
             </p>
           </div>
@@ -52,8 +52,8 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
       </section>
 
       {/* Company Overview & Yard Image */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+      <section className="py-10 sm:py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-7 min-w-0 space-y-6">
               <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display">
@@ -115,7 +115,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
 
       {/* Corporate Company Profile Section per Directive Section 12 */}
       <section className="py-16 bg-[#071E41] text-white border-y border-[#0D2C5B]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left: Document Info and Highlights */}
             <div className="lg:col-span-7 min-w-0 space-y-6">
@@ -244,7 +244,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
 
       {/* Proposed Mission, Vision & Values */}
       <section className="py-16 bg-[#F5F7FA] border-y border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
               Strategic Direction
@@ -299,7 +299,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
 
       {/* Four Core Values */}
       <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
           <div className="max-w-xl mb-10">
             <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display">
               Operating Values
@@ -355,28 +355,29 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
 
       {/* Official Office & Contact Strip */}
       <section className="py-14 bg-[#071E41] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-            <div className="space-y-2 text-center lg:text-left">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            <div className="space-y-2 text-left">
               <h3 className="text-2xl font-bold font-display">Speak Directly with Operations</h3>
-              <p className="text-slate-300 text-xs sm:text-sm">
+              <p className="text-slate-200 text-sm">
                 Have specific lane requirements or specialized hauling questions? Connect directly with our team.
               </p>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
               <a
                 href={COMPANY.contact.phoneTel}
-                className="px-6 py-3 text-xs font-bold tracking-wider uppercase text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded inline-flex items-center gap-2"
+                className="min-h-[48px] px-6 py-3 text-xs font-bold tracking-wider uppercase text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-md inline-flex items-center justify-center gap-2"
               >
-                <Phone className="w-3.5 h-3.5 text-[#C99A31]" />
+                <Phone className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
                 <span>Call 803-718-5509</span>
               </a>
               <button
+                type="button"
                 onClick={() => onNavigate('quote')}
-                className="px-6 py-3 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded inline-flex items-center gap-2 cursor-pointer font-display"
+                className="min-h-[48px] px-6 py-3 text-xs font-bold tracking-wider uppercase text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md inline-flex items-center justify-center gap-2 cursor-pointer font-display"
               >
                 <span>Request a Quote</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
           </div>

@@ -126,23 +126,23 @@ export const FleetPage: React.FC<FleetPageProps> = ({ onNavigate }) => {
   return (
     <div className="bg-[#F5F7FA] min-h-screen">
       {/* Hero Header */}
-      <section className="bg-[#071E41] text-white py-16 lg:py-20 border-b border-[#0D2C5B]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
-          <div className="max-w-3xl space-y-3">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
+      <section className="bg-[#071E41] text-white py-8 sm:py-14 lg:py-16 border-b border-[#0D2C5B]">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
+          <div className="max-w-3xl space-y-2.5 text-left">
+            <span className="block text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
               Commercial Fleet Configurations · Exclusive Momentum Branding
             </span>
-            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight font-display text-white">
+            <h1 className="text-[28px] sm:text-4xl lg:text-5xl font-extrabold tracking-tight font-display text-white leading-tight">
               Fleet &amp; Equipment Specifications
             </h1>
-            <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+            <p className="text-base text-slate-200 leading-relaxed">
               Standard commercial configurations utilized for dry freight distribution, flatbed transport, cargo van deliveries, and heavy construction equipment hauling.
             </p>
           </div>
 
           {/* Illustrative Notice Banner */}
-          <div className="mt-8 p-4 rounded-lg bg-[#041228] border border-slate-700/80 max-w-3xl text-xs text-slate-300 flex items-start gap-3">
-            <Info className="w-4 h-4 text-[#C99A31] shrink-0 mt-0.5" />
+          <div className="mt-6 p-4 rounded-lg bg-[#041228] border border-slate-700/80 max-w-3xl text-xs text-slate-300 flex items-start gap-3">
+            <Info className="w-4 h-4 text-[#C99A31] shrink-0 mt-0.5" aria-hidden="true" />
             <div>
               <strong className="text-white">Illustrative Equipment Notice:</strong> Equipment models and dimensions shown represent verified commercial transportation industry configurations operated under the Momentum design system. Active vehicles assigned to your shipment are matched to specific load weight, cargo dimensions, and receiving dock requirements at time of dispatch.
             </div>
@@ -151,12 +151,12 @@ export const FleetPage: React.FC<FleetPageProps> = ({ onNavigate }) => {
       </section>
 
       {/* Hero Image Showcase */}
-      <section className="py-12 max-w-7xl mx-auto px-4 sm:px-8">
+      <section className="py-8 sm:py-12 max-w-7xl mx-auto px-5 sm:px-8">
         <div className="rounded-xl overflow-hidden shadow-md border border-slate-200">
           <ImageWithFallback
             src={ASSETS.equipmentMobilization}
             alt={ASSET_METADATA.equipmentMobilization.alt}
-            className="w-full h-80 sm:h-96 object-cover"
+            className="w-full h-64 sm:h-96 object-cover"
             fallbackTitle="Commercial Transport Fleet"
           />
           <div className="p-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-600 gap-2">
@@ -167,80 +167,32 @@ export const FleetPage: React.FC<FleetPageProps> = ({ onNavigate }) => {
       </section>
 
       {/* Equipment Cards & Interactive Filter */}
-      <section className="pb-20 max-w-7xl mx-auto px-4 sm:px-8">
+      <section className="pb-16 sm:pb-20 max-w-7xl mx-auto px-5 sm:px-8">
         {/* Category Filter Controls */}
         <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-1.5 p-1 bg-white border border-slate-200 rounded-lg overflow-x-auto max-w-full">
-            <button
-              onClick={() => setFilterCategory('all')}
-              className={`px-3 py-1.5 text-xs font-bold uppercase rounded transition-colors cursor-pointer whitespace-nowrap ${
-                filterCategory === 'all'
-                  ? 'bg-[#071E41] text-white'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              All Configurations
-            </button>
-            <button
-              onClick={() => setFilterCategory('Tractor')}
-              className={`px-3 py-1.5 text-xs font-bold uppercase rounded transition-colors cursor-pointer whitespace-nowrap ${
-                filterCategory === 'Tractor'
-                  ? 'bg-[#071E41] text-white'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Tractors
-            </button>
-            <button
-              onClick={() => setFilterCategory('Dry Van')}
-              className={`px-3 py-1.5 text-xs font-bold uppercase rounded transition-colors cursor-pointer whitespace-nowrap ${
-                filterCategory === 'Dry Van'
-                  ? 'bg-[#071E41] text-white'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              53ft Dry Vans
-            </button>
-            <button
-              onClick={() => setFilterCategory('Flatbed')}
-              className={`px-3 py-1.5 text-xs font-bold uppercase rounded transition-colors cursor-pointer whitespace-nowrap ${
-                filterCategory === 'Flatbed'
-                  ? 'bg-[#071E41] text-white'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Flatbeds
-            </button>
-            <button
-              onClick={() => setFilterCategory('Heavy Haul')}
-              className={`px-3 py-1.5 text-xs font-bold uppercase rounded transition-colors cursor-pointer whitespace-nowrap ${
-                filterCategory === 'Heavy Haul'
-                  ? 'bg-[#071E41] text-white'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Heavy Haul
-            </button>
-            <button
-              onClick={() => setFilterCategory('Cargo Van')}
-              className={`px-3 py-1.5 text-xs font-bold uppercase rounded transition-colors cursor-pointer whitespace-nowrap ${
-                filterCategory === 'Cargo Van'
-                  ? 'bg-[#071E41] text-white'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Cargo Vans
-            </button>
-            <button
-              onClick={() => setFilterCategory('Dump Truck')}
-              className={`px-3 py-1.5 text-xs font-bold uppercase rounded transition-colors cursor-pointer whitespace-nowrap ${
-                filterCategory === 'Dump Truck'
-                  ? 'bg-[#071E41] text-white'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Dump Trucks
-            </button>
+          <div className="flex items-center gap-1.5 p-1.5 bg-white border border-slate-200 rounded-lg overflow-x-auto max-w-full">
+            {[
+              { id: 'all', label: 'All Configurations' },
+              { id: 'Tractor', label: 'Tractors' },
+              { id: 'Dry Van', label: '53ft Dry Vans' },
+              { id: 'Flatbed', label: 'Flatbeds' },
+              { id: 'Heavy Haul', label: 'Heavy Haul' },
+              { id: 'Cargo Van', label: 'Cargo Vans' },
+              { id: 'Dump Truck', label: 'Dump Trucks' },
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setFilterCategory(cat.id)}
+                className={`min-h-[44px] px-3.5 py-2 text-xs font-bold uppercase rounded-md transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                  filterCategory === cat.id
+                    ? 'bg-[#071E41] text-white'
+                    : 'text-slate-700 hover:text-[#071E41] hover:bg-slate-100'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
           </div>
 
           <div className="text-xs text-slate-500 font-medium">
@@ -313,8 +265,9 @@ export const FleetPage: React.FC<FleetPageProps> = ({ onNavigate }) => {
 
               <div className="p-6 pt-0 mt-4">
                 <button
+                  type="button"
                   onClick={() => onNavigate('quote')}
-                  className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-50 hover:bg-[#071E41] hover:text-white border border-slate-200 rounded transition-colors text-center font-display cursor-pointer"
+                  className="min-h-[48px] w-full py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-50 hover:bg-[#071E41] hover:text-white border border-slate-200 rounded-md transition-colors text-center font-display cursor-pointer"
                 >
                   Quote With This Equipment
                 </button>

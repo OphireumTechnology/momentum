@@ -13,12 +13,14 @@ import {
   Send,
   CheckCircle2,
   AlertCircle,
-  Building,
 } from 'lucide-react';
 
 interface ContactPageProps {
   onNavigate: (page: PageView) => void;
 }
+
+const inputClass =
+  'w-full min-w-0 min-h-[48px] px-3.5 py-2.5 text-base text-slate-900 bg-white border border-slate-300 rounded-md focus:border-[#071E41] focus:ring-2 focus:ring-[#071E41]/15 focus:outline-none placeholder:text-slate-400';
 
 export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
   const [formData, setFormData] = useState({
@@ -61,7 +63,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
       } else {
         setErrorMessage(data.error || 'Failed to submit inquiry.');
       }
-    } catch (err) {
+    } catch {
       setErrorMessage('Network connection error. Please call our dispatch line directly.');
     } finally {
       setIsSubmitting(false);
@@ -71,16 +73,16 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
   return (
     <div className="bg-[#F5F7FA] min-h-screen">
       {/* Hero Header */}
-      <section className="bg-[#071E41] text-white py-14 border-b border-[#0D2C5B]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
-          <div className="max-w-3xl space-y-2">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
+      <section className="bg-[#071E41] text-white py-8 sm:py-12 border-b border-[#0D2C5B]">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
+          <div className="max-w-3xl space-y-2 text-left">
+            <span className="block text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
               Columbia, South Carolina Headquarters
             </span>
-            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight font-display text-white">
+            <h1 className="text-[28px] sm:text-4xl lg:text-5xl font-extrabold tracking-tight font-display text-white leading-tight">
               Contact Operations &amp; Dispatch
             </h1>
-            <p className="text-sm text-slate-300">
+            <p className="text-base text-slate-200 leading-relaxed">
               Get in direct contact with Momentum Transportation &amp; Hauling LLC for load coordination, scheduling, and billing.
             </p>
           </div>
@@ -88,50 +90,50 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
       </section>
 
       {/* Main Content */}
-      <section className="py-14 max-w-7xl mx-auto px-4 sm:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+      <section className="py-8 sm:py-14 max-w-7xl mx-auto px-5 sm:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
           {/* Left Column: Official Contact Card & Image */}
           <div className="lg:col-span-5 min-w-0 space-y-6">
-            <div className="bg-white rounded-xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+            <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-8 shadow-sm space-y-6">
               <div className="border-b border-slate-100 pb-4">
                 <Logo variant="horizontal-light" size="md" />
               </div>
 
-              <div className="space-y-4 text-xs text-slate-700">
+              <div className="space-y-4 text-sm text-slate-700">
                 <div className="flex items-start gap-3">
-                  <MapPin className="w-4 h-4 text-[#C99A31] shrink-0 mt-0.5" />
+                  <MapPin className="w-5 h-5 text-[#C99A31] shrink-0 mt-0.5" aria-hidden="true" />
                   <div>
-                    <strong className="block text-[#071E41]">Official Address:</strong>
+                    <strong className="block text-[#071E41]">Official Address</strong>
                     <span>{COMPANY.contact.address}</span>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <Phone className="w-4 h-4 text-[#C99A31] shrink-0 mt-0.5" />
+                  <Phone className="w-5 h-5 text-[#C99A31] shrink-0 mt-0.5" aria-hidden="true" />
                   <div>
-                    <strong className="block text-[#071E41]">Direct Dispatch Phone:</strong>
-                    <a href={COMPANY.contact.phoneTel} className="text-slate-900 font-bold hover:text-[#071E41]">
+                    <strong className="block text-[#071E41]">Direct Dispatch Phone</strong>
+                    <a href={COMPANY.contact.phoneTel} className="text-slate-900 font-bold hover:text-[#071E41] inline-flex items-center min-h-[44px]">
                       {COMPANY.contact.phone}
                     </a>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <Mail className="w-4 h-4 text-[#C99A31] shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="block text-[#071E41]">Corporate Email:</strong>
-                    <a href={COMPANY.contact.emailMailto} className="text-slate-900 font-semibold hover:text-[#071E41]">
+                  <Mail className="w-5 h-5 text-[#C99A31] shrink-0 mt-0.5" aria-hidden="true" />
+                  <div className="min-w-0">
+                    <strong className="block text-[#071E41]">Corporate Email</strong>
+                    <a href={COMPANY.contact.emailMailto} className="text-slate-900 font-semibold hover:text-[#071E41] break-all inline-flex items-center min-h-[44px]">
                       {COMPANY.contact.email}
                     </a>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <Clock className="w-4 h-4 text-[#C99A31] shrink-0 mt-0.5" />
+                  <Clock className="w-5 h-5 text-[#C99A31] shrink-0 mt-0.5" aria-hidden="true" />
                   <div>
-                    <strong className="block text-[#071E41]">Hours of Operation:</strong>
+                    <strong className="block text-[#071E41]">Hours of Operation</strong>
                     <span>{COMPANY.hours.dispatch}</span>
-                    <span className="block text-slate-500">{COMPANY.hours.office}</span>
+                    <span className="block text-slate-500 text-xs mt-0.5">{COMPANY.hours.office}</span>
                   </div>
                 </div>
               </div>
@@ -139,55 +141,57 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
               <div className="pt-2 flex flex-col sm:flex-row gap-3">
                 <a
                   href={COMPANY.contact.phoneTel}
-                  className="flex-1 py-3 text-center text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded font-display"
+                  className="min-h-[48px] flex-1 px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded-md font-display inline-flex items-center justify-center"
                 >
                   Click to Call Now
                 </a>
-                <a
-                  href={COMPANY.contact.emailMailto}
-                  className="flex-1 py-3 text-center text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-slate-200 rounded font-display"
+                <button
+                  type="button"
+                  onClick={() => onNavigate('quote')}
+                  className="min-h-[48px] flex-1 px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md font-display inline-flex items-center justify-center cursor-pointer"
                 >
-                  Send Direct Email
-                </a>
+                  Request Freight Quote
+                </button>
               </div>
             </div>
 
             {/* Operations Office Visual */}
-            <div className="rounded-xl overflow-hidden shadow-md border border-slate-200">
+            <div className="rounded-xl overflow-hidden shadow-md border border-slate-200 bg-white">
               <ImageWithFallback
                 src={ASSETS.contactHero}
                 alt={ASSET_METADATA.contactHero.alt}
-                className="w-full h-64 object-cover"
+                className="w-full h-56 sm:h-64 object-cover"
                 fallbackTitle="Momentum Operations Office"
               />
-              <div className="p-3 bg-white text-[11px] text-slate-500">
+              <div className="p-3.5 text-xs text-slate-600">
                 Logistics dispatch and route management office.
               </div>
             </div>
           </div>
 
           {/* Right Column: Secure Inquiries Form */}
-          <div className="lg:col-span-7 min-w-0 bg-white rounded-xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+          <div className="lg:col-span-7 min-w-0 bg-white rounded-xl border border-slate-200 p-5 sm:p-8 shadow-sm">
             <h2 className="text-xl font-bold text-[#071E41] font-display mb-1">
               Send an Operational Message
             </h2>
-            <p className="text-xs text-slate-500 mb-6">
+            <p className="text-sm text-slate-600 mb-6">
               For general inquiries, carrier coordination, or billing matters, please submit the form below.
             </p>
 
             {submittedTicket ? (
-              <div className="p-6 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-3">
-                <div className="flex items-center gap-2 text-emerald-800 font-bold text-sm">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                  <span>Inquiry Dispatched Successfully</span>
+              <div className="p-6 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-900 space-y-4">
+                <div className="flex items-center gap-2 text-emerald-800 font-bold text-base">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" aria-hidden="true" />
+                  <span>Inquiry Recorded Successfully</span>
                 </div>
                 <p>
-                  Your message has been assigned reference ticket <strong className="font-mono">{submittedTicket}</strong> and delivered to operations at <strong className="font-mono text-emerald-900">{COMPANY.contact.email}</strong>.
+                  Your message has been assigned reference ticket <strong className="font-mono">{submittedTicket}</strong> for operations at <strong className="font-mono text-emerald-900 break-all">{COMPANY.contact.email}</strong>.
                 </p>
-                <p className="text-[11px] text-emerald-700">
-                  An authorized Momentum logistics representative will review your request and follow up promptly via email or direct phone.
+                <p className="text-xs text-emerald-800">
+                  A Momentum logistics coordinator will review your message and follow up promptly via email or direct phone.
                 </p>
                 <button
+                  type="button"
                   onClick={() => {
                     setSubmittedTicket(null);
                     setFormData({
@@ -198,74 +202,83 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                       message: '',
                     });
                   }}
-                  className="px-4 py-2 text-xs font-bold uppercase text-emerald-800 bg-white border border-emerald-300 rounded hover:bg-emerald-100 cursor-pointer"
+                  className="min-h-[44px] px-4 py-2 text-xs font-bold uppercase text-emerald-900 bg-white border border-emerald-300 rounded-md hover:bg-emerald-100 cursor-pointer"
                 >
                   Submit Another Inquiry
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 {errorMessage && (
-                  <div className="p-3 rounded bg-red-50 text-red-700 text-xs flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
+                  <div role="alert" className="p-3.5 rounded-md bg-red-50 border border-red-200 text-red-800 text-sm flex items-center gap-2.5">
+                    <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
                     <span>{errorMessage}</span>
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                      Your Name *
+                    <label htmlFor="contact-name" className="block text-sm font-bold text-[#071E41] mb-1.5">
+                      Your Name <span className="text-red-700">*</span>
                     </label>
                     <input
+                      id="contact-name"
                       type="text"
                       name="name"
+                      autoComplete="name"
                       value={formData.name}
                       onChange={handleChange}
                       required
                       placeholder="Full Name"
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:border-[#071E41] focus:outline-none"
+                      className={inputClass}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                      Email Address *
+                    <label htmlFor="contact-email" className="block text-sm font-bold text-[#071E41] mb-1.5">
+                      Email Address <span className="text-red-700">*</span>
                     </label>
                     <input
+                      id="contact-email"
                       type="email"
+                      inputMode="email"
+                      autoComplete="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
                       required
                       placeholder="name@business.com"
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:border-[#071E41] focus:outline-none"
+                      className={inputClass}
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    <label htmlFor="contact-phone" className="block text-sm font-bold text-[#071E41] mb-1.5">
                       Telephone
                     </label>
                     <input
+                      id="contact-phone"
                       type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
                       placeholder="(803) 000-0000"
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:border-[#071E41] focus:outline-none"
+                      className={inputClass}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    <label htmlFor="contact-inquiryType" className="block text-sm font-bold text-[#071E41] mb-1.5">
                       Inquiry Category
                     </label>
                     <select
+                      id="contact-inquiryType"
                       name="inquiryType"
                       value={formData.inquiryType}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:border-[#071E41] focus:outline-none"
+                      className={inputClass}
                     >
                       <option value="General Inquiries">General Inquiries &amp; Customer Support</option>
                       <option value="Freight Booking & Capacity">Commercial Freight Transportation (53ft Dry Van)</option>
@@ -280,27 +293,28 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                    Your Message *
+                  <label htmlFor="contact-message" className="block text-sm font-bold text-[#071E41] mb-1.5">
+                    Your Message <span className="text-red-700">*</span>
                   </label>
                   <textarea
+                    id="contact-message"
                     name="message"
                     value={formData.message}
                     onChange={handleChange}
                     required
                     rows={5}
                     placeholder="Provide details regarding your freight, schedule, or inquiry..."
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:border-[#071E41] focus:outline-none"
+                    className="w-full min-w-0 px-3.5 py-3 text-base text-slate-900 bg-white border border-slate-300 rounded-md focus:border-[#071E41] focus:ring-2 focus:ring-[#071E41]/15 focus:outline-none placeholder:text-slate-400"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded font-display transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="min-h-[48px] w-full py-3 px-5 text-sm font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded-md font-display transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  <Send className="w-3.5 h-3.5 text-[#C99A31]" />
-                  <span>{isSubmitting ? 'Transmitting...' : 'Send Message'}</span>
+                  <Send className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
+                  <span>{isSubmitting ? 'Sending Message...' : 'Send Message'}</span>
                 </button>
               </form>
             )}

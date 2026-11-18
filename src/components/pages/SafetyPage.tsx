@@ -20,16 +20,16 @@ export const SafetyPage: React.FC<SafetyPageProps> = ({ onNavigate }) => {
   return (
     <div className="bg-[#F5F7FA] min-h-screen">
       {/* Hero Header */}
-      <section className="bg-[#071E41] text-white py-14 border-b border-[#0D2C5B]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
-          <div className="max-w-3xl space-y-2">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
+      <section className="bg-[#071E41] text-white py-8 sm:py-12 border-b border-[#0D2C5B]">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
+          <div className="max-w-3xl space-y-2 text-left">
+            <span className="block text-xs font-bold uppercase tracking-widest text-[#C99A31] font-display">
               Operational Standards &amp; Maintenance Rigor
             </span>
-            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight font-display text-white">
+            <h1 className="text-[28px] sm:text-4xl lg:text-5xl font-extrabold tracking-tight font-display text-white leading-tight">
               Safety &amp; Regulatory Compliance
             </h1>
-            <p className="text-sm text-slate-300">
+            <p className="text-base text-slate-200 leading-relaxed">
               Rigorous inspection standards, certified driver qualifications, and mechanical readiness protect your freight and our communities every mile.
             </p>
           </div>
@@ -37,7 +37,7 @@ export const SafetyPage: React.FC<SafetyPageProps> = ({ onNavigate }) => {
       </section>
 
       {/* Main Content */}
-      <section className="py-14 max-w-7xl mx-auto px-4 sm:px-8 space-y-12">
+      <section className="py-8 sm:py-14 max-w-7xl mx-auto px-5 sm:px-8 space-y-10 sm:space-y-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-7 space-y-5">
             <span className="text-xs font-bold uppercase tracking-wider text-[#C99A31] font-display">
@@ -95,7 +95,7 @@ export const SafetyPage: React.FC<SafetyPageProps> = ({ onNavigate }) => {
         </div>
 
         {/* Safety Pillars */}
-        <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm space-y-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-8 shadow-sm space-y-6">
           <h3 className="text-lg font-bold text-[#071E41] font-display">
             The Momentum Safety Pillars
           </h3>

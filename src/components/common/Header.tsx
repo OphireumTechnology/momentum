@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Logo } from './Logo';
 import { COMPANY } from '../../config/company';
-import { Phone, Menu, X, ArrowRight, FileText } from 'lucide-react';
+import { Phone, Menu, X, ArrowRight, FileText, MapPin } from 'lucide-react';
 
 export type PageView =
   | 'home'
@@ -22,6 +22,8 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const navLinks: { label: string; page: PageView }[] = [
     { label: 'Home', page: 'home' },
@@ -38,27 +40,44 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [mobileMenuOpen]);
+
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200">
-      {/* Top Contact Notice Strip */}
-      <div className="bg-[#071E41] text-slate-200 text-xs py-1.5 px-4 sm:px-8 border-b border-[#0D2C5B]">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4 text-[11px] sm:text-xs">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 pt-[env(safe-area-inset-top)]">
+      {/* Desktop Top Notice Strip (Hidden on Mobile to prevent sticky header crowding & height bloat) */}
+      <div className="hidden md:block bg-[#071E41] text-slate-200 text-xs py-1.5 px-6 lg:px-8 border-b border-[#0D2C5B]">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 text-xs">
             <span className="font-medium text-white">Columbia, SC Headquarters</span>
-            <span className="hidden sm:inline text-slate-400">·</span>
-            <span className="hidden sm:inline text-slate-300">24/7 Regional Logistics &amp; Hauling Dispatch</span>
+            <span className="text-slate-400" aria-hidden="true">·</span>
+            <span className="text-slate-300">24/7 Regional Logistics &amp; Hauling Dispatch</span>
           </div>
           <div className="flex items-center gap-4">
             <a
               href={COMPANY.contact.phoneTel}
               className="inline-flex items-center gap-1.5 text-[#C99A31] font-semibold hover:text-white transition-colors"
             >
-              <Phone className="w-3 h-3" />
+              <Phone className="w-3.5 h-3.5" aria-hidden="true" />
               <span>{COMPANY.contact.formattedPhone}</span>
             </a>
-            <span className="text-slate-500">|</span>
+            <span className="text-slate-500" aria-hidden="true">|</span>
             <button
-              onClick={() => onNavigate('company-profile')}
+              type="button"
+              onClick={() => handleLinkClick('company-profile')}
               className={`hover:text-white transition-colors text-xs font-medium cursor-pointer ${
                 currentPage === 'company-profile' ? 'text-[#C99A31] font-bold' : 'text-slate-300'
               }`}
@@ -69,25 +88,28 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
         </div>
       </div>
 
-      {/* Main Navigation Bar — Strict 3-Zone Contract */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 h-20 sm:h-22 flex items-center justify-between gap-6 lg:gap-8">
+      {/* Main Navigation Bar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 md:h-20 flex items-center justify-between gap-2 sm:gap-6 lg:gap-8">
         {/* Zone 1: Brand Wordmark */}
         <button
+          type="button"
           onClick={() => handleLinkClick('home')}
-          className="focus:outline-none text-left shrink-0 cursor-pointer"
+          className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C99A31] rounded-md text-left min-w-0 shrink cursor-pointer py-1"
+          aria-label="Momentum Transportation & Hauling LLC Home"
         >
-          <Logo variant="horizontal-light" size="md" />
+          <Logo variant="horizontal-light" size="md" compactOnMobile />
         </button>
 
-        {/* Zone 2: Navigation Links (Single-line, 4-6 concise labels) */}
-        <nav className="hidden lg:flex items-center gap-7 text-sm font-medium text-slate-700">
+        {/* Zone 2: Desktop Navigation Links */}
+        <nav className="hidden lg:flex items-center gap-7 text-sm font-medium text-slate-700" aria-label="Main navigation">
           {navLinks.map((link) => {
             const isActive = currentPage === link.page;
             return (
               <button
                 key={link.page}
+                type="button"
                 onClick={() => handleLinkClick(link.page)}
-                className={`whitespace-nowrap shrink-0 transition-colors py-1 cursor-pointer ${
+                className={`whitespace-nowrap shrink-0 transition-colors py-2 cursor-pointer ${
                   isActive
                     ? 'text-[#071E41] font-bold border-b-2 border-[#C99A31]'
                     : 'text-slate-600 hover:text-[#071E41]'
@@ -99,78 +121,141 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
           })}
         </nav>
 
-        {/* Zone 3: Primary Action */}
+        {/* Zone 3: Desktop Primary Action */}
         <div className="hidden sm:flex items-center gap-3 shrink-0">
           <button
+            type="button"
             onClick={() => handleLinkClick('quote')}
-            className="px-5 py-2.5 text-xs font-bold tracking-wider uppercase text-white bg-[#071E41] hover:bg-[#041228] border border-[#071E41] rounded-md transition-all shadow-sm hover:shadow flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0"
+            className="min-h-[44px] px-5 py-2.5 text-xs font-bold tracking-wider uppercase text-white bg-[#071E41] hover:bg-[#041228] border border-[#071E41] rounded-md transition-colors shadow-sm flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0"
           >
             <span>Request a Quote</span>
-            <ArrowRight className="w-3.5 h-3.5 text-[#C99A31]" />
+            <ArrowRight className="w-3.5 h-3.5 text-[#C99A31]" aria-hidden="true" />
           </button>
         </div>
 
-        {/* Mobile Hamburger Trigger */}
-        <div className="flex lg:hidden items-center gap-2">
-          <button
-            onClick={() => handleLinkClick('quote')}
-            className="px-3 py-1.5 text-xs font-bold uppercase text-white bg-[#071E41] rounded-md sm:hidden"
+        {/* Mobile Right Controls (>= 44x44 touch targets) */}
+        <div className="flex lg:hidden items-center gap-1.5 shrink-0">
+          <a
+            href={COMPANY.contact.phoneTel}
+            aria-label={`Call dispatch at ${COMPANY.contact.formattedPhone}`}
+            className="min-w-[44px] min-h-[44px] px-2.5 inline-flex items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 text-[#071E41] hover:bg-slate-100 transition-colors"
           >
-            Quote
-          </button>
+            <Phone className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
+            <span className="hidden min-[390px]:inline sm:hidden text-xs font-bold">Call</span>
+          </a>
+
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 text-slate-700 hover:text-[#071E41] focus:outline-none"
-            aria-label="Toggle Navigation Menu"
+            ref={menuButtonRef}
+            type="button"
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-md border border-slate-200 bg-white text-[#071E41] hover:bg-slate-50 transition-colors cursor-pointer"
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation-drawer"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? (
+              <X className="w-6 h-6" aria-hidden="true" />
+            ) : (
+              <Menu className="w-6 h-6" aria-hidden="true" />
+            )}
           </button>
         </div>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Accessible Mobile Navigation Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-b border-slate-200 px-6 py-5 shadow-lg animate-in slide-in-from-top-2 duration-200">
-          <div className="flex flex-col gap-3">
-            {navLinks.map((link) => (
+        <div
+          id="mobile-navigation-drawer"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile Navigation Menu"
+          className="lg:hidden bg-white border-t border-slate-200 shadow-xl max-h-[calc(100dvh-64px)] overflow-y-auto overscroll-contain px-5 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+        >
+          <div className="flex items-center justify-between gap-3 pb-3 mb-2 border-b border-slate-200">
+            <div className="flex items-center gap-1.5 text-xs text-slate-600 min-w-0">
+              <MapPin className="w-3.5 h-3.5 text-[#C99A31] shrink-0" aria-hidden="true" />
+              <span className="truncate font-medium text-[#071E41]">Columbia, SC · 24/7 Dispatch</span>
+            </div>
+            <button
+              ref={closeButtonRef}
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                menuButtonRef.current?.focus();
+              }}
+              className="min-h-[44px] min-w-[44px] px-3 inline-flex items-center justify-center gap-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-xs font-bold text-[#071E41] cursor-pointer shrink-0"
+              aria-label="Close menu"
+            >
+              <X className="w-4 h-4" aria-hidden="true" />
+              <span>Close</span>
+            </button>
+          </div>
+
+          <nav aria-label="Mobile navigation" className="flex flex-col">
+            {navLinks.map((link) => {
+              const isActive = currentPage === link.page;
+              return (
+                <button
+                  key={link.page}
+                  type="button"
+                  onClick={() => handleLinkClick(link.page)}
+                  className={`min-h-[48px] w-full px-3 rounded-md text-left text-base font-semibold border-b border-slate-100 flex items-center justify-between cursor-pointer transition-colors ${
+                    isActive
+                      ? 'text-[#071E41] bg-[#071E41]/5 font-bold'
+                      : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <span>{link.label}</span>
+                  {isActive && <span className="w-2 h-2 rounded-full bg-[#C99A31]" aria-hidden="true" />}
+                </button>
+              );
+            })}
+
+            <div className="pt-3 mt-1 space-y-1">
               <button
-                key={link.page}
-                onClick={() => handleLinkClick(link.page)}
-                className={`text-left py-2 text-base font-semibold border-b border-slate-100 ${
-                  currentPage === link.page ? 'text-[#071E41] text-bold' : 'text-slate-700'
+                type="button"
+                onClick={() => handleLinkClick('company-profile')}
+                className={`min-h-[44px] w-full px-3 rounded-md text-left text-sm font-semibold flex items-center justify-between cursor-pointer ${
+                  currentPage === 'company-profile' ? 'text-[#071E41] bg-[#071E41]/5' : 'text-[#071E41] hover:bg-slate-50'
                 }`}
               >
-                {link.label}
-              </button>
-            ))}
-            <div className="pt-2 flex flex-col gap-2.5">
-              <button
-                onClick={() => handleLinkClick('careers')}
-                className="text-left py-2 text-sm text-slate-600 font-medium"
-              >
-                Careers &amp; Drivers
+                <span>Company Profile</span>
+                <FileText className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
               </button>
               <button
+                type="button"
                 onClick={() => handleLinkClick('safety')}
-                className="text-left py-2 text-sm text-slate-600 font-medium"
+                className="min-h-[44px] w-full px-3 rounded-md text-left text-sm font-medium text-slate-600 hover:bg-slate-50 cursor-pointer"
               >
                 Safety &amp; Compliance
               </button>
               <button
-                onClick={() => handleLinkClick('company-profile')}
-                className="text-left py-2 text-sm text-[#071E41] font-semibold flex items-center justify-between"
+                type="button"
+                onClick={() => handleLinkClick('careers')}
+                className="min-h-[44px] w-full px-3 rounded-md text-left text-sm font-medium text-slate-600 hover:bg-slate-50 cursor-pointer"
               >
-                <span>Company Profile (8-Page PDF)</span>
-                <FileText className="w-4 h-4 text-[#C99A31]" />
-              </button>
-              <button
-                onClick={() => handleLinkClick('quote')}
-                className="w-full mt-2 py-3 text-center text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] rounded-md shadow"
-              >
-                Request a Quote
+                Careers &amp; Drivers
               </button>
             </div>
-          </div>
+
+            <div className="pt-4 mt-2 border-t border-slate-200 grid grid-cols-1 gap-3">
+              <button
+                type="button"
+                onClick={() => handleLinkClick('quote')}
+                className="min-h-[48px] w-full px-5 py-3 text-center text-sm font-bold uppercase tracking-wider text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Request a Quote</span>
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              </button>
+              <a
+                href={COMPANY.contact.phoneTel}
+                className="min-h-[48px] w-full px-5 py-3 text-center text-sm font-bold text-white bg-[#071E41] hover:bg-[#041228] rounded-md flex items-center justify-center gap-2"
+              >
+                <Phone className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
+                <span>Call Dispatch: {COMPANY.contact.formattedPhone}</span>
+              </a>
+            </div>
+          </nav>
         </div>
       )}
     </header>

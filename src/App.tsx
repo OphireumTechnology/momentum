@@ -24,7 +24,7 @@ export default function App() {
     <div className="min-h-screen flex flex-col bg-[#F5F7FA]">
       <Header currentPage={currentPage} onNavigate={handleNavigate} />
 
-      <main className="flex-1">
+      <main className="flex-1 min-w-0 overflow-x-clip">
         {currentPage === 'home' && <HomePage onNavigate={handleNavigate} />}
         {currentPage === 'about' && <AboutPage onNavigate={handleNavigate} />}
         {currentPage === 'services' && <ServicesPage onNavigate={handleNavigate} />}
