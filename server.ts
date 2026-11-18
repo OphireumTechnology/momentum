@@ -676,11 +676,11 @@ app.post('/api/quotes', async (req, res) => {
   if (optional.some(k => body[k] != null && (typeof body[k] !== 'string' || body[k].length > 2000))) {
     return res.status(400).json({ success: false, code: 'INVALID_QUOTE_REQUEST' });
   }
-  const reference = 'MTH-Q-' + crypto.randomUUID().replace(/-/g,'').slice(0,12).toUpperCase();
-  const base = url.replace(/\/$/,'') + '/rest/v1/';
-  const headers = { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json', Prefer: 'return=representation' };
+  const idempotencyKey = req.get('Idempotency-Key');
+  if (!idempotencyKey || !/^[a-f0-9-]{36}$/i.test(idempotencyKey)) {
+    return res.status(400).json({ success: false, code: 'IDEMPOTENCY_KEY_REQUIRED' });
+  }
   const request = {
-    reference_number: reference,
     customer_name: body.customerName.trim(),
     company_name: body.companyName || null,
     email: body.email.trim(),
@@ -693,36 +693,28 @@ app.post('/api/quotes', async (req, res) => {
     freight_description: body.loadDescription.trim(),
     freight_weight_lbs: body.estimatedWeightLbs ? Number(body.estimatedWeightLbs) : null,
     dimensions: body.dimensions || null,
-    special_requirements: body.specialHandling || null,
-    source: 'website'
+    special_requirements: body.specialHandling || null
   };
   try {
-    const saved = await fetch(base + 'quote_requests', { method: 'POST', headers, body: JSON.stringify(request), signal: AbortSignal.timeout(10000) });
-    if (!saved.ok) {
-      console.error('Quote database insert failed', saved.status);
-      return res.status(503).json({ success: false, code: 'QUOTE_STORAGE_UNAVAILABLE' });
-    }
-    const rows = await saved.json();
-    const id = rows?.[0]?.id;
-    if (!id) return res.status(503).json({ success: false, code: 'QUOTE_STORAGE_UNAVAILABLE' });
-    const outbox = await fetch(base + 'email_outbox', {
-      method: 'POST', headers,
-      body: JSON.stringify({
-        quote_request_id: id,
-        recipient_email: 'wright.wendell@icloud.com',
-        subject: '[MOMENTUM] New Freight Quotation Request — ' + reference,
-        payload: { ...request },
-        status: 'pending'
-      }),
+    const saved = await fetch(url.replace(/\/$/,'') + '/rest/v1/rpc/submit_quote_request', {
+      method: 'POST',
+      headers: { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_quote: request, p_key: idempotencyKey }),
       signal: AbortSignal.timeout(10000)
     });
-    if (!outbox.ok) {
-      console.error('Quote notification queue insert failed', outbox.status, reference);
-      return res.status(503).json({ success: false, code: 'QUOTE_NOTIFICATION_QUEUE_UNAVAILABLE', referenceNumber: reference });
+    if (!saved.ok) {
+      console.error('Atomic quote submission failed', saved.status);
+      return res.status(saved.status === 409 ? 409 : 503).json({
+        success: false, code: saved.status === 409 ? 'IDEMPOTENCY_KEY_REUSED' : 'QUOTE_STORAGE_UNAVAILABLE'
+      });
     }
-    return res.status(201).json({
-      success: true, referenceNumber: reference, quote: { ...body, referenceNumber: reference }, status: 'received',
-      emailStatus: 'pending_domain_verification',
+    const rows = await saved.json();
+    const reference = rows?.[0]?.reference_number;
+    if (!reference) return res.status(503).json({ success: false, code: 'QUOTE_STORAGE_UNAVAILABLE' });
+    return res.status(rows[0].created ? 201 : 200).json({
+      success: true, referenceNumber: reference,
+      quote: { ...body, referenceNumber: reference },
+      status: 'received', emailStatus: 'pending_domain_verification',
       message: 'Your quote request has been saved. Our team will review it.'
     });
   } catch (error) {
