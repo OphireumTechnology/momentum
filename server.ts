@@ -721,7 +721,7 @@ app.post('/api/quotes', async (req, res) => {
       return res.status(503).json({ success: false, code: 'QUOTE_NOTIFICATION_QUEUE_UNAVAILABLE', referenceNumber: reference });
     }
     return res.status(201).json({
-      success: true, referenceNumber: reference, status: 'received',
+      success: true, referenceNumber: reference, quote: { ...body, referenceNumber: reference }, status: 'received',
       emailStatus: 'pending_domain_verification',
       message: 'Your quote request has been saved. Our team will review it.'
     });
