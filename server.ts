@@ -133,11 +133,13 @@ export async function sendNotificationEmail(params: {
   summary: string;
   fields: Record<string, any>;
 }) {
-  const auditId = `aud-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
+  const auditId = `aud-${crypto.randomUUID()}`;
   const timestamp = new Date().toISOString();
   const toAddress = OFFICIAL_RECIPIENT_EMAIL;
   const fromAddress = process.env.EMAIL_FROM || `"Momentum Operations" <dispatch@momentumhauling.com>`;
-  const replyToAddress = params.customer.email;
+  const replyToAddress = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(params.customer.email)
+    ? params.customer.email
+    : OFFICIAL_RECIPIENT_EMAIL;
 
   const fieldListText = Object.entries(params.fields)
     .filter(([_, v]) => v !== undefined && v !== null && v !== '')
@@ -684,6 +686,9 @@ app.post('/api/quotes', async (req, res) => {
 
     const refNum = `MTH-Q-${new Date().getUTCFullYear()}-${crypto.randomUUID().slice(0, 12).toUpperCase()}`;
     const weight = Number(estimatedWeightLbs) || 10000;
+    if (!Number.isFinite(weight) || weight <= 0 || weight > 200_000) {
+      return res.status(400).json({ success: false, error: 'Invalid estimated freight weight.' });
+    }
 
     const baseFee = 350;
     const estDistance = 120;
