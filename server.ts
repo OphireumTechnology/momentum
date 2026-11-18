@@ -245,16 +245,23 @@ function summarizeEmailDelivery(
   messageId: string | null;
   recipients: RecipientDeliverySummary[];
 } {
-  const recipients: RecipientDeliverySummary[] = outboxes.map((o) => ({
-    recipientEmail: o.recipient_email,
-    status: o.status,
-    delivered: o.status === 'sent',
-    provider: o.provider || null,
-    messageId: o.provider_message_id || null,
-  }));
+  const expectedRecipients = getAuthorizedQuoteRecipients();
+  // Missing rows are NOT a successful delivery. This also detects installations
+  // still using the old single-recipient database RPC.
+  const recipients: RecipientDeliverySummary[] = expectedRecipients.map((email) => {
+    const outbox = outboxes.find((o) => o.recipient_email.trim().toLowerCase() === email.toLowerCase());
+    return {
+      recipientEmail: email,
+      status: outbox?.status || 'not_queued',
+      delivered: outbox?.status === 'sent' || outbox?.status === 'delivered',
+      provider: outbox?.provider || null,
+      messageId: outbox?.provider_message_id || null,
+    };
+  });
 
   const sentCount = recipients.filter((r) => r.delivered).length;
-  const allDelivered = recipients.length > 0 && sentCount === recipients.length;
+  const allDelivered = recipients.length === expectedRecipients.length &&
+    recipients.length > 0 && sentCount === expectedRecipients.length;
 
   let status = 'pending_provider_config';
   if (allDelivered) {
@@ -324,11 +331,6 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
     const authorizedRecipients = getAuthorizedQuoteRecipients();
 
     if (supabaseUrl && supabaseKey) {
-      const previewEmail = buildQuoteNotificationEmail({
-        referenceNumber: 'PENDING',
-        submittedAtIso: new Date().toISOString(),
-        quote: normalized,
-      });
       const quotePayload = {
         customer_name: normalized.customerName,
         company_name: normalized.companyName,
@@ -343,8 +345,6 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
         freight_weight_lbs: normalized.estimatedWeightLbs,
         dimensions: normalized.dimensions,
         special_requirements: normalized.specialHandling,
-        html_body: previewEmail.htmlBody,
-        text_body: previewEmail.textBody,
         additional_details: normalized,
       };
       const saved = await fetch(supabaseUrl + '/rest/v1/rpc/submit_quote_request', {
