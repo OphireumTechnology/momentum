@@ -1,4 +1,5 @@
 import express from 'express';
+import crypto from 'node:crypto';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -10,9 +11,28 @@ dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT || 3000);
+if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
+  throw new Error('Invalid PORT environment variable');
+}
 
-app.use(express.json({ limit: '15mb' }));
+// Fail closed until server-side authentication, authorization, and tenancy are implemented.
+// Only allow demo operations on an explicitly opted-in non-production server.
+const allowDevelopmentOperations =
+  process.env.NODE_ENV !== 'production' && process.env.ENABLE_DEMO_OPERATIONS === 'true';
+app.use('/api', (req, res, next) => {
+  const publicSubmit = req.method === 'POST' &&
+    ['/quotes', '/contact', '/careers', '/support'].includes(req.path);
+  const publicAiSupport = req.method === 'POST' && req.path === '/ai/support';
+  if (publicSubmit || publicAiSupport || allowDevelopmentOperations) return next();
+  return res.status(503).json({
+    success: false,
+    code: 'SECURE_BACKEND_REQUIRED',
+    error: 'Operations and customer data APIs are disabled until secure authentication and isolation are configured.',
+  });
+});
+
+app.use(express.json({ limit: '128kb' }));
 
 // Initialize GoogleGenAI SDK with required telemetry
 const ai = process.env.GEMINI_API_KEY
@@ -261,7 +281,7 @@ Telephone: (803) 718-5509
     }
   } else {
     deliveryStatus = 'queued_pending_credentials';
-    deliveryError = 'Outbound SMTP transport credentials not provided in environment variables. Inquiry safely recorded and queued for delivery to wright.wendell@icloud.com.';
+    deliveryError = 'SMTP credentials are not configured. No durable queue is configured; delivery is unavailable.';
   }
 
   const auditRecord: EmailAuditRecord = {
@@ -629,7 +649,7 @@ app.post('/api/quotes', async (req, res) => {
       });
     }
 
-    const refNum = `MTH-Q-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const refNum = `MTH-Q-${new Date().getUTCFullYear()}-${crypto.randomUUID().slice(0, 12).toUpperCase()}`;
     const weight = Number(estimatedWeightLbs) || 10000;
 
     const baseFee = 350;
@@ -709,7 +729,7 @@ app.post('/api/quotes', async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Quotation request securely received and forwarded to wright.wendell@icloud.com.',
+      message: emailResult.delivered ? 'Quote request delivered to operations.' : 'Quote received by this server; email delivery is unconfirmed.',
       quote: newQuote,
       emailNotification: emailResult,
     });
@@ -796,7 +816,7 @@ app.post('/api/contact', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Name, email, and message are required.' });
     }
 
-    const ticketId = `MTH-MSG-${Math.floor(1000 + Math.random() * 9000)}`;
+    const ticketId = `MTH-MSG-${crypto.randomUUID().slice(0, 12).toUpperCase()}`;
 
     // Standardized subject lines per Directive §4
     let subject = `[MOMENTUM] New General Inquiry — ${ticketId}`;
@@ -849,7 +869,7 @@ app.post('/api/contact', async (req, res) => {
       success: true,
       ticketId,
       deliveryStatus: emailResult.status,
-      message: `Your inquiry has been safely received and forwarded to ${OFFICIAL_RECIPIENT_EMAIL}. Reference: ${ticketId}`,
+      message: emailResult.delivered ? `Inquiry delivered. Reference: ${ticketId}` : `Inquiry received but email delivery unconfirmed. Reference: ${ticketId}`,
       emailNotification: emailResult,
     });
   } catch (err: any) {
@@ -876,7 +896,7 @@ app.post('/api/careers', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Applicant name and contact phone number are required.' });
     }
 
-    const applicationId = `MTH-DRV-${Math.floor(1000 + Math.random() * 9000)}`;
+    const applicationId = `MTH-DRV-${crypto.randomUUID().slice(0, 12).toUpperCase()}`;
     const subject = `[MOMENTUM] Driver Application — ${applicationId}`;
 
     const emailResult = await sendNotificationEmail({
@@ -906,7 +926,7 @@ app.post('/api/careers', async (req, res) => {
       success: true,
       applicationId,
       deliveryStatus: emailResult.status,
-      message: `Driver interest application safely forwarded to ${OFFICIAL_RECIPIENT_EMAIL}. Reference: ${applicationId}`,
+      message: emailResult.delivered ? `Driver application delivered. Reference: ${applicationId}` : `Application received but email delivery unconfirmed. Reference: ${applicationId}`,
       emailNotification: emailResult,
     });
   } catch (err: any) {
@@ -930,7 +950,7 @@ app.post('/api/support', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Customer name, email, and description/message are required.' });
     }
 
-    const supportId = `MTH-SPT-${Math.floor(1000 + Math.random() * 9000)}`;
+    const supportId = `MTH-SPT-${crypto.randomUUID().slice(0, 12).toUpperCase()}`;
     const subject = `[MOMENTUM] Customer Concern — ${supportId}`;
 
     const emailResult = await sendNotificationEmail({
@@ -959,7 +979,7 @@ app.post('/api/support', async (req, res) => {
       success: true,
       ticketId: supportId,
       deliveryStatus: emailResult.status,
-      message: `Customer support request forwarded to ${OFFICIAL_RECIPIENT_EMAIL}. Reference: ${supportId}`,
+      message: emailResult.delivered ? `Support request delivered. Reference: ${supportId}` : `Support request received but email delivery unconfirmed. Reference: ${supportId}`,
       emailNotification: emailResult,
     });
   } catch (err: any) {
