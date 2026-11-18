@@ -32,6 +32,27 @@ app.use('/api', (req, res, next) => {
 });
 
 app.use(express.json({ limit: '128kb' }));
+// Basic per-instance protection for public endpoints. Multi-instance production
+// requires a shared, trusted reverse-proxy or external limiter.
+const requestWindows = new Map<string, { count: number; resetAt: number }>();
+app.use('/api', (req, res, next) => {
+  if (req.method !== 'POST') return next();
+  const now = Date.now();
+  if (requestWindows.size > 5000) {
+    for (const [key, w] of requestWindows) if (w.resetAt <= now) requestWindows.delete(key);
+  }
+  const key = req.ip || 'unknown';
+  const w = requestWindows.get(key);
+  if (!w || w.resetAt <= now) {
+    requestWindows.set(key, { count: 1, resetAt: now + 60_000 });
+    return next();
+  }
+  if (++w.count > 15) {
+    res.set('Retry-After', String(Math.ceil((w.resetAt - now) / 1000)));
+    return res.status(429).json({ success: false, code: 'RATE_LIMITED' });
+  }
+  return next();
+});
 
 // Initialize GoogleGenAI SDK with required telemetry
 const ai = process.env.GEMINI_API_KEY
@@ -641,7 +662,9 @@ app.post('/api/quotes', async (req, res) => {
       specialHandling,
     } = req.body;
 
-    if (!customerName || !email || !phone || !pickupLocation || !deliveryLocation || !loadDescription) {
+    if (![customerName, email, phone, pickupLocation, deliveryLocation, loadDescription].every(
+      (value) => typeof value === 'string' && value.trim().length > 0 && value.length <= 2000
+    ) || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
       return res.status(400).json({
         success: false,
         error: 'Please fill in all required fields (Name, Email, Phone, Origin, Destination, Load Description).',
@@ -811,7 +834,9 @@ app.patch('/api/quotes/:id', (req, res) => {
 app.post('/api/contact', async (req, res) => {
   try {
     const { name, email, phone, inquiryType, message, company } = req.body;
-    if (!name || !email || !message) {
+    if (![name, email, message].every(
+      (value) => typeof value === 'string' && value.trim().length > 0 && value.length <= 5000
+    ) || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
       return res.status(400).json({ success: false, error: 'Name, email, and message are required.' });
     }
 
@@ -891,7 +916,9 @@ app.post('/api/careers', async (req, res) => {
       notes,
     } = req.body;
 
-    if (!applicantName || !applicantPhone) {
+    if (![applicantName, applicantPhone].every(
+      (value) => typeof value === 'string' && value.trim().length > 0 && value.length <= 200
+    )) {
       return res.status(400).json({ success: false, error: 'Applicant name and contact phone number are required.' });
     }
 
@@ -945,7 +972,9 @@ app.post('/api/support', async (req, res) => {
     const trackingNumber = req.body.trackingNumber || req.body.shipmentRef || 'N/A';
     const accountNumber = req.body.accountNumber || 'N/A';
 
-    if (!customerName || !email || !description) {
+    if (![customerName, email, description].every(
+      (value) => typeof value === 'string' && value.trim().length > 0 && value.length <= 5000
+    ) || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
       return res.status(400).json({ success: false, error: 'Customer name, email, and description/message are required.' });
     }
 
