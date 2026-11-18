@@ -1,0 +1,28 @@
+name: Momentum quote release checks
+on:
+  pull_request:
+  push:
+    branches: [main, repair/main-supabase-runtime-20261118]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-package-lock
+      - run: npm run lint
+      - run: npm run build
+      - name: Validate quote integration contracts
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const server = fs.readFileSync('server.ts','utf8');
+          const pkg = JSON.parse(fs.readFileSync('package.json','utf8'));
+          assert.match(server, /rpc\/submit_quote_request/);
+          assert.match(server, /Idempotency-Key|idempotency-key/);
+          assert.equal(pkg.scripts.start, 'tsx server.ts');
+          assert.match(server, /getPersistenceBackend\(\) !== 'supabase'/);
+          NODE

@@ -94,7 +94,7 @@ interface LocalStoreState {
 export type PersistenceBackend = 'supabase' | 'local_durable_file';
 
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 export function isSupabaseConfigured(): boolean {
   return Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
@@ -102,6 +102,12 @@ export function isSupabaseConfigured(): boolean {
 
 export function getPersistenceBackend(): PersistenceBackend {
   return isSupabaseConfigured() ? 'supabase' : 'local_durable_file';
+}
+
+function assertDurableProductionStorage(): void {
+  if (process.env.NODE_ENV === 'production' && !isSupabaseConfigured()) {
+    throw new Error('SUPABASE_NOT_CONFIGURED: refusing ephemeral quote persistence in production');
+  }
 }
 
 const DATA_DIR = path.resolve(process.cwd(), 'data');
@@ -195,6 +201,7 @@ export async function findQuoteByIdempotencyKey(
     return { quote, outbox: outboxRows[0] || null };
   }
 
+  assertDurableProductionStorage();
   const state = ensureLocalStore();
   const quote = state.quote_requests.find((q) => q.idempotency_key === idempotencyKey);
   if (!quote) return null;
@@ -302,7 +309,8 @@ export async function createQuoteAndOutbox(params: {
     return { quote, outbox };
   }
 
-  // Local durable JSON store fallback
+  // Local durable JSON store fallback (development only)
+  assertDurableProductionStorage();
   const state = ensureLocalStore();
   const quote: StoredQuoteRequest = {
     id: crypto.randomUUID(),
