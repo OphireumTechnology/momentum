@@ -228,7 +228,7 @@ async function verifyInteractiveTabs(page, viewport) {
   // 4. Coverage / Service Areas page (vertical corridor tablist)
   await navigateToPage(page, viewport.width, 'Coverage');
   await assertLayoutAndTargets(page, viewport, 'service-areas');
-  const i26Tab = page.getByRole('tab', { name: /I-26 Corridor/i });
+  const i26Tab = page.getByRole('tab', { name: /I-26 Southeastern.*Port Corridor/i });
   await i26Tab.click();
   assert.equal(await i26Tab.getAttribute('aria-selected'), 'true');
 
