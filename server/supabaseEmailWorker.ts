@@ -61,7 +61,7 @@ export async function dispatchSupabaseOutboxOnce(): Promise<void> {
           },
           body: JSON.stringify({
             from: process.env.EMAIL_FROM,
-            to: [job.recipient_email],
+            to: job.recipient_email.split(',').map(email => email.trim()).filter(Boolean),
             subject: job.subject,
             text: body,
           }),
