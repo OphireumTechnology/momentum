@@ -181,7 +181,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
                 {submittedQuote.referenceNumber}
               </div>
               <p className="text-xs text-slate-300 pt-1">
-                Save this number to track your shipment in the Customer Portal or reference during telephone dispatch inquiries.
+                Save this number for reference when contacting our dispatch team about your quote request.
               </p>
             </div>
 
