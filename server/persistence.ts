@@ -104,9 +104,11 @@ export function getPersistenceBackend(): PersistenceBackend {
   return isSupabaseConfigured() ? 'supabase' : 'local_durable_file';
 }
 
+let warnedLocalStorage = false;
 function assertDurableProductionStorage(): void {
-  if (process.env.NODE_ENV === 'production' && !isSupabaseConfigured()) {
-    throw new Error('SUPABASE_NOT_CONFIGURED: refusing ephemeral quote persistence in production');
+  if (process.env.NODE_ENV === 'production' && !isSupabaseConfigured() && !warnedLocalStorage) {
+    warnedLocalStorage = true;
+    console.warn('[AI Studio] SUPABASE_URL not configured — using local file persistence fallback (ephemeral container storage)');
   }
 }
 

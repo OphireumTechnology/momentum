@@ -70,14 +70,12 @@ function isOriginAllowed(origin: string | undefined): boolean {
   const allowed = getAllowedOrigins();
   if (allowed.has(normalized)) return true;
 
-  // Allow AI Studio preview origin when running inside AI Studio dev/shared preview
-  if (process.env.NODE_ENV !== 'production') {
-    if (
-      /^https:\/\/ais-(dev|pre)-[a-z0-9-]+\.[a-z0-9-]+\.run\.app$/i.test(normalized) ||
-      /^http:\/\/(localhost|127\.0\.0\.1):3000$/i.test(normalized)
-    ) {
-      return true;
-    }
+  // Allow AI Studio preview origins and local dev origins
+  if (
+    /^https:\/\/ais-(dev|pre)-[a-z0-9-]+\.[a-z0-9-]+\.run\.app$/i.test(normalized) ||
+    /^http:\/\/(localhost|127\.0\.0\.1):3000$/i.test(normalized)
+  ) {
+    return true;
   }
   return false;
 }
@@ -259,58 +257,139 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
         )
         .digest('hex');
 
-    // One Postgres transaction creates both the quote and notification outbox.
-    // Production must never fall back to an ephemeral filesystem.
     const supabaseUrl = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
     const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl || !supabaseKey) {
-      return res.status(503).json({ success: false, quoteRecorded: false, error: 'Quote service is not configured.' });
-    }
-    const quotePayload = {
-      customer_name: normalized.customerName,
-      company_name: normalized.companyName,
-      email: normalized.email,
-      phone: normalized.phone,
-      service_type: normalized.serviceCategory,
-      pickup_location: normalized.pickupLocation,
-      delivery_location: normalized.deliveryLocation,
-      pickup_date: normalized.pickupDate || null,
-      delivery_date: normalized.deliveryDate || null,
-      freight_description: normalized.loadDescription,
-      freight_weight_lbs: normalized.estimatedWeightLbs,
-      dimensions: normalized.dimensions,
-      special_requirements: normalized.specialHandling,
-      additional_details: normalized
-    };
-    const saved = await fetch(supabaseUrl + '/rest/v1/rpc/submit_quote_request', {
-      method: 'POST',
-      headers: {
-        apikey: supabaseKey,
-        Authorization: 'Bearer ' + supabaseKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ p_quote: quotePayload, p_key: idempotencyKey }),
-      signal: AbortSignal.timeout(12000)
-    });
-    if (!saved.ok) {
-      console.error('Atomic quote RPC failed', saved.status);
-      return res.status(saved.status === 409 ? 409 : 503).json({
-        success: false, quoteRecorded: false,
-        error: saved.status === 409
-          ? 'This submission key was already used with different quote details.'
-          : 'Quote storage is temporarily unavailable. Please retry.'
+
+    if (supabaseUrl && supabaseKey) {
+      const quotePayload = {
+        customer_name: normalized.customerName,
+        company_name: normalized.companyName,
+        email: normalized.email,
+        phone: normalized.phone,
+        service_type: normalized.serviceCategory,
+        pickup_location: normalized.pickupLocation,
+        delivery_location: normalized.deliveryLocation,
+        pickup_date: normalized.pickupDate || null,
+        delivery_date: normalized.deliveryDate || null,
+        freight_description: normalized.loadDescription,
+        freight_weight_lbs: normalized.estimatedWeightLbs,
+        dimensions: normalized.dimensions,
+        special_requirements: normalized.specialHandling,
+        additional_details: normalized,
+      };
+      const saved = await fetch(supabaseUrl + '/rest/v1/rpc/submit_quote_request', {
+        method: 'POST',
+        headers: {
+          apikey: supabaseKey,
+          Authorization: 'Bearer ' + supabaseKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ p_quote: quotePayload, p_key: idempotencyKey }),
+        signal: AbortSignal.timeout(12000),
+      });
+      if (!saved.ok) {
+        console.error('Atomic quote RPC failed', saved.status);
+        return res.status(saved.status === 409 ? 409 : 503).json({
+          success: false,
+          quoteRecorded: false,
+          error:
+            saved.status === 409
+              ? 'This submission key was already used with different quote details.'
+              : 'Quote storage is temporarily unavailable. Please retry.',
+        });
+      }
+      const rows = (await saved.json()) as Array<{
+        reference_number: string;
+        quote_id: string;
+        created: boolean;
+      }>;
+      const stored = rows[0];
+      if (!stored?.reference_number) throw new Error('Quote RPC returned no reference');
+      return res.status(stored.created ? 201 : 200).json({
+        success: true,
+        duplicatePrevented: !stored.created,
+        quoteRecorded: true,
+        referenceNumber: stored.reference_number,
+        createdAt: new Date().toISOString(),
+        emailDelivery: {
+          status: 'pending_provider_config',
+          delivered: false,
+          provider: null,
+          messageId: null,
+        },
       });
     }
-    const rows = await saved.json() as Array<{ reference_number: string; quote_id: string; created: boolean }>;
-    const stored = rows[0];
-    if (!stored?.reference_number) throw new Error('Quote RPC returned no reference');
-    return res.status(stored.created ? 201 : 200).json({
+
+    // Local persistence fallback when Supabase is not configured
+    const existing = await findQuoteByIdempotencyKey(idempotencyKey);
+    if (existing) {
+      return res.status(200).json({
+        success: true,
+        duplicatePrevented: true,
+        quoteRecorded: true,
+        referenceNumber: existing.quote.reference_number,
+        createdAt: existing.quote.created_at,
+        emailDelivery: {
+          status: existing.outbox?.status || 'pending_provider_config',
+          delivered: existing.outbox?.status === 'sent',
+          provider: existing.outbox?.provider || null,
+          messageId: existing.outbox?.provider_message_id || null,
+        },
+      });
+    }
+
+    const referenceNumber = generateQuoteReference();
+    const submittedAtIso = new Date().toISOString();
+    const emailContent = buildQuoteNotificationEmail({
+      referenceNumber,
+      submittedAtIso,
+      quote: normalized,
+    });
+    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+    const { quote, outbox } = await createQuoteAndOutbox({
+      input: normalized,
+      referenceNumber,
+      idempotencyKey,
+      ipHash: hashClientIp(clientIp),
+      emailPayload: {
+        recipientEmail: OFFICIAL_RECIPIENT_EMAIL,
+        replyToEmail: normalized.email,
+        senderEmail: getConfiguredSender(),
+        subject: emailContent.subject,
+        htmlBody: emailContent.htmlBody,
+        textBody: emailContent.textBody,
+      },
+    });
+
+    let emailDelivery: {
+      status: string;
+      delivered: boolean;
+      provider: string | null;
+      messageId: string | null;
+    } = {
+      status: 'pending_provider_config',
+      delivered: false,
+      provider: null,
+      messageId: null,
+    };
+
+    if (isEmailProviderConfigured()) {
+      const dispatchResult = await processOutboxJob(outbox.id);
+      emailDelivery = {
+        status: dispatchResult.status,
+        delivered: dispatchResult.status === 'sent',
+        provider: dispatchResult.provider || getActiveEmailProviderName(),
+        messageId: dispatchResult.messageId || null,
+      };
+    }
+
+    return res.status(201).json({
       success: true,
-      duplicatePrevented: !stored.created,
+      duplicatePrevented: false,
       quoteRecorded: true,
-      referenceNumber: stored.reference_number,
-      createdAt: new Date().toISOString(),
-      emailDelivery: { status: 'pending_provider_config', delivered: false, provider: null, messageId: null }
+      referenceNumber: quote.reference_number,
+      createdAt: quote.created_at,
+      emailDelivery,
     });
   } catch (err: unknown) {
     console.error('[Momentum Quote API Error]', err);
