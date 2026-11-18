@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PageView } from '../common/Header';
-import { COMPANY, COMPANY_PHONE } from '../../config/company';
+import { COMPANY, COMPANY_EMAILS, COMPANY_PHONE } from '../../config/company';
 import { Logo } from '../common/Logo';
 import { ASSETS, ASSET_METADATA } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
@@ -124,23 +124,29 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <Mail className="w-5 h-5 text-[#C99A31] shrink-0 mt-0.5" aria-hidden="true" />
-                  <div className="min-w-0">
-                    <strong className="block text-[#071E41] mb-1">Official Company Emails</strong>
-                    <div className="flex flex-col gap-1">
-                      <div>
-                        <span className="block text-xs text-slate-600">Dispatch &amp; Operations</span>
-                        <a href={COMPANY.contact.emailMailto} className="text-slate-900 font-semibold hover:text-[#071E41] break-all inline-flex items-center min-h-[44px]">
-                          {COMPANY.contact.email}
-                        </a>
-                      </div>
-                      <div>
-                        <span className="block text-xs text-slate-600">General Inquiries</span>
-                        <a href={COMPANY.contact.secondaryEmailMailto} className="text-slate-900 font-semibold hover:text-[#071E41] break-all inline-flex items-center min-h-[44px]">
-                          {COMPANY.contact.secondaryEmail}
-                        </a>
-                      </div>
+                <div className="pt-1">
+                  <div className="rounded-lg bg-slate-50 border border-slate-200 p-4 space-y-3">
+                    <div className="flex items-center gap-2 text-[#071E41] border-b border-slate-200 pb-2">
+                      <Mail className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
+                      <strong className="text-xs font-extrabold uppercase tracking-wider font-display">
+                        Official Company Emails
+                      </strong>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3">
+                      {COMPANY_EMAILS.entries.map((entry) => (
+                        <div key={entry.key} className="min-w-0">
+                          <span className="block text-xs font-bold text-[#071E41]">
+                            {entry.label}
+                          </span>
+                          <a
+                            href={entry.href}
+                            aria-label={entry.ariaLabel}
+                            className="text-slate-900 font-semibold hover:text-[#071E41] hover:underline break-all inline-flex items-center min-h-[44px] py-1"
+                          >
+                            {entry.address}
+                          </a>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -204,7 +210,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                   <span>Inquiry Recorded Successfully</span>
                 </div>
                 <p>
-                  Your message has been assigned reference ticket <strong className="font-mono">{submittedTicket}</strong> for operations at <strong className="font-mono text-emerald-900 break-all">{COMPANY.contact.email}</strong>.
+                  Your message has been assigned reference ticket <strong className="font-mono">{submittedTicket}</strong> for our operations team (<strong className="font-mono text-emerald-900 break-all">{COMPANY_EMAILS.dispatch}</strong> &amp; <strong className="font-mono text-emerald-900 break-all">{COMPANY_EMAILS.general}</strong>).
                 </p>
                 <p className="text-xs text-emerald-800">
                   A Momentum logistics coordinator will review your message and follow up promptly via email or direct phone.

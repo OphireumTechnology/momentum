@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { PageView } from '../common/Header';
-import { COMPANY, COMPANY_PHONE } from '../../config/company';
+import { COMPANY, COMPANY_EMAILS, COMPANY_PHONE } from '../../config/company';
 import { ASSETS, ASSET_METADATA, LOGOS, COMPANY_PROFILE_PDF_URL } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 import { ResponsiveTabs, ResponsiveTabItem, getPanelId, getTabId } from '../common/ResponsiveTabs';
@@ -1626,7 +1626,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             </button>
           </div>
 
-          <div className="pt-6 border-t border-slate-700/60 max-w-md mx-auto flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-slate-300">
+          <div className="pt-6 border-t border-slate-700/60 max-w-2xl mx-auto flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2 sm:gap-5 text-xs text-slate-300">
             <a
               href={COMPANY_PHONE.href}
               aria-label={COMPANY_PHONE.ariaLabel}
@@ -1635,10 +1635,17 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               <Phone className="w-3.5 h-3.5 text-[#C99A31]" aria-hidden="true" />
               <span>{COMPANY_PHONE.display}</span>
             </a>
-            <span className="hidden sm:inline text-slate-500">·</span>
-            <a href={COMPANY.contact.emailMailto} className="min-h-[44px] inline-flex items-center font-semibold text-white hover:text-[#C99A31] break-all">
-              wright.wendell@icloud.com
-            </a>
+            {COMPANY_EMAILS.entries.map((entry) => (
+              <a
+                key={entry.key}
+                href={entry.href}
+                aria-label={entry.ariaLabel}
+                className="min-h-[44px] inline-flex items-center gap-1.5 font-semibold text-white hover:text-[#C99A31] break-all"
+              >
+                <span className="text-[#C99A31] font-bold">{entry.label}:</span>
+                <span>{entry.address}</span>
+              </a>
+            ))}
           </div>
         </div>
       </section>

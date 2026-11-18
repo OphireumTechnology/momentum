@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PageView } from '../common/Header';
-import { COMPANY, COMPANY_PHONE } from '../../config/company';
+import { COMPANY_EMAILS, COMPANY_PHONE } from '../../config/company';
 import { ASSETS, ASSET_METADATA } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 import { getApiUrl } from '../../config/api';
@@ -152,7 +152,7 @@ export const CareersPage: React.FC<CareersPageProps> = () => {
                   <span>Commercial Driver Application Submitted</span>
                 </div>
                 <p>
-                  Thank you, <strong>{applicantName}</strong>. Your driver application has been assigned reference <strong className="font-mono text-emerald-900">{submittedRef}</strong> and routed to <strong className="font-mono break-all">{COMPANY.contact.email}</strong>.
+                  Thank you, <strong>{applicantName}</strong>. Your driver application has been assigned reference <strong className="font-mono text-emerald-900">{submittedRef}</strong> and routed to our operations team (<strong className="font-mono break-all">{COMPANY_EMAILS.dispatch}</strong> &amp; <strong className="font-mono break-all">{COMPANY_EMAILS.general}</strong>).
                 </p>
                 <div className="p-3.5 bg-white/80 border border-emerald-200 rounded text-xs text-emerald-900 space-y-1">
                   <div><strong>Applicant:</strong> {applicantName} ({applicantPhone})</div>

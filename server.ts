@@ -1,4 +1,4 @@
-import { startSupabaseOutboxWorker } from './server/supabaseEmailWorker.ts';
+import { dispatchSupabaseOutboxOnce, startSupabaseOutboxWorker } from './server/supabaseEmailWorker.ts';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 import express from 'express';
@@ -12,10 +12,10 @@ import {
   buildQuoteNotificationEmail,
   escapeHtml,
   getActiveEmailProviderName,
+  getAuthorizedQuoteRecipients,
   getConfiguredSender,
   isEmailProviderConfigured,
   OFFICIAL_RECIPIENT_EMAIL,
-  OFFICIAL_QUOTE_RECIPIENTS,
   processOutboxJob,
   startOutboxRetryWorker,
 } from './server/emailOutbox.ts';
@@ -217,8 +217,69 @@ app.get('/api/health', (_req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
     persistence: getPersistenceBackend(),
     emailProviderConfigured: isEmailProviderConfigured(),
+    emailProvider: getActiveEmailProviderName(),
+    notificationRecipientCount: getAuthorizedQuoteRecipients().length,
   });
 });
+
+interface RecipientDeliverySummary {
+  recipientEmail: string;
+  status: string;
+  delivered: boolean;
+  provider: string | null;
+  messageId: string | null;
+}
+
+function summarizeEmailDelivery(
+  outboxes: Array<{
+    recipient_email: string;
+    status: string;
+    provider?: string | null;
+    provider_message_id?: string | null;
+  }>
+): {
+  status: string;
+  delivered: boolean;
+  allDelivered: boolean;
+  provider: string | null;
+  messageId: string | null;
+  recipients: RecipientDeliverySummary[];
+} {
+  const recipients: RecipientDeliverySummary[] = outboxes.map((o) => ({
+    recipientEmail: o.recipient_email,
+    status: o.status,
+    delivered: o.status === 'sent',
+    provider: o.provider || null,
+    messageId: o.provider_message_id || null,
+  }));
+
+  const sentCount = recipients.filter((r) => r.delivered).length;
+  const allDelivered = recipients.length > 0 && sentCount === recipients.length;
+
+  let status = 'pending_provider_config';
+  if (allDelivered) {
+    status = 'sent';
+  } else if (sentCount > 0) {
+    status = 'partial';
+  } else if (!isEmailProviderConfigured()) {
+    status = 'pending_provider_config';
+  } else if (recipients.length > 0 && recipients.every((r) => r.status === 'failed')) {
+    status = 'failed';
+  } else if (recipients.some((r) => r.status === 'retrying')) {
+    status = 'retrying';
+  } else if (recipients.length > 0) {
+    status = 'pending';
+  }
+
+  return {
+    status,
+    delivered: allDelivered,
+    allDelivered,
+    provider: recipients.find((r) => r.provider)?.provider || null,
+    messageId: recipients.find((r) => r.messageId)?.messageId || null,
+    recipients,
+  };
+}
 
 // 2. Automated Freight Quote Submission (Validated, Idempotent, Durable, Retried Outbox)
 app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) => {
@@ -260,8 +321,14 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
 
     const supabaseUrl = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
     const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const authorizedRecipients = getAuthorizedQuoteRecipients();
 
     if (supabaseUrl && supabaseKey) {
+      const previewEmail = buildQuoteNotificationEmail({
+        referenceNumber: 'PENDING',
+        submittedAtIso: new Date().toISOString(),
+        quote: normalized,
+      });
       const quotePayload = {
         customer_name: normalized.customerName,
         company_name: normalized.companyName,
@@ -276,6 +343,8 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
         freight_weight_lbs: normalized.estimatedWeightLbs,
         dimensions: normalized.dimensions,
         special_requirements: normalized.specialHandling,
+        html_body: previewEmail.htmlBody,
+        text_body: previewEmail.textBody,
         additional_details: normalized,
       };
       const saved = await fetch(supabaseUrl + '/rest/v1/rpc/submit_quote_request', {
@@ -306,18 +375,51 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
       }>;
       const stored = rows[0];
       if (!stored?.reference_number) throw new Error('Quote RPC returned no reference');
+
+      if (process.env.RESEND_API_KEY) {
+        await dispatchSupabaseOutboxOnce().catch((workerErr) => {
+          console.error('[Momentum] Immediate Supabase dispatch error:', workerErr instanceof Error ? workerErr.message : String(workerErr));
+        });
+      }
+
+      let outboxRows: Array<{
+        recipient_email: string;
+        status: string;
+        provider?: string | null;
+        provider_message_id?: string | null;
+      }> = [];
+      if (stored.quote_id) {
+        const outboxResp = await fetch(
+          `${supabaseUrl}/rest/v1/email_outbox?quote_request_id=eq.${encodeURIComponent(stored.quote_id)}&select=recipient_email,status,provider_message_id&order=created_at.asc`,
+          {
+            headers: {
+              apikey: supabaseKey,
+              Authorization: 'Bearer ' + supabaseKey,
+            },
+            signal: AbortSignal.timeout(8000),
+          }
+        ).catch(() => null);
+        if (outboxResp?.ok) {
+          outboxRows = (await outboxResp.json()) as typeof outboxRows;
+        }
+      }
+
+      if (outboxRows.length === 0) {
+        outboxRows = authorizedRecipients.map((recipient) => ({
+          recipient_email: recipient,
+          status: isEmailProviderConfigured() ? 'pending' : 'pending_provider_config',
+          provider: null,
+          provider_message_id: null,
+        }));
+      }
+
       return res.status(stored.created ? 201 : 200).json({
         success: true,
         duplicatePrevented: !stored.created,
         quoteRecorded: true,
         referenceNumber: stored.reference_number,
         createdAt: new Date().toISOString(),
-        emailDelivery: {
-          status: 'pending',
-          delivered: false,
-          provider: null,
-          messageId: null,
-        },
+        emailDelivery: summarizeEmailDelivery(outboxRows),
       });
     }
 
@@ -330,12 +432,7 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
         quoteRecorded: true,
         referenceNumber: existing.quote.reference_number,
         createdAt: existing.quote.created_at,
-        emailDelivery: {
-          status: existing.outbox?.status || 'pending_provider_config',
-          delivered: existing.outbox?.status === 'sent',
-          provider: existing.outbox?.provider || null,
-          messageId: existing.outbox?.provider_message_id || null,
-        },
+        emailDelivery: summarizeEmailDelivery(existing.outboxes),
       });
     }
 
@@ -347,13 +444,13 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
       quote: normalized,
     });
     const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
-    const { quote, outbox } = await createQuoteAndOutbox({
+    const { quote, outboxes } = await createQuoteAndOutbox({
       input: normalized,
       referenceNumber,
       idempotencyKey,
       ipHash: hashClientIp(clientIp),
       emailPayload: {
-        recipientEmail: OFFICIAL_QUOTE_RECIPIENTS.join(','),
+        recipientEmails: authorizedRecipients,
         replyToEmail: normalized.email,
         senderEmail: getConfiguredSender(),
         subject: emailContent.subject,
@@ -362,26 +459,19 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
       },
     });
 
-    let emailDelivery: {
-      status: string;
-      delivered: boolean;
-      provider: string | null;
-      messageId: string | null;
-    } = {
-      status: 'pending_provider_config',
-      delivered: false,
-      provider: null,
-      messageId: null,
-    };
-
     if (isEmailProviderConfigured()) {
-      const dispatchResult = await processOutboxJob(outbox.id);
-      emailDelivery = {
-        status: dispatchResult.status,
-        delivered: dispatchResult.status === 'sent',
-        provider: dispatchResult.provider || getActiveEmailProviderName(),
-        messageId: dispatchResult.messageId || null,
-      };
+      for (const job of outboxes) {
+        await processOutboxJob(job.id);
+      }
+      const refreshed = await findQuoteByIdempotencyKey(idempotencyKey);
+      return res.status(201).json({
+        success: true,
+        duplicatePrevented: false,
+        quoteRecorded: true,
+        referenceNumber: quote.reference_number,
+        createdAt: quote.created_at,
+        emailDelivery: summarizeEmailDelivery(refreshed?.outboxes || outboxes),
+      });
     }
 
     return res.status(201).json({
@@ -390,7 +480,7 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
       quoteRecorded: true,
       referenceNumber: quote.reference_number,
       createdAt: quote.created_at,
-      emailDelivery,
+      emailDelivery: summarizeEmailDelivery(outboxes),
     });
   } catch (err: unknown) {
     console.error('[Momentum Quote API Error]', err);
@@ -488,14 +578,19 @@ Respond ONLY with valid JSON with this exact structure:
   }
 });
 
-// 4. General Contact & Driver Careers Forms (HTML-escaped & routed to wright.wendell@icloud.com)
+// 4. General Contact & Driver Careers Forms (HTML-escaped & routed to official Momentum recipients)
 async function sendDirectOperationalEmail(params: {
   subject: string;
   replyTo: string;
   reference: string;
   rows: Array<[string, string]>;
-}): Promise<{ delivered: boolean; provider: string }> {
+}): Promise<{
+  delivered: boolean;
+  provider: string;
+  recipients: Array<{ recipientEmail: string; delivered: boolean; provider: string }>;
+}> {
   const sender = getConfiguredSender();
+  const recipients = getAuthorizedQuoteRecipients();
   const htmlRows = params.rows
     .map(
       ([label, value]) => `
@@ -525,23 +620,35 @@ async function sendDirectOperationalEmail(params: {
   const text = params.rows.map(([k, v]) => `${k}: ${v}`).join('\n');
 
   if (process.env.RESEND_API_KEY) {
-    const resp = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: sender,
-        to: [OFFICIAL_RECIPIENT_EMAIL],
-        reply_to: params.replyTo,
-        subject: params.subject,
-        html,
-        text,
-      }),
-    });
-    if (resp.ok) return { delivered: true, provider: 'resend' };
-    return { delivered: false, provider: 'resend' };
+    const results: Array<{ recipientEmail: string; delivered: boolean; provider: string }> = [];
+    for (const recipientEmail of recipients) {
+      try {
+        const resp = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+            'Idempotency-Key': `${params.reference}-${recipientEmail}`,
+          },
+          body: JSON.stringify({
+            from: sender,
+            to: [recipientEmail],
+            reply_to: params.replyTo,
+            subject: params.subject,
+            html,
+            text,
+          }),
+        });
+        results.push({ recipientEmail, delivered: resp.ok, provider: 'resend' });
+      } catch {
+        results.push({ recipientEmail, delivered: false, provider: 'resend' });
+      }
+    }
+    return {
+      delivered: results.length > 0 && results.every((r) => r.delivered),
+      provider: 'resend',
+      recipients: results,
+    };
   }
 
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
@@ -554,18 +661,38 @@ async function sendDirectOperationalEmail(params: {
         pass: process.env.SMTP_PASS,
       },
     });
-    await transporter.sendMail({
-      from: sender,
-      to: OFFICIAL_RECIPIENT_EMAIL,
-      replyTo: params.replyTo,
-      subject: params.subject,
-      html,
-      text,
-    });
-    return { delivered: true, provider: 'smtp' };
+    const results: Array<{ recipientEmail: string; delivered: boolean; provider: string }> = [];
+    for (const recipientEmail of recipients) {
+      try {
+        await transporter.sendMail({
+          from: sender,
+          to: recipientEmail,
+          replyTo: params.replyTo,
+          subject: params.subject,
+          html,
+          text,
+        });
+        results.push({ recipientEmail, delivered: true, provider: 'smtp' });
+      } catch {
+        results.push({ recipientEmail, delivered: false, provider: 'smtp' });
+      }
+    }
+    return {
+      delivered: results.length > 0 && results.every((r) => r.delivered),
+      provider: 'smtp',
+      recipients: results,
+    };
   }
 
-  return { delivered: false, provider: 'unconfigured' };
+  return {
+    delivered: false,
+    provider: 'unconfigured',
+    recipients: recipients.map((recipientEmail) => ({
+      recipientEmail,
+      delivered: false,
+      provider: 'unconfigured',
+    })),
+  };
 }
 
 app.post('/api/contact', contactRateLimiter, async (req: Request, res: Response) => {

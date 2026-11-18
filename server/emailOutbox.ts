@@ -12,20 +12,59 @@ import {
   updateOutboxJobResult,
 } from './persistence.ts';
 import type { StoredEmailOutbox } from './persistence.ts';
-import { COMPANY_PHONE } from '../src/config/company.ts';
+import { COMPANY_EMAILS, COMPANY_PHONE } from '../src/config/company.ts';
 
-export const OFFICIAL_QUOTE_RECIPIENTS = [
-  'wright.wendell@icloud.com',
-  'info@momentumtransporthauling.com',
-] as const;
+export const AUTHORIZED_OFFICIAL_RECIPIENTS: readonly string[] = [
+  COMPANY_EMAILS.dispatch,
+  COMPANY_EMAILS.general,
+];
 
-export const OFFICIAL_RECIPIENT_EMAIL =
-  process.env.OFFICIAL_RECIPIENT_EMAIL || OFFICIAL_QUOTE_RECIPIENTS[0];
+const AUTHORIZED_RECIPIENT_SET = new Set(
+  AUTHORIZED_OFFICIAL_RECIPIENTS.map((email) => email.toLowerCase())
+);
+
+export const OFFICIAL_RECIPIENT_EMAIL = COMPANY_EMAILS.dispatch;
+
+export function isAuthorizedRecipient(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return AUTHORIZED_RECIPIENT_SET.has(email.trim().toLowerCase());
+}
+
+/**
+ * Server-side recipient allowlisting:
+ * Reads QUOTE_NOTIFICATION_EMAILS (comma-separated) if configured, filters strictly
+ * against the authorized official company email allowlist, and ensures both
+ * official addresses receive notifications when unset or incomplete.
+ */
+export function getAuthorizedQuoteRecipients(): string[] {
+  const configuredRaw = process.env.QUOTE_NOTIFICATION_EMAILS || '';
+  if (!configuredRaw.trim()) {
+    return [...AUTHORIZED_OFFICIAL_RECIPIENTS];
+  }
+
+  const parsed = configuredRaw
+    .split(',')
+    .map((item) => item.trim().toLowerCase())
+    .filter((item) => isAuthorizedRecipient(item));
+
+  const unique = Array.from(new Set(parsed));
+  if (unique.length === 0) {
+    return [...AUTHORIZED_OFFICIAL_RECIPIENTS];
+  }
+
+  // Ensure both official company recipients are covered if only partial env config was supplied
+  for (const official of AUTHORIZED_OFFICIAL_RECIPIENTS) {
+    if (!unique.includes(official.toLowerCase())) {
+      unique.push(official.toLowerCase());
+    }
+  }
+  return unique;
+}
 
 export function getConfiguredSender(): string {
   return (
     process.env.EMAIL_FROM ||
-    'Momentum Transportation & Hauling <quotes@momentumhauling.com>'
+    'Momentum Dispatch <quotes@momentumtransporthauling.com>'
   );
 }
 
@@ -66,6 +105,33 @@ function getUrgencyLabel(value: string): string {
   );
 }
 
+function renderEmailSectionTable(title: string, rows: Array<[string, string]>): string {
+  const htmlRows = rows
+    .map(
+      ([label, value]) => `
+        <tr>
+          <td style="padding: 9px 14px; font-weight: 700; color: #071E41; border-bottom: 1px solid #E5E7EB; width: 38%; background-color: #F8FAFC; vertical-align: top;">
+            ${escapeHtml(label)}
+          </td>
+          <td style="padding: 9px 14px; color: #1F2937; border-bottom: 1px solid #E5E7EB; vertical-align: top;">
+            ${escapeHtml(value).replace(/\n/g, '<br/>')}
+          </td>
+        </tr>`
+    )
+    .join('');
+
+  return `
+    <div style="margin-bottom: 18px;">
+      <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: #071E41; border-bottom: 2px solid #C99A31; padding-bottom: 5px; margin-bottom: 8px;">
+        ${escapeHtml(title)}
+      </div>
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px; border: 1px solid #E5E7EB;">
+        <tbody>${htmlRows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
 export function buildQuoteNotificationEmail(params: {
   referenceNumber: string;
   submittedAtIso: string;
@@ -88,75 +154,86 @@ export function buildQuoteNotificationEmail(params: {
   const subject = `[MOMENTUM QUOTE] ${referenceNumber} — ${quote.pickupLocation} to ${quote.deliveryLocation} (${quote.serviceGroup.replace('_', ' ').toUpperCase()})`;
 
   const serviceDetailRows: Array<[string, string]> = [];
-  const d = quote.serviceDetails;
+  const d = quote.serviceDetails || {};
   if (quote.serviceGroup === 'dry_van') {
     serviceDetailRows.push(['Dry Van Seal Required', d.dryVanSealRequired ? 'Yes' : 'No']);
-    if (d.dryVanStackable) serviceDetailRows.push(['Pallet Stackability', d.dryVanStackable]);
-    if (d.dryVanAppointmentWindow) {
-      serviceDetailRows.push(['Dock / Appointment Window', d.dryVanAppointmentWindow]);
-    }
+    serviceDetailRows.push(['Pallet Stackability', d.dryVanStackable || 'Not specified (optional)']);
+    serviceDetailRows.push([
+      'Dock / Appointment Window',
+      d.dryVanAppointmentWindow || 'Not provided (optional)',
+    ]);
   } else if (quote.serviceGroup === 'flatbed') {
-    if (d.flatbedTarping) serviceDetailRows.push(['Tarping Requirement', d.flatbedTarping]);
-    if (d.flatbedSecurement) serviceDetailRows.push(['Securement Needs', d.flatbedSecurement]);
+    serviceDetailRows.push(['Tarping Requirement', d.flatbedTarping || 'Not specified (optional)']);
+    serviceDetailRows.push(['Securement Needs', d.flatbedSecurement || 'Not specified (optional)']);
     serviceDetailRows.push(['Side / Crane Loading', d.flatbedSideLoading ? 'Yes' : 'No']);
   } else if (quote.serviceGroup === 'cargo_van') {
     serviceDetailRows.push(['Inside Delivery Needed', d.cargoVanInsideDelivery ? 'Yes' : 'No']);
-    if (d.cargoVanPieceCount) serviceDetailRows.push(['Piece Count', d.cargoVanPieceCount]);
-    if (d.cargoVanDockOrJobsite) {
-      serviceDetailRows.push(['Delivery Environment', d.cargoVanDockOrJobsite]);
-    }
+    serviceDetailRows.push(['Piece Count', d.cargoVanPieceCount || 'Not provided (optional)']);
+    serviceDetailRows.push([
+      'Delivery Environment',
+      d.cargoVanDockOrJobsite || 'Not specified (optional)',
+    ]);
   } else if (quote.serviceGroup === 'heavy_haul') {
-    if (d.heavyHaulTrailerType) serviceDetailRows.push(['Preferred Trailer Type', d.heavyHaulTrailerType]);
-    if (d.heavyHaulEquipmentModel) {
-      serviceDetailRows.push(['Equipment Make / Model', d.heavyHaulEquipmentModel]);
-    }
-    if (d.heavyHaulIsOperable) serviceDetailRows.push(['Machine Operability', d.heavyHaulIsOperable]);
+    serviceDetailRows.push([
+      'Preferred Trailer Type',
+      d.heavyHaulTrailerType || 'Not specified (optional)',
+    ]);
+    serviceDetailRows.push([
+      'Equipment Make / Model',
+      d.heavyHaulEquipmentModel || 'Not provided (optional)',
+    ]);
+    serviceDetailRows.push([
+      'Machine Operability',
+      d.heavyHaulIsOperable || 'Not specified (optional)',
+    ]);
     serviceDetailRows.push([
       'Oversize Permits / Escort Needed',
       d.heavyHaulPermitsNeeded ? 'Yes' : 'No / Unsure',
     ]);
   }
 
-  const allRows: Array<[string, string]> = [
+  const customerRows: Array<[string, string]> = [
     ['Quote Reference Number', referenceNumber],
-    ['Submitted Timestamp', `${formattedTimestamp} EST (${submittedAtIso})`],
-    ['Customer Name', quote.customerName],
-    ['Company Name', quote.companyName || 'Not provided'],
-    ['Customer Email (Reply-To)', quote.email],
-    ['Phone Number', quote.phone],
+    ['Submission Date & Time', `${formattedTimestamp} EST (${submittedAtIso})`],
+    ['Customer Full Name', quote.customerName],
+    ['Company / Business Name', quote.companyName || 'Not provided (optional)'],
+    ['Customer Email Address (Reply-To)', quote.email],
+    ['Customer Telephone Number', quote.phone],
     ['Preferred Contact Method', quote.preferredContactMethod.toUpperCase()],
-    ['Service Category', serviceLabel],
-    ['Urgency', urgencyLabel],
+  ];
+
+  const routeRows: Array<[string, string]> = [
+    ['Requested Transportation Service', serviceLabel],
+    ['Schedule Urgency', urgencyLabel],
     ['Pickup Address / Location', quote.pickupLocation],
     ['Delivery Address / Location', quote.deliveryLocation],
     ['Requested Pickup Date', quote.pickupDate],
-    ['Requested Delivery Date', quote.deliveryDate || 'Flexible / Coordinate with Dispatch'],
-    ['Cargo Type', quote.cargoType],
-    ['Cargo Description', quote.loadDescription],
-    ['Estimated Weight', `${quote.estimatedWeightLbs.toLocaleString()} lbs`],
-    ['Dimensions', quote.dimensions || 'Not specified'],
-    ['Pallet Count / Equipment Details', quote.palletCountOrEquipment || 'Not specified'],
-    ['Loading / Unloading Requirements', loadingLabel],
-    ['Oversized Load Declaration', quote.isOversized ? 'YES — Oversized Freight Declared' : 'No'],
-    ['Hazardous Material (Hazmat)', quote.isHazmat ? `YES — ${quote.hazmatDetails}` : 'No'],
-    ...serviceDetailRows,
-    ['Special Handling Instructions', quote.specialHandling || 'None'],
-    ['Consent to Be Contacted', 'Confirmed by customer at submission'],
+    ['Requested Delivery Date', quote.deliveryDate || 'Not provided — Flexible / Coordinate with Dispatch (optional)'],
   ];
 
-  const htmlRows = allRows
-    .map(
-      ([label, value]) => `
-        <tr>
-          <td style="padding: 10px 14px; font-weight: 700; color: #071E41; border-bottom: 1px solid #E5E7EB; width: 38%; background-color: #F8FAFC; vertical-align: top;">
-            ${escapeHtml(label)}
-          </td>
-          <td style="padding: 10px 14px; color: #1F2937; border-bottom: 1px solid #E5E7EB; vertical-align: top;">
-            ${escapeHtml(value).replace(/\n/g, '<br/>')}
-          </td>
-        </tr>`
-    )
-    .join('');
+  const cargoRows: Array<[string, string]> = [
+    ['Cargo Type', quote.cargoType],
+    ['Freight / Cargo Description', quote.loadDescription],
+    ['Estimated Weight', `${quote.estimatedWeightLbs.toLocaleString()} lbs`],
+    ['Dimensions (L x W x H)', quote.dimensions || 'Not provided (optional)'],
+    ['Pallet Count / Equipment Units', quote.palletCountOrEquipment || 'Not provided (optional)'],
+    ['Loading / Unloading Requirements', loadingLabel],
+    ...serviceDetailRows,
+  ];
+
+  const specialRows: Array<[string, string]> = [
+    ['Oversized Load Declaration', quote.isOversized ? 'YES — Oversized Freight Declared' : 'No'],
+    ['Hazardous Material (Hazmat)', quote.isHazmat ? `YES — ${quote.hazmatDetails}` : 'No'],
+    ['Additional Customer Instructions', quote.specialHandling || 'None provided (optional)'],
+    ['Accuracy & Contact Consent', 'Confirmed by customer at submission'],
+  ];
+
+  const allRows: Array<[string, string]> = [
+    ...customerRows,
+    ...routeRows,
+    ...cargoRows,
+    ...specialRows,
+  ];
 
   const htmlBody = `<!DOCTYPE html>
 <html lang="en">
@@ -165,10 +242,10 @@ export function buildQuoteNotificationEmail(params: {
     <title>${escapeHtml(subject)}</title>
   </head>
   <body style="margin: 0; padding: 24px; background-color: #F5F7FA; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-    <div style="max-width: 680px; margin: 0 auto; background-color: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden;">
+    <div style="max-width: 700px; margin: 0 auto; background-color: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden;">
       <div style="background-color: #071E41; padding: 24px; border-bottom: 4px solid #C99A31; color: #FFFFFF;">
         <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #C99A31; font-weight: 700;">
-          Automated Freight Quote Request
+          Automated Freight Quote Notification
         </div>
         <h1 style="margin: 6px 0 0 0; font-size: 20px; font-weight: 800; color: #FFFFFF;">
           MOMENTUM TRANSPORTATION &amp; HAULING LLC
@@ -179,19 +256,21 @@ export function buildQuoteNotificationEmail(params: {
       </div>
 
       <div style="padding: 24px;">
-        <div style="background-color: #F8FAFC; border-left: 4px solid #071E41; padding: 12px 16px; margin-bottom: 20px;">
+        <div style="background-color: #F8FAFC; border-left: 4px solid #071E41; padding: 14px 16px; margin-bottom: 20px;">
           <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">Quote Reference</div>
           <div style="font-size: 20px; font-weight: 800; color: #071E41; font-family: monospace;">${escapeHtml(referenceNumber)}</div>
           <div style="font-size: 12px; color: #475569; margin-top: 4px;">
             Route: <strong>${escapeHtml(quote.pickupLocation)}</strong> &rarr; <strong>${escapeHtml(quote.deliveryLocation)}</strong>
           </div>
+          <div style="font-size: 11px; color: #64748B; margin-top: 4px;">
+            Official Routing: ${escapeHtml(AUTHORIZED_OFFICIAL_RECIPIENTS.join(' · '))}
+          </div>
         </div>
 
-        <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px;">
-          <tbody>
-            ${htmlRows}
-          </tbody>
-        </table>
+        ${renderEmailSectionTable('1. Customer & Contact Information', customerRows)}
+        ${renderEmailSectionTable('2. Service & Route Schedule', routeRows)}
+        ${renderEmailSectionTable('3. Cargo & Equipment Specifications', cargoRows)}
+        ${renderEmailSectionTable('4. Declarations & Additional Instructions', specialRows)}
 
         <div style="background-color: #FFFBEB; border: 1px solid #FDE68A; padding: 12px 16px; border-radius: 6px; font-size: 12px; color: #92400E;">
           <strong>Direct Reply Ready:</strong> Reply directly to this email to respond to <strong>${escapeHtml(quote.customerName)}</strong> at <a href="mailto:${escapeHtml(quote.email)}" style="color: #071E41;">${escapeHtml(quote.email)}</a>.
@@ -199,7 +278,8 @@ export function buildQuoteNotificationEmail(params: {
       </div>
 
       <div style="background-color: #F8FAFC; padding: 14px 24px; border-top: 1px solid #E5E7EB; font-size: 11px; color: #64748B; text-align: center;">
-        Momentum Transportation &amp; Hauling LLC · 2 Penhurst Ct., Columbia, SC 29229 · <a href="${COMPANY_PHONE.href}" style="color: #071E41; text-decoration: underline;">${COMPANY_PHONE.display}</a>
+        Momentum Transportation &amp; Hauling LLC · 2 Penhurst Ct., Columbia, SC 29229 · <a href="${COMPANY_PHONE.href}" style="color: #071E41; text-decoration: underline;">${COMPANY_PHONE.display}</a><br/>
+        Dispatch: ${escapeHtml(COMPANY_EMAILS.dispatch)} · General Inquiries: ${escapeHtml(COMPANY_EMAILS.general)}
       </div>
     </div>
   </body>
@@ -210,6 +290,7 @@ export function buildQuoteNotificationEmail(params: {
     '==============================================================',
     ...allRows.map(([label, value]) => `${label}: ${value}`),
     '==============================================================',
+    `Official Notification Recipients: ${AUTHORIZED_OFFICIAL_RECIPIENTS.join(', ')}`,
     `Reply directly to this email to contact ${quote.customerName} (${quote.email}).`,
     `Dispatch Desk: ${COMPANY_PHONE.display} (${COMPANY_PHONE.e164}) · 2 Penhurst Ct., Columbia, SC 29229`,
   ].join('\n');
@@ -237,7 +318,7 @@ async function sendViaResend(job: StoredEmailOutbox): Promise<ProviderSendResult
     },
     body: JSON.stringify({
       from: job.sender_email,
-      to: job.recipient_email.split(',').map(email => email.trim()).filter(Boolean),
+      to: [job.recipient_email],
       reply_to: job.reply_to_email,
       subject: job.subject,
       html: job.html_body,
@@ -295,6 +376,9 @@ async function sendViaSmtp(job: StoredEmailOutbox): Promise<ProviderSendResult> 
 async function dispatchToConfiguredProvider(
   job: StoredEmailOutbox
 ): Promise<ProviderSendResult> {
+  if (!isAuthorizedRecipient(job.recipient_email)) {
+    throw new Error(`Recipient blocked by server allowlist: ${job.recipient_email}`);
+  }
   if (process.env.RESEND_API_KEY) {
     return await sendViaResend(job);
   }
@@ -315,7 +399,7 @@ function computeNextRetryIso(attemptNumber: number): string {
 
 async function emitFailureAlert(job: StoredEmailOutbox, errorMsg: string): Promise<void> {
   console.error(
-    `[MOMENTUM EMAIL ALERT] Delivery failed for ${job.reference_number} (outbox ${job.id}) after ${job.attempt_count} attempts: ${errorMsg}`
+    `[MOMENTUM EMAIL ALERT] Delivery failed for ${job.reference_number} (outbox ${job.id}, recipient ${job.recipient_email}) after ${job.attempt_count} attempts: ${errorMsg}`
   );
   const webhookUrl = process.env.ALERT_WEBHOOK_URL;
   if (!webhookUrl) return;
@@ -341,6 +425,7 @@ async function emitFailureAlert(job: StoredEmailOutbox, errorMsg: string): Promi
 
 export async function processOutboxJob(outboxId: string): Promise<{
   status: 'sent' | 'retrying' | 'failed' | 'skipped';
+  recipientEmail?: string;
   provider?: string;
   messageId?: string;
   error?: string;
@@ -357,6 +442,7 @@ export async function processOutboxJob(outboxId: string): Promise<{
     attemptNumber: nextAttempt,
     eventType: 'attempt_started',
     provider: getActiveEmailProviderName(),
+    metadata: { recipientEmail: claimed.recipient_email },
   });
 
   try {
@@ -380,16 +466,19 @@ export async function processOutboxJob(outboxId: string): Promise<{
       eventType: 'delivered',
       provider: result.provider,
       providerMessageId: result.messageId,
+      metadata: { recipientEmail: claimed.recipient_email },
     });
 
     return {
       status: 'sent',
+      recipientEmail: claimed.recipient_email,
       provider: result.provider,
       messageId: result.messageId,
     };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
-    const exhausted = nextAttempt >= claimed.max_attempts;
+    const blockedByAllowlist = errorMsg.includes('allowlist');
+    const exhausted = blockedByAllowlist || nextAttempt >= claimed.max_attempts;
 
     if (exhausted) {
       await updateOutboxJobResult(claimed.id, {
@@ -406,10 +495,15 @@ export async function processOutboxJob(outboxId: string): Promise<{
         eventType: 'permanent_failure',
         provider: getActiveEmailProviderName(),
         errorMessage: errorMsg,
+        metadata: { recipientEmail: claimed.recipient_email },
       });
 
       await emitFailureAlert({ ...claimed, attempt_count: nextAttempt }, errorMsg);
-      return { status: 'failed', error: errorMsg };
+      return {
+        status: 'failed',
+        recipientEmail: claimed.recipient_email,
+        error: errorMsg,
+      };
     }
 
     const nextRetryAt = computeNextRetryIso(nextAttempt);
@@ -428,10 +522,14 @@ export async function processOutboxJob(outboxId: string): Promise<{
       eventType: 'retry_scheduled',
       provider: getActiveEmailProviderName(),
       errorMessage: errorMsg,
-      metadata: { nextRetryAt },
+      metadata: { nextRetryAt, recipientEmail: claimed.recipient_email },
     });
 
-    return { status: 'retrying', error: errorMsg };
+    return {
+      status: 'retrying',
+      recipientEmail: claimed.recipient_email,
+      error: errorMsg,
+    };
   }
 }
 

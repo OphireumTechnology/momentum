@@ -1,6 +1,6 @@
 import React from 'react';
 import { Logo } from './Logo';
-import { COMPANY, COMPANY_PHONE } from '../../config/company';
+import { COMPANY, COMPANY_EMAILS, COMPANY_PHONE } from '../../config/company';
 import { COMPANY_PROFILE_PDF_URL } from '../../config/assets';
 import { PageView } from './Header';
 import { Phone, Mail, MapPin, Shield, ArrowUpRight, FileText } from 'lucide-react';
@@ -79,20 +79,25 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                   <span>{COMPANY_PHONE.display}</span>
                 </a>
               </div>
-              <div>
-                <a
-                  href={COMPANY.contact.emailMailto}
-                  className="min-h-[44px] inline-flex items-center gap-2.5 text-slate-200 hover:text-white transition-colors break-all"
-                >
-                  <Mail className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
-                  <span>{COMPANY.contact.email}</span>
-                </a>
-              </div>
-              <div>
-                <a href={COMPANY.contact.secondaryEmailMailto} className="min-h-[44px] inline-flex items-center gap-2.5 text-slate-200 hover:text-white transition-colors break-all">
-                  <Mail className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
-                  <span>{COMPANY.contact.secondaryEmail}</span>
-                </a>
+              <div className="pt-2 space-y-2 border-t border-[#0D2C5B]/80">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[#C99A31] font-display">
+                  Official Company Emails
+                </div>
+                {COMPANY_EMAILS.entries.map((entry) => (
+                  <div key={entry.key} className="min-w-0">
+                    <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                      {entry.label}
+                    </span>
+                    <a
+                      href={entry.href}
+                      aria-label={entry.ariaLabel}
+                      className="min-h-[44px] inline-flex items-center gap-2.5 text-slate-200 hover:text-white transition-colors break-all"
+                    >
+                      <Mail className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
+                      <span>{entry.address}</span>
+                    </a>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
