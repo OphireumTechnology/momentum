@@ -24,5 +24,9 @@ jobs:
           assert.match(server, /rpc\/submit_quote_request/);
           assert.match(server, /Idempotency-Key|idempotency-key/);
           assert.equal(pkg.scripts.start, 'tsx server.ts');
-          assert.match(server, /getPersistenceBackend\(\) !== 'supabase'/);
+          const worker = fs.readFileSync('server/supabaseEmailWorker.ts', 'utf8');
+          assert.match(server, /getPersistenceBackend\(\) === 'supabase'\) startSupabaseOutboxWorker\(\)/);
+          assert.match(server, /else startOutboxRetryWorker\(30_000\)/);
+          assert.match(worker, /Idempotency-Key/);
+          assert.match(worker, /status=eq.pending/);
           NODE
