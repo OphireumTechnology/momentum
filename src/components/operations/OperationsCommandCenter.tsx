@@ -50,6 +50,24 @@ type ModuleTab =
   | 'settings';
 
 export const OperationsCommandCenter: React.FC<OperationsCommandCenterProps> = ({ onNavigate }) => {
+  // Secure operations login/RBAC is pending. Hide all privileged content and
+  // disable API-triggering controls until real authenticated sessions exist.
+  if (import.meta.env.MODE !== 'development' || import.meta.env.VITE_ENABLE_DEMO_OPERATIONS !== 'true') {
+    return (
+      <section className="min-h-screen bg-[#F5F7FA] flex items-center justify-center p-8">
+        <div className="bg-white max-w-xl border border-slate-200 rounded-xl shadow-sm p-8 text-center space-y-5">
+          <ShieldCheck className="w-12 h-12 text-[#071E41] mx-auto" />
+          <h1 className="text-2xl font-bold text-[#071E41]">Operations Access Restricted</h1>
+          <p className="text-slate-700">
+            This command center requires verified staff authentication, role-based
+            authorization, and server-side audit controls before production use.
+          </p>
+          <button onClick={() => onNavigate('home')}
+            className="bg-[#071E41] text-white font-semibold px-6 py-3 rounded">Return to Website</button>
+        </div>
+      </section>
+    );
+  }
   const [currentRole, setCurrentRole] = useState<UserRole>('executive');
   const [activeTab, setActiveTab] = useState<ModuleTab>('overview');
 
