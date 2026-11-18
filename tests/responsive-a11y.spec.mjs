@@ -197,7 +197,7 @@ async function verifyInteractiveTabs(page, viewport) {
   // 2. Services page (5 tabs)
   await navigateToPage(page, viewport.width, 'Services');
   await assertLayoutAndTargets(page, viewport, 'services');
-  for (const serviceLabel of ['Heavy Hauling', 'Cargo Van', '53ft Dry Van', 'Flatbed & Step Deck', 'Freight Transport']) {
+  for (const serviceLabel of ['Freight Transport', 'Commercial Hauling', 'Regional Corridors', 'Cargo Van Delivery', 'Construction Hauling & Logistics']) {
     const tab = page.getByRole('tab', { name: new RegExp(serviceLabel, 'i') });
     await tab.click();
     assert.equal(await tab.getAttribute('aria-selected'), 'true');
@@ -212,14 +212,14 @@ async function verifyInteractiveTabs(page, viewport) {
   await assertLayoutAndTargets(page, viewport, 'fleet');
   if (viewport.width < 768) {
     const select = page.locator('#fleet-mobile-select');
-    await select.selectOption('flatbed');
-    assert.equal(await select.inputValue(), 'flatbed');
+    await select.selectOption('Flatbed');
+    assert.equal(await select.inputValue(), 'Flatbed');
     await page.getByRole('button', { name: /next fleet equipment category/i }).click();
-    assert.equal(await select.inputValue(), 'step-deck');
+    assert.equal(await select.inputValue(), 'Heavy Haul');
   } else {
-    const stepDeckTab = page.getByRole('tab', { name: /Step Deck/i });
-    await stepDeckTab.click();
-    assert.equal(await stepDeckTab.getAttribute('aria-selected'), 'true');
+    const heavyHaulTab = page.getByRole('tab', { name: /Heavy Haul/i });
+    await heavyHaulTab.click();
+    assert.equal(await heavyHaulTab.getAttribute('aria-selected'), 'true');
   }
   if (viewport.capture) {
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, `fleet-${viewport.name}.png`), fullPage: false });
