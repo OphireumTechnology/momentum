@@ -636,7 +636,9 @@ app.all('/api/*', (_req: Request, res: Response) => {
 
 async function startServer() {
   // Start durable email retry worker (survives restarts via Supabase / local durable store)
-  startOutboxRetryWorker(30_000);
+  // The atomic Supabase queue uses a different schema from the legacy worker.
+  // Never run that worker against the production Supabase outbox.
+  if (getPersistenceBackend() !== 'supabase') startOutboxRetryWorker(30_000);
   void purgeExpiredLocalRecords();
 
   app.use(express.static(path.resolve(__dirname, 'public')));
