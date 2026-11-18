@@ -661,7 +661,7 @@ async function startServer() {
       setHeaders(res: import('http').ServerResponse, filePath: string) {
         if (filePath.endsWith('index.html')) {
           res.setHeader('Cache-Control', 'no-store, max-age=0');
-        } else if (/\\/assets\\/|\\\\assets\\\\/.test(filePath)) {
+        } else if (filePath.includes('/assets/') || filePath.includes('\\assets\\')) {
           res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
         }
       },
