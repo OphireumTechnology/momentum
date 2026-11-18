@@ -233,12 +233,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
               </button>
 
               <div className="flex items-center gap-3">
-                <button
-                  onClick={() => onNavigate('portal')}
-                  className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded font-display cursor-pointer"
-                >
-                  View in Customer Portal
-                </button>
+
                 <button
                   onClick={() => {
                     setSubmittedQuote(null);
