@@ -168,7 +168,12 @@ export async function dispatchSupabaseOutboxOnce(): Promise<void> {
     due.searchParams.set('order', 'created_at.asc');
     due.searchParams.set('limit', '10');
     const res = await fetch(due, { headers: headers(), signal: AbortSignal.timeout(12000) });
-    if (!res.ok) throw new Error('Supabase outbox read failed: HTTP ' + res.status);
+    if (!res.ok) {
+      // PostgREST returns a structured error body identifying invalid filters,
+      // missing columns and schema-cache issues. Do not log request headers.
+      const errorText = (await res.text()).slice(0, 600);
+      throw new Error('Supabase outbox read failed: HTTP ' + res.status + ' ' + errorText);
+    }
     const jobs = (await res.json()) as OutboxJob[];
     for (const job of jobs) {
       if (job.attempt_count >= job.max_attempts) {
