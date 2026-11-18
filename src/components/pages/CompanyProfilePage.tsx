@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PageView } from '../common/Header';
-import { COMPANY } from '../../config/company';
+import { COMPANY_PHONE } from '../../config/company';
 import { LOGOS, ASSETS, COMPANY_PROFILE_PDF_URL } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 import {
@@ -141,10 +141,14 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
                   <MapPin className="w-3.5 h-3.5 text-[#C99A31]" />
                   <span>Columbia, South Carolina · USA</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5 text-[#C99A31]" />
-                  <span>(803) 718-5509</span>
-                </div>
+                <a
+                  href={COMPANY_PHONE.href}
+                  aria-label={COMPANY_PHONE.ariaLabel}
+                  className="flex items-center gap-2 hover:text-[#C99A31] transition-colors"
+                >
+                  <Phone className="w-3.5 h-3.5 text-[#C99A31]" aria-hidden="true" />
+                  <span>{COMPANY_PHONE.display}</span>
+                </a>
                 <div className="flex items-center gap-2">
                   <FileCheck className="w-3.5 h-3.5 text-[#C99A31]" />
                   <span>Complete 8-Page Document · 2.7 MB</span>
@@ -272,8 +276,12 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
                   </div>
                   <div>
                     <span className="font-bold text-slate-500 uppercase text-[10px] block">Direct Operations &amp; Dispatch:</span>
-                    <a href="tel:8037185509" className="font-bold text-[#071E41] hover:text-[#C99A31]">
-                      (803) 718-5509
+                    <a
+                      href={COMPANY_PHONE.href}
+                      aria-label={COMPANY_PHONE.ariaLabel}
+                      className="font-bold text-[#071E41] hover:text-[#C99A31]"
+                    >
+                      {COMPANY_PHONE.display}
                     </a>
                     <span className="block text-slate-600">wright.wendell@icloud.com</span>
                   </div>
@@ -931,8 +939,12 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
                   <Phone className="w-4 h-4 text-[#C99A31]" />
                   <span className="font-bold uppercase tracking-wider text-xs font-display">Direct Operations &amp; Dispatch</span>
                 </div>
-                <a href="tel:8037185509" className="text-base font-bold text-[#071E41] hover:text-[#C99A31] block">
-                  (803) 718-5509
+                <a
+                  href={COMPANY_PHONE.href}
+                  aria-label={COMPANY_PHONE.ariaLabel}
+                  className="text-base font-bold text-[#071E41] hover:text-[#C99A31] inline-flex items-center min-h-[44px]"
+                >
+                  {COMPANY_PHONE.display}
                 </a>
                 <div className="text-xs text-slate-600">
                   Immediate capacity, scheduling &amp; dispatch
@@ -1006,11 +1018,12 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ onNaviga
               </div>
               <div className="flex flex-wrap items-center gap-3 shrink-0">
                 <a
-                  href="tel:8037185509"
-                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5"
+                  href={COMPANY_PHONE.href}
+                  aria-label={COMPANY_PHONE.ariaLabel}
+                  className="min-h-[44px] px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5"
                 >
-                  <Phone className="w-3.5 h-3.5 text-[#C99A31]" />
-                  <span>Call (803) 718-5509</span>
+                  <Phone className="w-3.5 h-3.5 text-[#C99A31]" aria-hidden="true" />
+                  <span>Call {COMPANY_PHONE.display}</span>
                 </a>
                 <button
                   onClick={() => onNavigate('quote')}

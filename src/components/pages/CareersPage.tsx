@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PageView } from '../common/Header';
-import { COMPANY } from '../../config/company';
+import { COMPANY, COMPANY_PHONE } from '../../config/company';
 import { ASSETS, ASSET_METADATA } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 import { getApiUrl } from '../../config/api';
@@ -64,7 +64,9 @@ export const CareersPage: React.FC<CareersPageProps> = () => {
         setErrorMessage(data.error || 'Failed to submit driver application.');
       }
     } catch {
-      setErrorMessage('Network connection error. Please call our Columbia dispatch office directly at 803-718-5509.');
+      setErrorMessage(
+        `Network connection error. Please call our Columbia dispatch office directly at ${COMPANY_PHONE.display}.`
+      );
     } finally {
       setIsSubmitting(false);
     }

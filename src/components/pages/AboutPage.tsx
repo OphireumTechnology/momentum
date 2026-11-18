@@ -1,6 +1,6 @@
 import React from 'react';
 import { PageView } from '../common/Header';
-import { COMPANY } from '../../config/company';
+import { COMPANY, COMPANY_PHONE } from '../../config/company';
 import { Logo } from '../common/Logo';
 import { ASSETS, ASSET_METADATA, LOGOS, COMPANY_PROFILE_PDF_URL } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
@@ -365,11 +365,12 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
               <a
-                href={COMPANY.contact.phoneTel}
+                href={COMPANY_PHONE.href}
+                aria-label={COMPANY_PHONE.ariaLabel}
                 className="min-h-[48px] px-6 py-3 text-xs font-bold tracking-wider uppercase text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-md inline-flex items-center justify-center gap-2"
               >
                 <Phone className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
-                <span>Call 803-718-5509</span>
+                <span>Call {COMPANY_PHONE.display}</span>
               </a>
               <button
                 type="button"

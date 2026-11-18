@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PageView } from '../common/Header';
-import { COMPANY } from '../../config/company';
+import { COMPANY, COMPANY_PHONE } from '../../config/company';
 import { Logo } from '../common/Logo';
 import { ASSETS, ASSET_METADATA } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
@@ -64,7 +64,9 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
         setErrorMessage(data.error || 'Failed to submit inquiry.');
       }
     } catch {
-      setErrorMessage('Network connection error. Please call our dispatch line directly.');
+      setErrorMessage(
+        `Network connection error. Please call our dispatch line directly at ${COMPANY_PHONE.display}.`
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -112,8 +114,12 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                   <Phone className="w-5 h-5 text-[#C99A31] shrink-0 mt-0.5" aria-hidden="true" />
                   <div>
                     <strong className="block text-[#071E41]">Direct Dispatch Phone</strong>
-                    <a href={COMPANY.contact.phoneTel} className="text-slate-900 font-bold hover:text-[#071E41] inline-flex items-center min-h-[44px]">
-                      {COMPANY.contact.phone}
+                    <a
+                      href={COMPANY_PHONE.href}
+                      aria-label={COMPANY_PHONE.ariaLabel}
+                      className="text-slate-900 font-bold hover:text-[#071E41] inline-flex items-center min-h-[44px]"
+                    >
+                      {COMPANY_PHONE.display}
                     </a>
                   </div>
                 </div>
@@ -140,10 +146,12 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
 
               <div className="pt-2 flex flex-col sm:flex-row gap-3">
                 <a
-                  href={COMPANY.contact.phoneTel}
-                  className="min-h-[48px] flex-1 px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded-md font-display inline-flex items-center justify-center"
+                  href={COMPANY_PHONE.href}
+                  aria-label={COMPANY_PHONE.ariaLabel}
+                  className="min-h-[48px] flex-1 px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded-md font-display inline-flex items-center justify-center gap-1.5"
                 >
-                  Click to Call Now
+                  <Phone className="w-3.5 h-3.5 text-[#C99A31] shrink-0" aria-hidden="true" />
+                  <span>Call {COMPANY_PHONE.display}</span>
                 </a>
                 <button
                   type="button"

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PageView } from '../common/Header';
-import { COMPANY } from '../../config/company';
+import { COMPANY, COMPANY_PHONE } from '../../config/company';
 import { ASSETS, ASSET_METADATA, LOGOS, COMPANY_PROFILE_PDF_URL } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 import {
@@ -282,7 +282,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
-                  <span>Direct Dispatch: <a href={COMPANY.contact.phoneTel} className="font-semibold text-white hover:text-[#C99A31] underline">{COMPANY.contact.formattedPhone}</a></span>
+                  <span>Direct Dispatch: <a href={COMPANY_PHONE.href} aria-label={COMPANY_PHONE.ariaLabel} className="font-semibold text-white hover:text-[#C99A31] underline">{COMPANY_PHONE.display}</a></span>
                 </div>
               </div>
             </div>
@@ -846,8 +846,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                   Direct coordination between customers and our Columbia operations desk. Speak directly with experienced logistics coordinators for immediate status updates.
                 </p>
                 <div className="text-[11px] text-[#C99A31] font-semibold flex items-center gap-1.5 pt-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Direct phone line: 803-718-5509</span>
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                  <a
+                    href={COMPANY_PHONE.href}
+                    aria-label={COMPANY_PHONE.ariaLabel}
+                    className="hover:text-white underline transition-colors"
+                  >
+                    Direct phone line: {COMPANY_PHONE.display}
+                  </a>
                 </div>
               </div>
 
@@ -1208,8 +1214,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                   Quote Freight On This Lane
                 </button>
                 <a
-                  href={COMPANY.contact.phoneTel}
-                  className="min-h-[44px] flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-slate-200 rounded font-display transition-colors text-center"
+                  href={COMPANY_PHONE.href}
+                  aria-label={COMPANY_PHONE.ariaLabel}
+                  className="min-h-[44px] flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-slate-100 hover:bg-slate-200 rounded font-display transition-colors inline-flex items-center justify-center text-center"
                 >
                   Speak With Lane Dispatcher
                 </a>
@@ -1319,7 +1326,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                 Momentum Transportation &amp; Hauling LLC
               </h3>
               <p className="text-xs text-slate-300">
-                2 Penhurst Ct., Columbia, South Carolina 29229 · Operational Dispatch: (803) 718-5509
+                2 Penhurst Ct., Columbia, South Carolina 29229 · Operational Dispatch:{' '}
+                <a
+                  href={COMPANY_PHONE.href}
+                  aria-label={COMPANY_PHONE.ariaLabel}
+                  className="text-white hover:text-[#C99A31] underline font-semibold"
+                >
+                  {COMPANY_PHONE.display}
+                </a>
               </p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full md:w-auto">
@@ -1484,7 +1498,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
           Deep Royal Navy background (#071E41) with metallic gold accents.
           Headline: Let's Move Your Business Forward.
           Buttons: REQUEST A QUOTE, CONTACT OPERATIONS.
-          Direct contacts: (803) 718-5509, wright.wendell@icloud.com
+          Direct contacts: +1 (803) 718-5509, wright.wendell@icloud.com
           ========================================================================= */}
       <section className="bg-gradient-to-r from-[#071E41] via-[#0B2B5C] to-[#071E41] text-white py-16 border-t border-[#0D2C5B]">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 text-center space-y-6">
@@ -1516,9 +1530,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
           </div>
 
           <div className="pt-6 border-t border-slate-700/60 max-w-md mx-auto flex flex-col sm:flex-row items-center justify-center gap-4 text-xs text-slate-300">
-            <a href={COMPANY.contact.phoneTel} className="font-semibold text-white hover:text-[#C99A31] inline-flex items-center gap-1.5">
-              <Phone className="w-3.5 h-3.5 text-[#C99A31]" />
-              <span>(803) 718-5509</span>
+            <a
+              href={COMPANY_PHONE.href}
+              aria-label={COMPANY_PHONE.ariaLabel}
+              className="min-h-[44px] font-semibold text-white hover:text-[#C99A31] inline-flex items-center gap-1.5"
+            >
+              <Phone className="w-3.5 h-3.5 text-[#C99A31]" aria-hidden="true" />
+              <span>{COMPANY_PHONE.display}</span>
             </a>
             <span className="hidden sm:inline text-slate-500">·</span>
             <a href={COMPANY.contact.emailMailto} className="font-semibold text-white hover:text-[#C99A31]">

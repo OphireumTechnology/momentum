@@ -12,6 +12,7 @@ import {
   updateOutboxJobResult,
 } from './persistence.ts';
 import type { StoredEmailOutbox } from './persistence.ts';
+import { COMPANY_PHONE } from '../src/config/company.ts';
 
 export const OFFICIAL_RECIPIENT_EMAIL =
   process.env.OFFICIAL_RECIPIENT_EMAIL || 'wright.wendell@icloud.com';
@@ -193,7 +194,7 @@ export function buildQuoteNotificationEmail(params: {
       </div>
 
       <div style="background-color: #F8FAFC; padding: 14px 24px; border-top: 1px solid #E5E7EB; font-size: 11px; color: #64748B; text-align: center;">
-        Momentum Transportation &amp; Hauling LLC · 2 Penhurst Ct., Columbia, SC 29229 · (803) 718-5509
+        Momentum Transportation &amp; Hauling LLC · 2 Penhurst Ct., Columbia, SC 29229 · <a href="${COMPANY_PHONE.href}" style="color: #071E41; text-decoration: underline;">${COMPANY_PHONE.display}</a>
       </div>
     </div>
   </body>
@@ -205,6 +206,7 @@ export function buildQuoteNotificationEmail(params: {
     ...allRows.map(([label, value]) => `${label}: ${value}`),
     '==============================================================',
     `Reply directly to this email to contact ${quote.customerName} (${quote.email}).`,
+    `Dispatch Desk: ${COMPANY_PHONE.display} (${COMPANY_PHONE.e164}) · 2 Penhurst Ct., Columbia, SC 29229`,
   ].join('\n');
 
   return { subject, htmlBody, textBody };

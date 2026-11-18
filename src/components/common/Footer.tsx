@@ -1,6 +1,6 @@
 import React from 'react';
 import { Logo } from './Logo';
-import { COMPANY } from '../../config/company';
+import { COMPANY, COMPANY_PHONE } from '../../config/company';
 import { COMPANY_PROFILE_PDF_URL } from '../../config/assets';
 import { PageView } from './Header';
 import { Phone, Mail, MapPin, Shield, ArrowUpRight, FileText } from 'lucide-react';
@@ -33,11 +33,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           </div>
           <div className="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <a
-              href={COMPANY.contact.phoneTel}
+              href={COMPANY_PHONE.href}
+              aria-label={COMPANY_PHONE.ariaLabel}
               className="min-h-[48px] px-5 py-3 text-xs font-bold tracking-wider uppercase text-white bg-slate-800/90 hover:bg-slate-700/90 border border-slate-600 rounded-md transition-colors inline-flex items-center justify-center gap-2"
             >
               <Phone className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
-              <span>Call {COMPANY.contact.formattedPhone}</span>
+              <span>Call {COMPANY_PHONE.display}</span>
             </a>
             <button
               type="button"
@@ -70,11 +71,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </div>
               <div>
                 <a
-                  href={COMPANY.contact.phoneTel}
+                  href={COMPANY_PHONE.href}
+                  aria-label={COMPANY_PHONE.ariaLabel}
                   className="min-h-[44px] inline-flex items-center gap-2.5 text-slate-200 hover:text-white transition-colors font-medium"
                 >
                   <Phone className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
-                  <span>{COMPANY.contact.phone}</span>
+                  <span>{COMPANY_PHONE.display}</span>
                 </a>
               </div>
               <div>
@@ -199,8 +201,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 </button>
               </li>
               <li>
-                <a href={COMPANY.contact.phoneTel} className="min-h-[44px] w-full flex items-center hover:text-white transition-colors text-left">
-                  24/7 Phone: {COMPANY.contact.formattedPhone}
+                <a
+                  href={COMPANY_PHONE.href}
+                  aria-label={COMPANY_PHONE.ariaLabel}
+                  className="min-h-[44px] w-full flex items-center hover:text-white transition-colors text-left"
+                >
+                  24/7 Phone: {COMPANY_PHONE.display}
                 </a>
               </li>
               <li className="pt-3">
@@ -228,8 +234,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           <p>&copy; {new Date().getFullYear()} Momentum Transportation &amp; Hauling LLC. All rights reserved.</p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <span>Columbia, SC 29229</span>
-            <a href={COMPANY.contact.phoneTel} className="hover:text-white transition-colors">
-              {COMPANY.contact.formattedPhone}
+            <a
+              href={COMPANY_PHONE.href}
+              aria-label={COMPANY_PHONE.ariaLabel}
+              className="min-h-[44px] inline-flex items-center hover:text-white transition-colors"
+            >
+              {COMPANY_PHONE.display}
             </a>
             <span>&ldquo;Moving Business Forward.&rdquo;</span>
           </div>

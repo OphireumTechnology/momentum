@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PageView } from '../common/Header';
 import { ASSETS, ASSET_METADATA } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
+import { COMPANY_PHONE } from '../../config/company';
 import {
   CheckCircle2,
   ArrowRight,
@@ -12,6 +13,7 @@ import {
   Truck,
   HardHat,
   Package,
+  Phone,
 } from 'lucide-react';
 
 interface ServicesPageProps {
@@ -682,17 +684,25 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
             <p className="text-sm text-slate-600 mt-1">Our dispatchers will evaluate your exact weight, dimensions, equipment needs, and timeline.</p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+            <a
+              href={COMPANY_PHONE.href}
+              aria-label={COMPANY_PHONE.ariaLabel}
+              className="min-h-[48px] px-5 py-3 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded-md font-display inline-flex items-center justify-center gap-2 whitespace-nowrap"
+            >
+              <Phone className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
+              <span>Call {COMPANY_PHONE.display}</span>
+            </a>
             <button
               type="button"
               onClick={() => onNavigate('quote')}
-              className="min-h-[48px] px-6 py-3 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md font-display cursor-pointer"
+              className="min-h-[48px] px-6 py-3 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md font-display cursor-pointer whitespace-nowrap"
             >
               Request Quote
             </button>
             <button
               type="button"
               onClick={() => onNavigate('contact')}
-              className="min-h-[48px] px-6 py-3 text-xs font-bold uppercase tracking-wider text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md font-display cursor-pointer"
+              className="min-h-[48px] px-6 py-3 text-xs font-bold uppercase tracking-wider text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md font-display cursor-pointer whitespace-nowrap"
             >
               Contact Dispatch
             </button>

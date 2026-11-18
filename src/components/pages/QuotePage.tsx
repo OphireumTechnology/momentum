@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { PageView } from '../common/Header';
-import { COMPANY } from '../../config/company';
+import { COMPANY, COMPANY_PHONE } from '../../config/company';
 import { Logo } from '../common/Logo';
 import { ASSETS, ASSET_METADATA } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
@@ -289,7 +289,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
       }
     } catch {
       setErrorMessage(
-        'Could not reach the Momentum quotation server. Your form inputs have been preserved — click Retry Submission below or call dispatch directly at (803) 718-5509.'
+        `Could not reach the Momentum quotation server. Your form inputs have been preserved — click Retry Submission below or call dispatch directly at ${COMPANY_PHONE.display}.`
       );
       setCanRetry(true);
       errorBannerRef.current?.focus();
@@ -350,8 +350,12 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
               <div className="text-left sm:text-right text-xs text-slate-600">
                 <span className="font-bold text-[#071E41] block">{COMPANY.legalName}</span>
                 <span>{COMPANY.contact.address}</span>
-                <a href={COMPANY.contact.phoneTel} className="block font-semibold text-[#071E41] mt-0.5 hover:underline">
-                  Dispatch: {COMPANY.contact.formattedPhone}
+                <a
+                  href={COMPANY_PHONE.href}
+                  aria-label={COMPANY_PHONE.ariaLabel}
+                  className="block font-semibold text-[#071E41] mt-0.5 hover:underline"
+                >
+                  Dispatch: {COMPANY_PHONE.display}
                 </a>
               </div>
             </div>
@@ -401,8 +405,12 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
               </div>
               <p className="text-xs text-slate-300 leading-relaxed">
                 Keep this reference number for your records when speaking with dispatch at{' '}
-                <a href={COMPANY.contact.phoneTel} className="text-white underline font-semibold">
-                  {COMPANY.contact.formattedPhone}
+                <a
+                  href={COMPANY_PHONE.href}
+                  aria-label={COMPANY_PHONE.ariaLabel}
+                  className="text-white underline font-semibold"
+                >
+                  {COMPANY_PHONE.display}
                 </a>
                 .
               </p>
@@ -434,8 +442,12 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
                     <strong className="block mb-0.5">Saved — Dispatch Notification Queued</strong>
                     <span>
                       Your quote request has been saved successfully. Your dispatch notification is queued for delivery. For immediate same-day dispatch, call{' '}
-                      <a href={COMPANY.contact.phoneTel} className="font-bold underline">
-                        {COMPANY.contact.formattedPhone}
+                      <a
+                        href={COMPANY_PHONE.href}
+                        aria-label={COMPANY_PHONE.ariaLabel}
+                        className="font-bold underline"
+                      >
+                        {COMPANY_PHONE.display}
                       </a>
                       .
                     </span>
@@ -563,10 +575,11 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
                       <span>Retry Submission</span>
                     </button>
                     <a
-                      href={COMPANY.contact.phoneTel}
+                      href={COMPANY_PHONE.href}
+                      aria-label={COMPANY_PHONE.ariaLabel}
                       className="min-h-[44px] inline-flex items-center text-sm font-bold text-red-800 underline"
                     >
-                      Call Dispatch: {COMPANY.contact.formattedPhone}
+                      Call Dispatch: {COMPANY_PHONE.display}
                     </a>
                   </div>
                 )}
@@ -1469,11 +1482,12 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate }) => {
                 Speak directly with our Columbia dispatch desk for urgent same-day hauling, oversized permits, or truck availability.
               </p>
               <a
-                href={COMPANY.contact.phoneTel}
+                href={COMPANY_PHONE.href}
+                aria-label={COMPANY_PHONE.ariaLabel}
                 className="min-h-[48px] w-full px-4 py-3 rounded-md bg-[#071E41] hover:bg-[#041228] text-white font-bold text-sm inline-flex items-center justify-center gap-2.5 transition-colors"
               >
                 <Phone className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
-                <span>Call {COMPANY.contact.formattedPhone}</span>
+                <span>Call {COMPANY_PHONE.display}</span>
               </a>
               <div className="text-xs text-slate-500 pt-1">
                 {COMPANY.hours.dispatch}

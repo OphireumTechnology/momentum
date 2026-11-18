@@ -28,6 +28,7 @@ import {
   purgeExpiredLocalRecords,
 } from './server/persistence.ts';
 import { validateAndNormalizeQuote } from './src/shared/quoteSchema.ts';
+import { COMPANY_PHONE } from './src/config/company.ts';
 
 dotenv.config();
 
@@ -316,7 +317,7 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
       success: false,
       quoteRecorded: false,
       error:
-        'We could not safely record your quote request at this moment. Please retry in a few seconds or call dispatch at (803) 718-5509.',
+        `We could not safely record your quote request at this moment. Please retry in a few seconds or call dispatch at ${COMPANY_PHONE.display}.`,
     });
   }
 });
@@ -522,13 +523,13 @@ app.post('/api/contact', contactRateLimiter, async (req: Request, res: Response)
       delivered: result.delivered,
       message: result.delivered
         ? `Your inquiry (${ticketId}) has been delivered to our operations team.`
-        : `Your inquiry (${ticketId}) has been recorded. For immediate assistance, please call (803) 718-5509.`,
+        : `Your inquiry (${ticketId}) has been recorded. For immediate assistance, please call ${COMPANY_PHONE.display}.`,
     });
   } catch (err) {
     console.error('[Momentum Contact API Error]', err);
     return res.status(500).json({
       success: false,
-      error: 'Unable to send inquiry right now. Please call (803) 718-5509.',
+      error: `Unable to send inquiry right now. Please call ${COMPANY_PHONE.display}.`,
     });
   }
 });
@@ -583,7 +584,7 @@ app.post('/api/careers', contactRateLimiter, async (req: Request, res: Response)
     console.error('[Momentum Careers API Error]', err);
     return res.status(500).json({
       success: false,
-      error: 'Unable to submit driver application right now. Please call (803) 718-5509.',
+      error: `Unable to submit driver application right now. Please call ${COMPANY_PHONE.display}.`,
     });
   }
 });

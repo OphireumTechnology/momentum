@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PageView } from '../common/Header';
 import { ASSETS, ASSET_METADATA } from '../../config/assets';
 import { ImageWithFallback } from '../common/ImageWithFallback';
+import { COMPANY_PHONE } from '../../config/company';
 import {
   ShieldAlert,
   ArrowRight,
@@ -9,6 +10,7 @@ import {
   CheckCircle,
   Truck,
   Filter,
+  Phone,
 } from 'lucide-react';
 
 interface FleetPageProps {
@@ -274,6 +276,35 @@ export const FleetPage: React.FC<FleetPageProps> = ({ onNavigate }) => {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Direct Dispatch & Equipment Availability Strip */}
+        <div className="mt-10 bg-white rounded-xl border border-slate-200 p-5 sm:p-8 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-[#071E41] font-display">
+              Verify Equipment Availability With Dispatch
+            </h2>
+            <p className="text-sm text-slate-600 mt-1">
+              Speak directly with our Columbia dispatch team for trailer availability, payload clearances, or oversized permits.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto shrink-0">
+            <a
+              href={COMPANY_PHONE.href}
+              aria-label={COMPANY_PHONE.ariaLabel}
+              className="min-h-[48px] px-5 py-3 text-xs font-bold uppercase tracking-wider text-white bg-[#071E41] hover:bg-[#041228] rounded-md font-display inline-flex items-center justify-center gap-2 whitespace-nowrap"
+            >
+              <Phone className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
+              <span>Call {COMPANY_PHONE.display}</span>
+            </a>
+            <button
+              type="button"
+              onClick={() => onNavigate('quote')}
+              className="min-h-[48px] px-6 py-3 text-xs font-bold uppercase tracking-wider text-[#071E41] bg-[#C99A31] hover:bg-[#E8BE65] rounded-md font-display cursor-pointer whitespace-nowrap"
+            >
+              Request Equipment Quote
+            </button>
+          </div>
         </div>
       </section>
     </div>

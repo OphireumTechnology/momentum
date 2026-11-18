@@ -3,6 +3,15 @@
  * All company details are sourced exclusively from verified official directives.
  */
 
+export const COMPANY_PHONE = {
+  display: '+1 (803) 718-5509',
+  e164: '+18037185509',
+  href: 'tel:+18037185509',
+  countryCode: '+1',
+  country: 'US',
+  ariaLabel: 'Call Momentum Transportation and Hauling at +1 803 718 5509',
+} as const;
+
 export const COMPANY = {
   legalName: 'Momentum Transportation & Hauling LLC',
   displayName: 'Momentum Transportation & Hauling',
@@ -17,9 +26,9 @@ export const COMPANY = {
     state: 'SC',
     postalCode: '29229',
     country: 'USA',
-    phone: '803-718-5509',
-    formattedPhone: '(803) 718-5509',
-    phoneTel: 'tel:8037185509',
+    phone: COMPANY_PHONE.display,
+    formattedPhone: COMPANY_PHONE.display,
+    phoneTel: COMPANY_PHONE.href,
     email: 'wright.wendell@icloud.com',
     emailMailto: 'mailto:wright.wendell@icloud.com',
   },

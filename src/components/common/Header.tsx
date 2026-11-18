@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Logo } from './Logo';
-import { COMPANY } from '../../config/company';
+import { COMPANY, COMPANY_PHONE } from '../../config/company';
 import { Phone, Menu, X, ArrowRight, FileText, MapPin } from 'lucide-react';
 
 export type PageView =
@@ -68,11 +68,12 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
           </div>
           <div className="flex items-center gap-4">
             <a
-              href={COMPANY.contact.phoneTel}
-              className="inline-flex items-center gap-1.5 text-[#C99A31] font-semibold hover:text-white transition-colors"
+              href={COMPANY_PHONE.href}
+              aria-label={COMPANY_PHONE.ariaLabel}
+              className="inline-flex items-center gap-1.5 text-[#C99A31] font-semibold hover:text-white transition-colors whitespace-nowrap"
             >
               <Phone className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>{COMPANY.contact.formattedPhone}</span>
+              <span>{COMPANY_PHONE.display}</span>
             </a>
             <span className="text-slate-500" aria-hidden="true">|</span>
             <button
@@ -136,12 +137,15 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
         {/* Mobile Right Controls (>= 44x44 touch targets) */}
         <div className="flex lg:hidden items-center gap-1.5 shrink-0">
           <a
-            href={COMPANY.contact.phoneTel}
-            aria-label={`Call dispatch at ${COMPANY.contact.formattedPhone}`}
-            className="min-w-[44px] min-h-[44px] px-2.5 inline-flex items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 text-[#071E41] hover:bg-slate-100 transition-colors"
+            href={COMPANY_PHONE.href}
+            aria-label={COMPANY_PHONE.ariaLabel}
+            className="min-w-[44px] min-h-[44px] px-2.5 inline-flex items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 text-[#071E41] hover:bg-slate-100 transition-colors shrink-0"
           >
             <Phone className="w-4 h-4 text-[#C99A31] shrink-0" aria-hidden="true" />
-            <span className="hidden min-[390px]:inline sm:hidden text-xs font-bold">Call</span>
+            <span className="min-[460px]:hidden text-xs font-bold">Call</span>
+            <span className="hidden min-[460px]:inline text-xs font-bold whitespace-nowrap">
+              {COMPANY_PHONE.display}
+            </span>
           </a>
 
           <button
@@ -248,11 +252,12 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
                 <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </button>
               <a
-                href={COMPANY.contact.phoneTel}
+                href={COMPANY_PHONE.href}
+                aria-label={COMPANY_PHONE.ariaLabel}
                 className="min-h-[48px] w-full px-5 py-3 text-center text-sm font-bold text-white bg-[#071E41] hover:bg-[#041228] rounded-md flex items-center justify-center gap-2"
               >
                 <Phone className="w-4 h-4 text-[#C99A31]" aria-hidden="true" />
-                <span>Call Dispatch: {COMPANY.contact.formattedPhone}</span>
+                <span>Call Dispatch: {COMPANY_PHONE.display}</span>
               </a>
             </div>
           </nav>
