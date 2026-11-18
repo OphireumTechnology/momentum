@@ -131,6 +131,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                     <a href={COMPANY.contact.emailMailto} className="text-slate-900 font-semibold hover:text-[#071E41] break-all inline-flex items-center min-h-[44px]">
                       {COMPANY.contact.email}
                     </a>
+                    <a href={COMPANY.contact.secondaryEmailMailto} className="text-slate-900 font-semibold hover:text-[#071E41] break-all inline-flex items-center min-h-[44px]">{COMPANY.contact.secondaryEmail}</a>
                   </div>
                 </div>
 
