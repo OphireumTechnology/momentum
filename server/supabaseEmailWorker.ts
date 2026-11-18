@@ -29,7 +29,7 @@ export async function dispatchSupabaseOutboxOnce(): Promise<void> {
     // Recover an interrupted job only after its claim lease has expired.
     // Resend uses the same idempotency key on retry.
     const stale = new Date(Date.now() - 10 * 60_000).toISOString();
-    await patch('status=eq.sending&updated_at=lt.' + encodeURIComponent(stale), { status: 'pending' });
+    await patch('status=eq.sending&updated_at=lt.' + encodeURIComponent(stale) + '&attempt_count=lt.5', { status: 'pending' });
     const due = new URL(url());
     due.searchParams.set('select', 'id,recipient_email,subject,payload,attempt_count,max_attempts');
     due.searchParams.set('status', 'eq.pending');
@@ -67,7 +67,10 @@ export async function dispatchSupabaseOutboxOnce(): Promise<void> {
           }),
           signal: AbortSignal.timeout(15000),
         });
-        if (!sent.ok) throw new Error('Resend HTTP ' + sent.status);
+        if (!sent.ok) {
+          const detail = await sent.text().catch(() => '');
+          throw new Error('Resend HTTP ' + sent.status + ': ' + detail.slice(0, 120));
+        }
         const response = await sent.json() as { id?: string };
         await patch('id=eq.' + encodeURIComponent(job.id) + '&status=eq.sending', {
           status: 'sent', sent_at: new Date().toISOString(), provider_message_id: response.id || null,
