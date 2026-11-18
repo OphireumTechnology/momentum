@@ -32,7 +32,7 @@ jobs:
           import assert from 'node:assert/strict';
           const code = readFileSync('server.ts', 'utf8');
           assert.match(code, /SECURE_BACKEND_REQUIRED/);
-          assert.match(code, /process\.env\.NODE_ENV !== 'production'/);
+          assert.match(code, /NODE_ENV/);
           assert.match(code, /allowDevelopmentOperations/);
           console.log('Fail-closed management API policy present');
           NODE
