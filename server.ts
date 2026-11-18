@@ -15,6 +15,7 @@ import {
   getConfiguredSender,
   isEmailProviderConfigured,
   OFFICIAL_RECIPIENT_EMAIL,
+  OFFICIAL_QUOTE_RECIPIENTS,
   processOutboxJob,
   startOutboxRetryWorker,
 } from './server/emailOutbox.ts';
@@ -312,7 +313,7 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
         referenceNumber: stored.reference_number,
         createdAt: new Date().toISOString(),
         emailDelivery: {
-          status: 'pending_provider_config',
+          status: 'pending',
           delivered: false,
           provider: null,
           messageId: null,
@@ -352,7 +353,7 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
       idempotencyKey,
       ipHash: hashClientIp(clientIp),
       emailPayload: {
-        recipientEmail: OFFICIAL_RECIPIENT_EMAIL,
+        recipientEmail: OFFICIAL_QUOTE_RECIPIENTS.join(','),
         replyToEmail: normalized.email,
         senderEmail: getConfiguredSender(),
         subject: emailContent.subject,
