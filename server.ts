@@ -664,7 +664,7 @@ app.post('/api/quotes', async (req, res) => {
 
     if (![customerName, email, phone, pickupLocation, deliveryLocation, loadDescription].every(
       (value) => typeof value === 'string' && value.trim().length > 0 && value.length <= 2000
-    ) || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    ) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({
         success: false,
         error: 'Please fill in all required fields (Name, Email, Phone, Origin, Destination, Load Description).',
@@ -836,7 +836,7 @@ app.post('/api/contact', async (req, res) => {
     const { name, email, phone, inquiryType, message, company } = req.body;
     if (![name, email, message].every(
       (value) => typeof value === 'string' && value.trim().length > 0 && value.length <= 5000
-    ) || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    ) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ success: false, error: 'Name, email, and message are required.' });
     }
 
@@ -974,7 +974,7 @@ app.post('/api/support', async (req, res) => {
 
     if (![customerName, email, description].every(
       (value) => typeof value === 'string' && value.trim().length > 0 && value.length <= 5000
-    ) || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    ) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ success: false, error: 'Customer name, email, and description/message are required.' });
     }
 
