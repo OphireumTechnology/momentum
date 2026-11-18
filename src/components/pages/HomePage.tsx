@@ -916,12 +916,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenQuickQuote
                       <span>Explore Regional Service Network</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
-                    <button
-                      onClick={() => onNavigate('portal')}
-                      className="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700"
-                    >
-                      Customer Portal
-                    </button>
+
                   </div>
                 </div>
               </div>
