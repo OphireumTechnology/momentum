@@ -127,11 +127,21 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                 <div className="flex items-start gap-3">
                   <Mail className="w-5 h-5 text-[#C99A31] shrink-0 mt-0.5" aria-hidden="true" />
                   <div className="min-w-0">
-                    <strong className="block text-[#071E41]">Corporate Email</strong>
-                    <a href={COMPANY.contact.emailMailto} className="text-slate-900 font-semibold hover:text-[#071E41] break-all inline-flex items-center min-h-[44px]">
-                      {COMPANY.contact.email}
-                    </a>
-                    <a href={COMPANY.contact.secondaryEmailMailto} className="text-slate-900 font-semibold hover:text-[#071E41] break-all inline-flex items-center min-h-[44px]">{COMPANY.contact.secondaryEmail}</a>
+                    <strong className="block text-[#071E41] mb-1">Official Company Emails</strong>
+                    <div className="flex flex-col gap-1">
+                      <div>
+                        <span className="block text-xs text-slate-600">Dispatch &amp; Operations</span>
+                        <a href={COMPANY.contact.emailMailto} className="text-slate-900 font-semibold hover:text-[#071E41] break-all inline-flex items-center min-h-[44px]">
+                          {COMPANY.contact.email}
+                        </a>
+                      </div>
+                      <div>
+                        <span className="block text-xs text-slate-600">General Inquiries</span>
+                        <a href={COMPANY.contact.secondaryEmailMailto} className="text-slate-900 font-semibold hover:text-[#071E41] break-all inline-flex items-center min-h-[44px]">
+                          {COMPANY.contact.secondaryEmail}
+                        </a>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
