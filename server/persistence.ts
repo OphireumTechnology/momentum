@@ -1,3 +1,4 @@
+import { supabaseAuthHeaders, supabaseErrorStatus } from './supabaseRest.ts';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
@@ -158,16 +159,14 @@ async function supabaseFetch<T>(
   const res = await fetch(url, {
     ...options,
     headers: {
-      apikey: SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      ...supabaseAuthHeaders(SUPABASE_SERVICE_ROLE_KEY),
       'Content-Type': 'application/json',
       ...(options.headers || {}),
     },
   });
 
   if (!res.ok) {
-    const bodyText = await res.text().catch(() => '');
-    throw new Error(`Supabase REST error (${res.status}): ${bodyText || res.statusText}`);
+    throw new Error('Supabase REST error: ' + await supabaseErrorStatus(res));
   }
 
   const text = await res.text();

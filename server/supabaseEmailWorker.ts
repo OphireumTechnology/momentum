@@ -1,3 +1,4 @@
+import { supabaseAuthHeaders, supabaseErrorStatus } from './supabaseRest.ts';
 import {
   buildQuoteNotificationEmail,
   escapeHtml,
@@ -23,8 +24,7 @@ type OutboxJob = {
 const url = () => (process.env.SUPABASE_URL || '').replace(/\/$/, '') + '/rest/v1/email_outbox';
 const key = () => process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const headers = () => ({
-  apikey: key(),
-  Authorization: 'Bearer ' + key(),
+  ...supabaseAuthHeaders(key()),
   'Content-Type': 'application/json',
   Prefer: 'return=representation',
 });
@@ -38,7 +38,9 @@ async function patch(query: string, changes: Record<string, unknown>): Promise<O
     body: JSON.stringify({ ...changes, updated_at: new Date().toISOString() }),
     signal: AbortSignal.timeout(12000),
   });
-  if (!res.ok) throw new Error('Supabase outbox update failed: HTTP ' + res.status);
+  if (!res.ok) {
+    throw new Error('Supabase outbox update failed: ' + await supabaseErrorStatus(res));
+  }
   return (await res.json()) as OutboxJob[];
 }
 
@@ -169,10 +171,7 @@ export async function dispatchSupabaseOutboxOnce(): Promise<void> {
     due.searchParams.set('limit', '10');
     const res = await fetch(due, { headers: headers(), signal: AbortSignal.timeout(12000) });
     if (!res.ok) {
-      // PostgREST returns a structured error body identifying invalid filters,
-      // missing columns and schema-cache issues. Do not log request headers.
-      const errorText = (await res.text()).slice(0, 600);
-      throw new Error('Supabase outbox read failed: HTTP ' + res.status + ' ' + errorText);
+      throw new Error('Supabase outbox read failed: ' + await supabaseErrorStatus(res));
     }
     const jobs = (await res.json()) as OutboxJob[];
     for (const job of jobs) {

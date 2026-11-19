@@ -1,3 +1,4 @@
+import { supabaseAuthHeaders } from './server/supabaseRest.ts';
 import { dispatchSupabaseOutboxOnce, startSupabaseOutboxWorker } from './server/supabaseEmailWorker.ts';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
@@ -352,8 +353,7 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
       const saved = await fetch(supabaseUrl + '/rest/v1/rpc/submit_quote_request', {
         method: 'POST',
         headers: {
-          apikey: supabaseKey,
-          Authorization: 'Bearer ' + supabaseKey,
+          ...supabaseAuthHeaders(supabaseKey),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ p_quote: quotePayload, p_key: idempotencyKey }),
@@ -395,8 +395,7 @@ app.post('/api/quotes', quoteRateLimiter, async (req: Request, res: Response) =>
           `${supabaseUrl}/rest/v1/email_outbox?quote_request_id=eq.${encodeURIComponent(stored.quote_id)}&select=recipient_email,status,provider_message_id&order=created_at.asc`,
           {
             headers: {
-              apikey: supabaseKey,
-              Authorization: 'Bearer ' + supabaseKey,
+              ...supabaseAuthHeaders(supabaseKey),
             },
             signal: AbortSignal.timeout(8000),
           }

@@ -2,6 +2,17 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { dispatchSupabaseOutboxOnce } from '../server/supabaseEmailWorker.ts';
 import fs from 'node:fs';
+import { supabaseAuthHeaders, supabaseErrorStatus } from '../server/supabaseRest.ts';
+
+test('Supabase REST authentication selects headers by key type and retains only diagnostic codes', async () => {
+  assert.deepEqual(supabaseAuthHeaders('sb_secret_example'), { apikey: 'sb_secret_example' });
+  assert.deepEqual(supabaseAuthHeaders('eyJ.example.jwt'), {
+    apikey: 'eyJ.example.jwt',
+    Authorization: 'Bearer eyJ.example.jwt',
+  });
+  const error = Response.json({ code: 'PGRST204', message: 'Private row data' }, { status: 400 });
+  assert.equal(await supabaseErrorStatus(error), 'HTTP 400 (PGRST204)');
+});
 
 const first = 'wright.wendell@icloud.com';
 const second = 'info@momentumtransporthauling.com';
@@ -21,7 +32,7 @@ test('Resend dispatcher sends independently, retries one inbox, and does not dup
   process.env.RESEND_API_KEY = 'test-key';
   process.env.EMAIL_FROM = 'Momentum Dispatch <quotes@momentumtransporthauling.com>';
   process.env.SUPABASE_URL = 'https://example.supabase.co';
-  process.env.SUPABASE_SECRET_KEY = 'test-supabase-key';
+  process.env.SUPABASE_SECRET_KEY = 'sb_secret_test-key';
   const queue = [
     { id: 'id-w', recipient_email: first, status: 'pending', subject: 'New quote', payload: { reference_number: 'TEST-001', quote: { customer_name: 'Sample Customer', pickup_location: 'SC' } }, attempt_count: 0, max_attempts: 5, next_attempt_at: '2000-01-01T00:00:00Z', updated_at: '2026-11-19T00:00:00Z', created_at: '2026-11-19T00:00:00Z' },
     { id: 'id-i', recipient_email: second, status: 'pending', subject: 'New quote', payload: { reference_number: 'TEST-001', quote: { customer_name: 'Sample Customer' } }, attempt_count: 0, max_attempts: 5, next_attempt_at: '2000-01-01T00:00:00Z', updated_at: '2026-11-19T00:00:00Z', created_at: '2026-11-19T00:00:00Z' },
@@ -41,6 +52,8 @@ test('Resend dispatcher sends independently, retries one inbox, and does not dup
       return response({ id: 'resend-' + request.to[0] });
     }
     assert.equal(uri.pathname, '/rest/v1/email_outbox');
+    assert.equal(options.headers.apikey, 'sb_secret_test-key');
+    assert.equal(options.headers.Authorization, undefined);
     const matches = (job) => {
       for (const [field, expression] of uri.searchParams) {
         if (['select', 'order', 'limit'].includes(field)) continue;
