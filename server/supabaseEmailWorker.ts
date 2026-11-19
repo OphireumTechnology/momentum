@@ -1,3 +1,4 @@
+import { supabaseAuthHeaders, supabaseErrorStatus } from './supabaseRest.ts';
 import {
   buildQuoteNotificationEmail,
   escapeHtml,
@@ -22,17 +23,11 @@ type OutboxJob = {
 
 const url = () => (process.env.SUPABASE_URL || '').replace(/\/$/, '') + '/rest/v1/email_outbox';
 const key = () => process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-// Supabase sb_secret_* keys authenticate through apikey, not as JWT bearer tokens.
-// Legacy service_role JWTs can be used in both headers for backwards compatibility.
-const headers = () => {
-  const apiKey = key();
-  return {
-    apikey: apiKey,
-    ...(apiKey.startsWith('eyJ') ? { Authorization: 'Bearer ' + apiKey } : {}),
-    'Content-Type': 'application/json',
-    Prefer: 'return=representation',
-  };
-};
+const headers = () => ({
+  ...supabaseAuthHeaders(key()),
+  'Content-Type': 'application/json',
+  Prefer: 'return=representation',
+});
 
 let running = false;
 
@@ -44,8 +39,7 @@ async function patch(query: string, changes: Record<string, unknown>): Promise<O
     signal: AbortSignal.timeout(12000),
   });
   if (!res.ok) {
-    const detail = (await res.text()).slice(0, 600);
-    throw new Error('Supabase outbox update failed: HTTP ' + res.status + ' ' + detail);
+    throw new Error('Supabase outbox update failed: ' + await supabaseErrorStatus(res));
   }
   return (await res.json()) as OutboxJob[];
 }
@@ -177,10 +171,7 @@ export async function dispatchSupabaseOutboxOnce(): Promise<void> {
     due.searchParams.set('limit', '10');
     const res = await fetch(due, { headers: headers(), signal: AbortSignal.timeout(12000) });
     if (!res.ok) {
-      // PostgREST returns a structured error body identifying invalid filters,
-      // missing columns and schema-cache issues. Do not log request headers.
-      const errorText = (await res.text()).slice(0, 600);
-      throw new Error('Supabase outbox read failed: HTTP ' + res.status + ' ' + errorText);
+      throw new Error('Supabase outbox read failed: ' + await supabaseErrorStatus(res));
     }
     const jobs = (await res.json()) as OutboxJob[];
     for (const job of jobs) {
