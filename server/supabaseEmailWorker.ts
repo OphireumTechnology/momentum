@@ -30,6 +30,7 @@ const headers = () => ({
 });
 
 let running = false;
+let successfulPollLogged = false;
 
 async function patch(query: string, changes: Record<string, unknown>): Promise<OutboxJob[]> {
   const res = await fetch(url() + '?' + query, {
@@ -174,6 +175,12 @@ export async function dispatchSupabaseOutboxOnce(): Promise<void> {
       throw new Error('Supabase outbox read failed: ' + await supabaseErrorStatus(res));
     }
     const jobs = (await res.json()) as OutboxJob[];
+    // Emit one privacy-safe proof that the production outbox query succeeded.
+    // Never log recipients, quote payloads, credentials, or message contents.
+    if (!successfulPollLogged) {
+      console.info('[Momentum] Supabase outbox polling succeeded');
+      successfulPollLogged = true;
+    }
     for (const job of jobs) {
       if (job.attempt_count >= job.max_attempts) {
         await patch('id=eq.' + encodeURIComponent(job.id) + '&status=eq.pending', {
