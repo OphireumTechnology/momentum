@@ -1,0 +1,42 @@
+name: Mobile browser screenshots
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'index.html'
+      - 'vite.config.*'
+      - 'tests/mobile-browser.mjs'
+      - '.github/workflows/mobile-browser-screenshots.yml'
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-package-lock
+      - run: npm install --no-save --no-package-lock playwright
+      - run: npx playwright install --with-deps chromium
+      - run: npm run lint
+      - run: npm run build
+      - name: Start static preview
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/momentum-preview.log 2>&1 &
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:4173/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/momentum-preview.log
+          exit 1
+      - name: Capture responsive screenshots and check overflow
+        run: node tests/mobile-browser.mjs
+      - name: Upload screenshots and JSON report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: momentum-mobile-browser-screenshots
+          path: mobile-browser-results/
+          if-no-files-found: warn
