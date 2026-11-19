@@ -22,12 +22,17 @@ type OutboxJob = {
 
 const url = () => (process.env.SUPABASE_URL || '').replace(/\/$/, '') + '/rest/v1/email_outbox';
 const key = () => process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const headers = () => ({
-  apikey: key(),
-  Authorization: 'Bearer ' + key(),
-  'Content-Type': 'application/json',
-  Prefer: 'return=representation',
-});
+// Supabase sb_secret_* keys authenticate through apikey, not as JWT bearer tokens.
+// Legacy service_role JWTs can be used in both headers for backwards compatibility.
+const headers = () => {
+  const apiKey = key();
+  return {
+    apikey: apiKey,
+    ...(apiKey.startsWith('eyJ') ? { Authorization: 'Bearer ' + apiKey } : {}),
+    'Content-Type': 'application/json',
+    Prefer: 'return=representation',
+  };
+};
 
 let running = false;
 
@@ -38,7 +43,10 @@ async function patch(query: string, changes: Record<string, unknown>): Promise<O
     body: JSON.stringify({ ...changes, updated_at: new Date().toISOString() }),
     signal: AbortSignal.timeout(12000),
   });
-  if (!res.ok) throw new Error('Supabase outbox update failed: HTTP ' + res.status);
+  if (!res.ok) {
+    const detail = (await res.text()).slice(0, 600);
+    throw new Error('Supabase outbox update failed: HTTP ' + res.status + ' ' + detail);
+  }
   return (await res.json()) as OutboxJob[];
 }
 
