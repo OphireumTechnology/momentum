@@ -163,7 +163,7 @@ export async function dispatchSupabaseOutboxOnce(): Promise<void> {
     const due = new URL(url());
     due.searchParams.set(
       'select',
-      'id,recipient_email,subject,payload,attempt_count,max_attempts'
+      'id,recipient_email,reply_to_email,sender_email,subject,html_body,text_body,payload,attempt_count,max_attempts'
     );
     due.searchParams.set('status', 'eq.pending');
     due.searchParams.set('next_attempt_at', 'lte.' + new Date().toISOString());
