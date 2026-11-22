@@ -44,7 +44,7 @@ test('Resend dispatcher sends independently, retries one inbox, and does not dup
     const uri = new URL(String(target));
     if (uri.hostname === 'api.resend.com') {
       const request = JSON.parse(options.body);
-      sends.push({ to: request.to, key: options.headers['Idempotency-Key'], text: request.text });
+      sends.push({ to: request.to, key: options.headers['Idempotency-Key'], payload: request, text: request.text });
       if (request.to[0] === second && failSecondOnce) {
         failSecondOnce = false;
         return response({ message: 'Temporary provider throttling' }, 429);
@@ -93,6 +93,7 @@ test('Resend dispatcher sends independently, retries one inbox, and does not dup
     assert.equal(queue[1].attempt_count, 2);
     assert.equal(sends.length, 3);
     assert.equal(sends[1].key, sends[2].key);
+    assert.deepEqual(sends[2].payload, sends[1].payload, 'retry must preserve the complete Resend request payload for its idempotency key');
   } finally {
     globalThis.fetch = oldFetch;
     for (const [name, value] of Object.entries(oldEnv)) {
