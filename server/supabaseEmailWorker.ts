@@ -19,6 +19,7 @@ type OutboxJob = {
   payload?: { reference_number?: string; quote?: Record<string, unknown> } | null;
   attempt_count: number;
   max_attempts: number;
+  created_at: string;
 };
 
 const url = () => (process.env.SUPABASE_URL || '').replace(/\/$/, '') + '/rest/v1/email_outbox';
@@ -104,7 +105,7 @@ function buildEmailContentFromJob(job: OutboxJob): {
     };
     const built = buildQuoteNotificationEmail({
       referenceNumber: ref,
-      submittedAtIso: new Date().toISOString(),
+      submittedAtIso: job.created_at,
       quote: normalizedQuote,
     });
     return {
@@ -163,7 +164,7 @@ export async function dispatchSupabaseOutboxOnce(): Promise<void> {
     const due = new URL(url());
     due.searchParams.set(
       'select',
-      'id,recipient_email,subject,payload,attempt_count,max_attempts'
+      'id,recipient_email,reply_to_email,sender_email,subject,html_body,text_body,payload,attempt_count,max_attempts,created_at'
     );
     due.searchParams.set('status', 'eq.pending');
     due.searchParams.set('next_attempt_at', 'lte.' + new Date().toISOString());
