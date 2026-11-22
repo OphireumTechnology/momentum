@@ -19,6 +19,7 @@ type OutboxJob = {
   payload?: { reference_number?: string; quote?: Record<string, unknown> } | null;
   attempt_count: number;
   max_attempts: number;
+  created_at: string;
 };
 
 const url = () => (process.env.SUPABASE_URL || '').replace(/\/$/, '') + '/rest/v1/email_outbox';
@@ -30,9 +31,28 @@ const headers = () => ({
 });
 
 let running = false;
+let successfulPollLogged = false;
+
+/** Classify network failures by operation without logging sensitive request data. */
+async function fetchOutboxStage(
+  stage: 'recovery-patch' | 'pending-get' | 'job-patch',
+  input: string | URL,
+  init: RequestInit
+): Promise<Response> {
+  try {
+    return await fetch(input, init);
+  } catch (error) {
+    const kind = error instanceof Error && error.name === 'TimeoutError'
+      ? 'timeout'
+      : error instanceof Error && error.name === 'AbortError'
+        ? 'aborted'
+        : 'transport';
+    throw new Error('Supabase outbox ' + stage + ' ' + kind + ' failure');
+  }
+}
 
 async function patch(query: string, changes: Record<string, unknown>): Promise<OutboxJob[]> {
-  const res = await fetch(url() + '?' + query, {
+  const res = await fetchOutboxStage(query.startsWith('status=eq.processing') ? 'recovery-patch' : 'job-patch', url() + '?' + query, {
     method: 'PATCH',
     headers: headers(),
     body: JSON.stringify({ ...changes, updated_at: new Date().toISOString() }),
@@ -104,7 +124,7 @@ function buildEmailContentFromJob(job: OutboxJob): {
     };
     const built = buildQuoteNotificationEmail({
       referenceNumber: ref,
-      submittedAtIso: new Date().toISOString(),
+      submittedAtIso: job.created_at,
       quote: normalizedQuote,
     });
     return {
@@ -163,17 +183,22 @@ export async function dispatchSupabaseOutboxOnce(): Promise<void> {
     const due = new URL(url());
     due.searchParams.set(
       'select',
-      'id,recipient_email,subject,payload,attempt_count,max_attempts'
+      'id,recipient_email,subject,payload,attempt_count,max_attempts,created_at'
     );
     due.searchParams.set('status', 'eq.pending');
     due.searchParams.set('next_attempt_at', 'lte.' + new Date().toISOString());
     due.searchParams.set('order', 'created_at.asc');
     due.searchParams.set('limit', '10');
-    const res = await fetch(due, { headers: headers(), signal: AbortSignal.timeout(12000) });
+    const res = await fetchOutboxStage('pending-get', due, { headers: headers(), signal: AbortSignal.timeout(12000) });
     if (!res.ok) {
       throw new Error('Supabase outbox read failed: ' + await supabaseErrorStatus(res));
     }
     const jobs = (await res.json()) as OutboxJob[];
+    // Emit only once, after a successful response and JSON parse.
+    if (!successfulPollLogged) {
+      console.info('[Momentum] Supabase outbox polling succeeded');
+      successfulPollLogged = true;
+    }
     for (const job of jobs) {
       if (job.attempt_count >= job.max_attempts) {
         await patch('id=eq.' + encodeURIComponent(job.id) + '&status=eq.pending', {
